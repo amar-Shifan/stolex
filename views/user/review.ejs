@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <!-- Back Button -->
+                <div class="mb-3" >
+                    <a href="/order-details" class="back-btn " style="background-color:#88c8bc; padding-inline: 10px; border-radius: 5px; color: white;" >
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Back to Order Details</span>
+                    </a>
+                </div>
+    
+                <div class="card">
+                    <div class="card-header  text-white d-flex justify-content-between align-items-center" style="background-color: #88c8bc;">
+                        <h3 class="mb-0">Write a Review</h3>
+                    </div>
+                    <div class="card-body">
+                        <form>
+                            <div class="mb-4 text-center">
+                                <label class="form-label fw-bold">Rate your experience</label>
+                                <div class="rating">
+                                    <input type="radio" name="rating" id="star5" value="5">
+                                    <label for="star5" class="fas fa-star"></label>
+                                    <input type="radio" name="rating" id="star4" value="4">
+                                    <label for="star4" class="fas fa-star"></label>
+                                    <input type="radio" name="rating" id="star3" value="3">
+                                    <label for="star3" class="fas fa-star"></label>
+                                    <input type="radio" name="rating" id="star2" value="2">
+                                    <label for="star2" class="fas fa-star"></label>
+                                    <input type="radio" name="rating" id="star1" value="1">
+                                    <label for="star1" class="fas fa-star"></label>
+                                </div>
+                            </div>
+    
+                            <div class="mb-3">
+                                <label for="reviewTitle" class="form-label">Title</label>
+                                <input type="text" class="form-control" id="reviewTitle" placeholder="Sum up your experience in a few words">
+                            </div>
+    
+                            <div class="mb-3">
+                                <label for="reviewDescription" class="form-label">Your Review</label>
+                                <textarea class="form-control" id="reviewDescription" rows="4" placeholder="Tell us more about your experience..."></textarea>
+                            </div>
+    
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-primary" style="background-color: #88c8bc; border: none;">Submit Review</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</body>
+</html>
+

@@ -1,0 +1,273 @@
+<%- include('../partials/header.ejs') %>
+
+<style>
+    .verification-container {
+        max-width: 450px;
+        margin: 100px auto;
+        padding: 30px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .verification-title {
+        text-align: center;
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    .verification-text {
+        text-align: center;
+        color: #666;
+        font-size: 0.95rem;
+        margin-bottom: 30px;
+    }
+
+    .otp-input-group {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        margin-bottom: 25px;
+    }
+
+    .otp-input {
+        width: 50px;
+        height: 50px;
+        text-align: center;
+        font-size: 1.2rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        background: #f8f9fa;
+        transition: all 0.3s;
+    }
+
+    .otp-input:focus {
+        border-color: #68c3a3;
+        box-shadow: 0 0 0 0.2rem rgba(104, 195, 163, 0.25);
+        background: white;
+    }
+
+    .otp-input::-webkit-inner-spin-button,
+    .otp-input::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .verify-btn {
+        background: #68c3a3;
+        border: none;
+        padding: 12px 40px;
+        border-radius: 25px;
+        color: white;
+        font-weight: 500;
+        width: 100%;
+        transition: all 0.3s;
+    }
+
+    .verify-btn:hover {
+        background: #5ab094;
+        transform: translateY(-2px);
+    }
+
+    .verify-btn:disabled {
+        background: #cccccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .resend-container {
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .timer {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+    }
+
+    .resend-btn {
+        background: none;
+        border: none;
+        color: #68c3a3;
+        font-weight: 500;
+        padding: 0;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .resend-btn:disabled {
+        color: #999;
+        cursor: not-allowed;
+    }
+
+    .resend-btn:hover:not(:disabled) {
+        color: #5ab094;
+        text-decoration: underline;
+    }
+
+    .alert {
+        display: none;
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="container">
+    <div class="verification-container">
+        <h2 class="verification-title">Verify Your Email</h2>
+        <p class="verification-text">We've sent a verification code to<br><strong><%= message %></strong></p>
+        
+        <div class="alert alert-danger" id="error-message" role="alert"><% error %></div>
+        <div class="alert alert-success" id="success-message" role="alert"><% message %></div>
+
+        <form id="otpForm" action="/otp-verification" method="post">
+            <div class="otp-input-group">
+                <input type="number" class="otp-input" maxlength="1" name="otp1" required>
+                <input type="number" class="otp-input" maxlength="1" name="otp2" required>
+                <input type="number" class="otp-input" maxlength="1" name="otp3" required>
+                <input type="number" class="otp-input" maxlength="1" name="otp4" required>
+            </div>
+
+            <button type="submit" class="verify-btn" id="verifyBtn">Verify</button>
+
+            <div class="resend-container">
+                <div class="timer" id="timer">Resend code in <span id="countdown">30</span>s</div>
+                <button type="button" class="resend-btn" id="resendBtn" disabled>Resend Code</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputs = document.querySelectorAll('.otp-input');
+        const form = document.getElementById('otpForm');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const resendBtn = document.getElementById('resendBtn');
+        const countdownEl = document.getElementById('countdown');
+        const errorMessage = document.getElementById('error-message');
+        const successMessage = document.getElementById('success-message');
+        
+        let countdown = 30;
+        let countdownInterval;
+
+        // Start initial countdown
+        startCountdown();
+
+        // Handle input behavior
+        inputs.forEach((input, index) => {
+            // Prevent non-numeric input
+            input.addEventListener('input', function(e) {
+                this.value = this.value.replace(/[^0-9]/g, '');
+                
+                // Move to next input
+                if (this.value && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+                
+                // Enable/disable verify button
+                verifyBtn.disabled = !isFormComplete();
+            });
+
+            // Handle backspace
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && !this.value && index > 0) {
+                    inputs[index - 1].focus();
+                }
+            });
+
+            // Clear error on focus
+            input.addEventListener('focus', function() {
+                errorMessage.style.display = 'none';
+                this.select();
+            });
+        });
+
+        // Handle resend
+        resendBtn.addEventListener('click', function() {
+            // Show loading state
+            resendBtn.disabled = true;
+            
+            // Simulate resend API call
+            setTimeout(() => {
+                showSuccess('New verification code sent!');
+                resetInputs();
+                startCountdown();
+            }, 1500);
+        });
+
+        function startCountdown() {
+            countdown = 60;
+            resendBtn.disabled = true;
+            updateCountdown();
+            
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            
+            countdownInterval = setInterval(() => {
+                countdown--;
+                updateCountdown();
+                
+                if (countdown === 0) {
+                    clearInterval(countdownInterval);
+                    resendBtn.disabled = false;
+                    document.getElementById('timer').style.display = 'none';
+                }
+            }, 1000);
+        }
+
+        function updateCountdown() {
+            countdownEl.textContent = countdown;
+        }
+
+        function isFormComplete() {
+            return Array.from(inputs).every(input => input.value.length === 1);
+        }
+
+        function resetInputs() {
+            inputs.forEach(input => input.value = '');
+            inputs[0].focus();
+            verifyBtn.disabled = true;
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            successMessage.style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+        }
+    });
+
+
+    resendBtn.addEventListener('click', async function () {
+    try {
+        const response = await fetch('/resend-otp', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        const result = await response.json();
+
+        if (response.ok) {
+            showSuccess('New verification code sent!');
+            resetInputs();
+            startCountdown();
+        } else {
+            showError(result.message || 'Failed to resend OTP. Please try again.');
+        }
+    } catch (error) {
+        showError('An error occurred while resending OTP. Please try again.');
+        console.error(error);
+    }
+});
+
+</script>
+
+<%- include('../partials/footer.ejs') %>

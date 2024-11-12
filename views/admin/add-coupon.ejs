@@ -1,0 +1,100 @@
+<%-include('../partials/admin_header.ejs',{title:"admin page"})%>
+
+<section class="content-main">
+    <div class="content-header">
+        <div>
+            <h2 class="content-title card-title">Add Coupon</h2>
+            <p>Create a new coupon code for your store</p>
+        </div>
+    </div>
+    <div class="card mb-4">
+        <div class="card-body">
+            <form>
+                <div class="row mb-4">
+                    <div class="col-xl-8 col-lg-8">
+                        <div class="mb-4">
+                            <label class="form-label">Coupon Name</label>
+                            <input type="text" placeholder="Enter coupon name (e.g., SUMMER2024)" class="form-control">
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Coupon Code</label>
+                            <div class="input-group">
+                                <input type="text" placeholder="Enter coupon code" class="form-control">
+                                <button class="btn btn-outline-secondary" type="button">Generate Code</button>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Description</label>
+                            <textarea placeholder="Type coupon details here" class="form-control" rows="4"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label">Activation Date</label>
+                                <input type="date" class="form-control">
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label">Expiry Date</label>
+                                <input type="date" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-4 col-lg-4">
+                        <div class="mb-4">
+                            <label class="form-label">Discount Amount</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" placeholder="Enter amount">
+                                <select class="form-select" style="max-width: 100px;">
+                                    <option value="fixed">$</option>
+                                    <option value="percentage">%</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Criteria Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" placeholder="Minimum purchase amount">
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Usage Type</label>
+                            <select class="form-select">
+                                <option>Single Use</option>
+                                <option>Multiple Use</option>
+                                <option>One Per Customer</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Status</label>
+                            <select class="form-select">
+                                <option>Active</option>
+                                <option>Inactive</option>
+                                <option>Scheduled</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Applicable Categories</label>
+                            <select class="form-select" multiple>
+                                <option>All Categories</option>
+                                <option>Electronics</option>
+                                <option>Clothing</option>
+                                <option>Home & Garden</option>
+                                <option>Books</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Usage Limit</label>
+                            <input type="number" class="form-control" placeholder="Maximum number of uses">
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end gap-3">
+                    <button type="button" class="btn btn-light">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Coupon</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<%-include('../partials/admin_header.ejs')%>

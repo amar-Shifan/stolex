@@ -1,0 +1,360 @@
+<!-- categories.ejs -->
+<%-include('../partials/admin_header.ejs',{title:"Categories Management"})%>
+
+<section class="content-main">
+    <div class="content-header">
+        <div>
+            <h2 class="content-title card-title">Categories</h2>
+            <p>Manage your product categories and subcategories</p>
+        </div>
+        <div>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#categoryModal">
+                <i class="material-icons md-plus"></i> Create Category
+            </button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <!-- Categories List -->
+                
+                <div class="col-md-8">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Category Name</th>
+                                    <th>Parent</th>
+                                    <th>Status</th>
+                                    <th>description</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (categories && categories.length > 0) { %>
+                                    <% categories.forEach((category) => { %>
+                                        <tr>
+                                            <td><%= category.name %></td>
+                                            <td><%= category.parentCategory == null ? 'Main Category' : category.parentCategory %></td>
+                                            <td><%= category.status %></td>
+                                            <td><%= category.description %></td>
+                                            <td class="text-end">
+                                                <button class="btn btn-warning edit-btn" onclick="openEditModal(<%= JSON.stringify(category) %>)"  >
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="5" class="text-center">No categories found.</td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                            
+                        </table>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <form id="searchForm" method="GET" action="/admin/categories" style="padding: 0; margin: 0;">
+                                <div class="mb-4">
+                                    <label class="form-label">Search Category</label>
+                                    <input type="text" class="form-control" name="search" id="searchInput" placeholder="Type to search...">
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label">Status</label>
+                                    <select class="form-select" name="status" id="statusFilter">
+                                        <option value="">All</option>
+                                        <option value="Active">Active</option>
+                                        <option value="Inactive">Inactive</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
+                            </form>
+                        </div>
+                    </div>        
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+<!-- Category Modal -->
+<div class="modal fade" id="categoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Create Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="categoryForm"  >
+                    <input type="hidden" id="categoryId" name="id">
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        <input type="text" class="form-control" id="categoryName" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" id="categoryDescription" name="description"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Type</label>
+                        <select class="form-select" id="categoryType" name="type" required>
+                            <option value="main">Main Category</option>
+                            <option value="subcategory">Subcategory</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="parentCategoryDiv" style="display: none;">
+                        <label class="form-label">Parent Category</label>
+                        <select class="form-select" name="parentCategory" id="parentCategoryFilter">
+                            <option value="">Select a Category</option> <!-- Default option -->
+                            <% categories.forEach((category) => { %>
+                                <% if (category.level === 0) { %>
+                                    <option value="<%= category._id %>"><%= category.name %></option>
+                                <% } %>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" id="categoryStatus" name="status">
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary" id="saveCategory">Save</button>
+                    </div>
+                </form>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1070">
+    <% if(typeof message !== 'undefined' && message) { %>
+      <div id="notificationToast" class="toast show animate__animated animate__fadeInRight" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header <%= message.type === 'success' ? 'bg-success' : 'bg-danger' %> text-white">
+          <i class="fas <%= message.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle' %> me-2"></i>
+          <strong class="me-auto"><%= message.type === 'success' ? 'Success!' : 'Error!' %></strong>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          <%= message.text %>
+        </div>
+      </div>
+    <% } %>
+</div>
+
+
+<!-- updateCategory modal  -->
+<div class="modal fade" id="editCategoryModal" tabindex="-1" aria-labelledby="editCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editCategoryModalLabel">Edit Category</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="editCategoryForm" method="POST">
+            <input type="hidden" name="_method" value="PATCH">
+             
+          <div class="modal-body">
+            <input type="hidden" id="editCategoryId" name="categoryId">
+            
+            <div class="mb-3">
+              <label for="editCategoryName" class="form-label">Category Name</label>
+              <input type="text" class="form-control" id="editCategoryName" name="name" required>
+            </div>
+            
+            <div class="mb-3">
+              <label for="editCategoryDescription" class="form-label">Description</label>
+              <textarea class="form-control" id="editCategoryDescription" name="description" rows="3"></textarea>
+            </div>
+            
+            <div class="mb-3">
+              <label for="editCategoryStatus" class="form-label">Status</label>
+              <select class="form-select" id="editCategoryStatus" name="status" required>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+<script src="/js/showNotification.js"></script>
+<script src="/js/confirmation.js"></script>
+<script>
+
+const name = document.getElementById('categoryName')
+const description = document.getElementById('categoryDescription')
+const type = document.getElementById('categoryType')
+const status = document.getElementById('categoryStatus')
+const parentCategory = document.getElementById('parentCategory')
+
+document.getElementById('categoryForm').addEventListener('submit', (event) => {
+    event.preventDefault();
+    fetch('/admin/createCategory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            name: name.value,
+            description: description.value,
+            parentCategory: parentCategory.value || null,
+            status: status.value,
+            type: type.value
+        })
+    })
+    .then((res) => res.json())
+    .then((data) => {
+        if (data.success) {
+            showNotification('success', data.message);
+            setTimeout(() => {
+                location.href = '/admin/categories';
+            }, 2000);
+        } else {
+            showNotification('error', data.message);
+        }
+    })
+    .catch((error) => {
+        showNotification('error', 'An unexpected error occurred. Please try again later.');
+    });
+});
+
+
+
+document.addEventListener('DOMContentLoaded', function() {
+
+    document.getElementById('categoryType').addEventListener('change', toggleParentCategory);
+
+});
+
+function toggleParentCategory() {
+    const type = document.getElementById('categoryType').value;
+    const parentDiv = document.getElementById('parentCategoryDiv');
+    const parentSelect = document.getElementById('parentCategory');
+    
+    parentDiv.style.display = type === 'subcategory' ? 'block' : 'none';
+    parentSelect.required = type === 'subcategory';
+}
+
+function resetForm() {
+    document.getElementById('categoryForm').reset();
+    document.getElementById('categoryId').value = '';
+    document.getElementById('modalTitle').textContent = 'Create Category';
+    toggleParentCategory();
+}     
+
+function showToast(message, type = 'info') {
+    alert(message);  
+}
+
+// modal for edit
+function openEditModal(category) {
+    document.getElementById('editCategoryId').value = category._id;
+    document.getElementById('editCategoryName').value = category.name;
+    document.getElementById('editCategoryDescription').value = category.description;
+    document.getElementById('editCategoryStatus').value = category.status;
+    
+    const form = document.getElementById('editCategoryForm');
+    form.action = `/admin/updateCategory`; 
+    const modal = new bootstrap.Modal(document.getElementById('editCategoryModal'));
+    modal.show();
+  }
+
+
+  document.getElementById('editCategoryForm').addEventListener('submit', (event) => {
+  event.preventDefault();
+
+  const categoryId = document.getElementById('editCategoryId').value;
+  const name = document.getElementById('editCategoryName').value;
+  const description = document.getElementById('editCategoryDescription').value;
+  const status = document.getElementById('editCategoryStatus').value;
+
+  fetch('/admin/updateCategory', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ categoryId, name, description, status }),
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.success) {
+        showNotification('success', data.message);
+        setTimeout(() => {
+          location.reload();
+        }, 2000);
+      } else {
+        showNotification('error', data.message);
+      }
+    })
+    .catch((error) => {
+      showNotification('error', 'An unexpected error occurred. Please try again.');
+    });
+});
+
+function deleteCategory(category){
+    confirmationUtil.confirm({
+    message:'are you sure you want to delete',
+    confirmText:'delete',
+    confirmButtonClass: 'btn-danger',
+    callback: (result) => {
+            if (result) {
+                window.location.href = `/admin/${category._id}`
+            }
+    }
+}) 
+}
+
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggles = document.querySelectorAll('.isListedToggle');
+
+        toggles.forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                const categoryId = this.dataset.id;
+                const isListed = this.checked;
+
+                fetch(`/admin/${categoryId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ isListed })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification('success', data.message);
+                    } else {
+                        showNotification('error', data.message);
+                    }
+                })
+                .catch(error => {
+                    showNotification('error', 'An error occurred while updating the category.');
+                });
+            });
+        });
+    });
+
+
+
+
+</script>
+
+<%-include('../partials/admin_footer.ejs')%>
