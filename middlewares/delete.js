@@ -1,95 +1,82 @@
 const cloudinary = require('cloudinary').v2;
 const env = require('../utils/env_var');
 
+// Configure Cloudinary
 cloudinary.config({
     cloud_name: env.CLOUDINARY_CLOUD_NAME,
     api_key: env.CLOUDINARY_API_KEY,
     api_secret: env.CLOUDINARY_API_SECRET,
 });
 
-// Utility function to delete a single image from Cloudinary
-const deleteFromCloudinary = async (imageUrl) => {
+// Upload file to Cloudinary
+const uploadToCloudinary = async (file) => {
     try {
-        const publicId = imageUrl.split('/').slice(-1)[0].split('.')[0]; // For URL cases
-        const result = await cloudinary.uploader.destroy(`products/${publicId}`);
-        if (result.result === 'ok') {
-            return true;
-        } else {
-            console.error(`Failed to delete image: ${imageUrl}`);
-            return false;
+      const result = await cloudinary.uploader.upload(file, {
+        folder: 'products',
+        use_filename: true,
+        unique_filename: true,
+      });
+      return { url: result.secure_url, public_id: result.public_id };
+    } catch (error) {
+      console.error('Cloudinary upload error:', error);
+      throw new Error('Failed to upload image');
+    }
+  };
+  
+  const deleteFromCloudinary = async (imageUrl) => {
+    try {
+      const publicId = imageUrl.split('/').slice(-1)[0].split('.')[0];
+      const fullPublicId = `products/${publicId}`;
+      const result = await cloudinary.uploader.destroy(fullPublicId);
+      return result.result === 'ok';
+    } catch (error) {
+      console.error('Cloudinary delete error:', error);
+      return false;
+    }
+  };
+
+  
+// Middleware to handle product image updates
+const handleProductImages = async (req, res, next) => {
+    try {
+      const imagesToDelete = req.body.imagesToDelete || [];
+      const existingImages = req.body.existingImages || [];
+      const existingImagesArray = Array.isArray(existingImages) ? existingImages : [existingImages];
+      const imagesToDeleteArray = Array.isArray(imagesToDelete) ? imagesToDelete : [imagesToDelete];
+  
+      // Filter kept images
+      const keptImages = existingImagesArray.filter(img => !imagesToDeleteArray.includes(img));
+  
+      // Delete images from Cloudinary
+      const deletePromises = imagesToDeleteArray.map(deleteFromCloudinary);
+      await Promise.all(deletePromises);
+  
+      // Upload new images
+      const uploadedImages = [];
+      if (req.files && req.files.length > 0) {
+        for (const file of req.files) {
+          const uploadedImage = await uploadToCloudinary(file.path);
+          uploadedImages.push(uploadedImage.url);
         }
+      }
+  
+      // Combine kept and newly uploaded images
+      req.processedImages = [...keptImages, ...uploadedImages];
+  
+      next();
     } catch (error) {
-        console.error('Cloudinary delete error:', error);
-        return false;
+      console.error('Error processing images:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Error processing images',
+      });
     }
-};
+  };
+  
 
-// Middleware to delete multiple images
-const deleteImagesMiddleware = async (req, res, next) => {
-    try {
-        // Get images to delete from request body or query
-        const imagesToDelete = req.body.imagesToDelete || req.query.imagesToDelete;
-        
-        if (!imagesToDelete) {
-            return next();
-        }
-
-        // Convert to array if single string
-        const imageUrls = Array.isArray(imagesToDelete) ? imagesToDelete : [imagesToDelete];
-        
-        // Delete all images
-        const deletePromises = imageUrls.map(url => deleteFromCloudinary(url));
-        const results = await Promise.all(deletePromises);
-        
-        // Add results to request object for potential use in next middleware
-        req.deletedImages = {
-            success: results.filter(result => result === true).length,
-            failed: results.filter(result => result === false).length
-        };
-        
-        next();
-    } catch (error) {
-        console.error('Error in delete images middleware:', error);
-        // Don't throw error, just log it and continue
-        next();
-    }
-};
-
-// Middleware to delete single image
-const deleteSingleImageMiddleware = async (req, res, next) => {
-    try {
-        const imageUrl = req.body.imageToDelete || req.query.imageToDelete;
-        
-        if (!imageUrl) {
-            return next();
-        }
-
-        const result = await deleteFromCloudinary(imageUrl);
-        req.imageDeleted = result;
-        
-        next();
-    } catch (error) {
-        console.error('Error in delete single image middleware:', error);
-        next();
-    }
-};
-
-// Helper function to clean up old images when updating
-const cleanupOldImages = async (oldImages, newImages) => {
-    try {
-        const imagesToDelete = oldImages.filter(oldImg => !newImages.includes(oldImg));
-        const deletePromises = imagesToDelete.map(url => deleteFromCloudinary(url));
-        await Promise.all(deletePromises);
-        return true;
-    } catch (error) {
-        console.error('Error cleaning up old images:', error);
-        return false;
-    }
-};
 
 module.exports = {
+    uploadToCloudinary,
     deleteFromCloudinary,
-    deleteImagesMiddleware,
-    deleteSingleImageMiddleware,
-    cleanupOldImages
+    handleProductImages
 };

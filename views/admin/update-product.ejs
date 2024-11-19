@@ -1,73 +1,95 @@
-<%-include('../partials/admin_header.ejs') %>
+<%- include('../partials/admin_header.ejs') %>
 
 <div class="container my-5">
   <h1 class="mb-4 text-center">Update Product</h1>
-  <form id="updateForm" >
+  
+  <form id="updateForm" enctype="multipart/form-data">
     <div class="row mb-4" id="image-container">
+      <% if (product.images && product.images.length > 0) { %>
         <% product.images.forEach((image, index) => { %>
-            <div class="col-md-4 mb-3">
-              <div class="card h-100">
-                <img src="<%= image %>" class="card-img-top preview-img" alt="Image <%= index + 1 %>">
-                <div class="card-body d-flex flex-column justify-content-end">
-                  <!-- Hidden input to preserve existing images -->
-                  <input type="hidden" name="existingImages[]" value="<%= image %>">
-          
-                  <!-- Checkbox to mark this image for deletion -->
-                  <div class="form-check">
-                    <input 
-                      class="form-check-input" 
-                      type="checkbox" 
-                      name="imagesToDelete[]" 
-                      value="<%= image %>" 
-                      id="delete-image-<%= index %>">
-                    <label class="form-check-label" for="delete-image-<%= index %>">
-                      Remove this image
-                    </label>
-                  </div>
-          
-                  <!-- Input to replace current image -->
-                  <label for="replace-image-<%= index %>" class="form-label mt-2">Replace with new image:</label>
-                  <input type="file" class="form-control file-input" name="images" accept="image/*" id="replace-image-<%= index %>">
+          <div class="col-md-4 mb-3">
+            <div class="card h-100">
+              <img src="<%= image %>" class="card-img-top preview-img" alt="Image <%= index + 1 %>">
+              <div class="card-body d-flex flex-column justify-content-end">
+                <input type="hidden" name="existingImages[]" value="<%= image %>">
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" name="imagesToDelete[]" value="<%= image %>" id="delete-image-<%= index %>">
+                  <label class="form-check-label" for="delete-image-<%= index %>">
+                    Remove this image
+                  </label>
                 </div>
+                <input type="file" class="form-control file-input" name="images" accept="image/*">
               </div>
             </div>
-          <% }) %>
-          
+          </div>
+        <% }); %>
+      <% } %>
     </div>
+
     <div class="d-flex justify-content-center mb-3">
       <button type="button" class="btn btn-outline-primary" onclick="addImage()">+ Add More Images</button>
     </div>
+
     <div class="row mb-4">
       <div class="col-md-6 mb-3">
         <label for="name" class="form-label">Product Name</label>
         <input type="text" class="form-control" id="name" name="name" value="<%= product.name %>" required>
       </div>
+
       <div class="col-md-6 mb-3">
         <label for="description" class="form-label">Description</label>
         <textarea class="form-control" id="description" name="description" rows="2" required><%= product.description %></textarea>
       </div>
     </div>
+
     <div class="row mb-4">
       <div class="col-md-6 mb-3">
         <label for="price" class="form-label">Price</label>
         <input type="number" class="form-control" id="price" name="price" value="<%= product.price %>" required>
       </div>
-      <div class="col-md-6 mb-3">
-        <label for="stock" class="form-label">Stock Quantity</label>
-        <input type="number" class="form-control" id="stock" name="stock" value="<%= product.stock %>" required>
-      </div>
-      <div class="col-md-6 mb-3">
-        <label for="brand" class="form-label">Brand Name</label>
-        <input type="text" class="form-control" id="brand" name="brand" value="<%= product.brand %>" required>
-      </div>
+
       <div class="col-md-6 mb-3">
         <label for="category" class="form-label">Category</label>
-        <select class="form-select" name="category" id="parentCategoryFilter">
+        <select class="form-select" name="category" id="parentCategoryFilter" onchange="handleCategoryChange(this)" required>
           <% categories.forEach((category) => { %>
-            <option value="<%= category._id %>" <%= category._id === product.category ? 'selected' : '' %>><%= category.name %></option>
+            <% if (category.level === 1) { %>
+              <option value="<%= category._id %>" 
+                <%= category._id.toString() === product.category.toString() ? 'selected' : '' %>>
+                <%= category.name %>
+              </option>
+            <% } %>
           <% }) %>
         </select>
       </div>
+    </div>
+
+    <div class="row mb-4">
+      <div class="col-md-6 mb-3" id="dynamic-fields">
+        <!-- Stock Management -->
+        <label class="form-label">Stock Management</label>
+        <div id="stockContainer">
+          <% if (product.stock && product.stock.length > 0) { %>
+            <% product.stock.forEach((stockItem, index) => { %>
+              <div class="stock-entry mb-2">
+                <div class="input-group">
+                  <input type="text" class="form-control" name="size[]" placeholder="Size" value="<%= stockItem.size %>" required>
+                  <input type="number" class="form-control" name="quantity[]" placeholder="Quantity" value="<%= stockItem.quantity %>" required>
+                  <button type="button" class="btn btn-danger" onclick="removeStockEntry(this)">Remove</button>
+                </div>
+              </div>
+            <% }); %>
+          <% } %>
+        </div>
+        <button type="button" class="btn btn-outline-secondary mt-2" onclick="addStockEntry()">+ Add Size/Stock</button>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label for="brand" class="form-label">Brand</label>
+        <input type="text" class="form-control" id="brand" name="brand" value="<%= product.brand %>" required>
+      </div>
+    </div>
+
+    <div class="row mb-4">
       <div class="col-md-6 mb-3">
         <label for="status" class="form-label">Status</label>
         <select class="form-select" id="status" name="status" required>
@@ -76,15 +98,14 @@
         </select>
       </div>
     </div>
+
     <div class="text-center">
-      <button type="submit" class="btn btn-primary btn-lg">Update Product</button>
+      <button type="submit" class="btn btn-primary btn-lg" >Update Product</button>
     </div>
   </form>
 </div>
 
-
-<!-- Modal for cropping -->
-
+<!-- Cropping Modal -->
 <div class="modal fade" id="cropModal" tabindex="-1" aria-labelledby="cropModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -105,159 +126,246 @@
   </div>
 </div>
 
-<script src="/public/js/showNotification.js"></script>
-<script>
-  let imageCount = <%= product.images.length %>;
+ <!--- notification div -->
+ <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1070">
+  <% if(typeof message !== 'undefined' && message) { %>
+    <div id="notificationToast" class="toast show animate__animated animate__fadeInRight" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header <%= message.type === 'success' ? 'bg-success' : 'bg-danger' %> text-white">
+        <i class="fas <%= message.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle' %> me-2"></i>
+        <strong class="me-auto"><%= message.type === 'success' ? 'Success!' : 'Error!' %></strong>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="toast-body">
+        <%= message.text %>
+      </div>
+    </div>
+  <% } %>
+</div>
 
-  function addImage() {
-    imageCount++;
-    const row = document.createElement('div');
-    row.className = 'col-md-4 mb-3';
-    row.innerHTML = 
-      `<div class="card h-100">
-        <img src="/api/placeholder/300/200" class="card-img-top preview-img" alt="Image ${imageCount}">
-        <div class="card-body d-flex flex-column justify-content-end">
-          <input type="file" class="form-control file-input" name="images" accept="image/*">
-        </div>
-      </div>`;
-    document.getElementById('image-container').appendChild(row);
+
+<script src="/js/showNotification.js"></script>
+
+
+<script>
+
+
+// Image handling functions
+let imageCount = <%= product.images ? product.images.length : 0 %>;
+
+function addImage() {
+  imageCount++;
+  const row = document.createElement('div');
+  row.className = 'col-md-4 mb-3';
+  row.innerHTML = `
+    <div class="card h-100">
+      <img src="/api/placeholder/300/200" class="card-img-top preview-img" alt="Image ${imageCount}">
+      <div class="card-body d-flex flex-column justify-content-end">
+        <input type="file" class="form-control file-input" name="images" accept="image/*">
+      </div>
+    </div>`;
+  document.getElementById('image-container').appendChild(row);
+  initializeFileInput(row.querySelector('.file-input'));
+}
+
+// Stock management functions
+function addStockEntry() {
+  const container = document.getElementById('stockContainer');
+  const newEntry = document.createElement('div');
+  newEntry.className = 'stock-entry mb-2';
+  newEntry.innerHTML = `
+    <div class="input-group">
+      <input type="text" class="form-control" name="size[]" placeholder="Size" required>
+      <input type="number" class="form-control" name="quantity[]" placeholder="Quantity" required>
+      <button type="button" class="btn btn-danger" onclick="removeStockEntry(this)">Remove</button>
+    </div>`;
+  container.appendChild(newEntry);
+}
+
+function removeStockEntry(button) {
+  button.closest('.stock-entry').remove();
+}
+
+// Validate form before submission
+function validateForm() {
+  const form = document.getElementById('updateForm');
+  
+  // Validate Product Name
+  const name = document.getElementById('name').value.trim();
+  if (!name) {
+    showNotification('error', 'Product name is required.');
+    return false;
   }
 
-  document.addEventListener('change', function(e) {
-    if (e.target && e.target.classList.contains('file-input')) {
-      const file = e.target.files[0];
-      const preview = e.target.closest('.card').querySelector('.preview-img');
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          preview.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      }
+  // Validate Description
+  const description = document.getElementById('description').value.trim();
+  if (!description) {
+    showNotification('error', 'Product description is required.');
+    return false;
+  }
+
+  // Validate Price
+  const price = document.getElementById('price').value.trim();
+  if (!price || isNaN(price) || parseFloat(price) <= 0) {
+    showNotification('error', 'Please enter a valid price.');
+    return false;
+  }
+
+  // Validate Category
+  const category = document.getElementById('parentCategoryFilter').value;
+  if (!category) {
+    showNotification('error', 'Product category is required.');
+    return false;
+  }
+
+  // Validate Stock Entries
+  const stockEntries = document.querySelectorAll('.stock-entry');
+  if (stockEntries.length === 0) {
+    showNotification('error', 'At least one stock entry (size and quantity) is required.');
+    return false;
+  }
+
+  let stockValid = true;
+  stockEntries.forEach(entry => {
+    const size = entry.querySelector('input[name="size[]"]').value.trim();
+    const quantity = entry.querySelector('input[name="quantity[]"]').value.trim();
+    if (!size || !quantity || isNaN(quantity) || parseInt(quantity) <= 0) {
+      stockValid = false;
     }
   });
 
-  document.getElementById('updateForm').addEventListener('submit',()=>{
+  if (!stockValid) {
+    showNotification('error', 'Please provide valid stock entries with size and quantity.');
+    return false;
+  }
 
-    const name = document.getElementById('name').value
-    const description = document.getElementById('description').value
-    const brand = document.getElementById('brand').value
-    const category = document.getElementById('category').value
-    const status = document.getElementById('status').value
-    const stock = document.getElementById('stock').value
-    const existingImages = document.getElementById('existingImages').value
+  // Validate Image Upload (existing or new)
+  const images = document.querySelectorAll('input[name="images"]');
+  const existingImages = document.querySelectorAll('input[name="existingImages[]"]:checked');
+  if (images.length === 0 && existingImages.length === 0) {
+    showNotification('error', 'Please upload or select at least one image.');
+    return false;
+  }
 
-    fetch("/admin/update-product/<%= product._id %>",{
-        method:'post',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({name,
-        description,
-        price,
-        stock,
-        brand,
-        category,
-        status,
-        existingImages})
-    })
-    .then((res)=>res.json)
-    .then((data)=>{
-        if(data.success){
-            showNotification('success',data.message)
-            console.log("working success");
-            
-        }else{
-            showNotification('error',data.message)
-            console.log('not working ')
-        }
-        setTimeout(()=>{
-            window.location.href = '/admin/products'
-        },1000)
-    })
-  })
-// CROPPING 
-  document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.file-input').forEach((input) => {
-    input.addEventListener('change', function (event) {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        const cropperImage = document.getElementById('cropperImage');
-        const cropModal = new bootstrap.Modal(document.getElementById('cropModal'));
-        let cropper; // Unique cropper instance for each modal session
+  return true;
+}
 
-        reader.onload = function (e) {
-          cropperImage.src = e.target.result; // Set image source for cropping
-          cropModal.show();
+// Form submission
+document.getElementById('updateForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
 
-          // Initialize CropperJS only after the modal is fully shown
-          document.getElementById('cropModal').addEventListener(
-            'shown.bs.modal',
-            function initCropper() {
-              if (cropper) cropper.destroy(); // Destroy existing instance (if any)
-              cropper = new Cropper(cropperImage, {
-                aspectRatio: 1,
-                viewMode: 2,
-              });
+  if (!validateForm()) {
+    return;
+  }
 
-              // Unbind to prevent stacking this listener
-              this.removeEventListener('shown.bs.modal', initCropper);
-            }
-          );
+  const formData = new FormData();
+  
+  // Add basic fields
+  formData.append('name', document.getElementById('name').value);
+  formData.append('description', document.getElementById('description').value);
+  formData.append('price', document.getElementById('price').value);
+  formData.append('brand', document.getElementById('brand').value);
+  formData.append('category', document.getElementById('parentCategoryFilter').value);
+  formData.append('status', document.getElementById('status').value);
 
-          // Bind "Crop & Save" functionality
-          document.getElementById('cropButton').onclick = function () {
-            if (cropper) {
-              const canvas = cropper.getCroppedCanvas();
-
-              if (canvas) {
-                canvas.toBlob((blob) => {
-                  const previewImage = input.closest('.card').querySelector('.preview-img');
-                  const url = URL.createObjectURL(blob);
-                  previewImage.src = url; // Display cropped image
-
-                  // Replace original file input with cropped image blob
-                  const croppedFile = new File([blob], `${Date.now()}_cropped.jpg`, { type: 'image/jpeg' });
-                  const dataTransfer = new DataTransfer();
-                  dataTransfer.items.add(croppedFile);
-                  input.files = dataTransfer.files;
-
-                  // Clean up and hide modal
-                  cropModal.hide();
-                  cropper.destroy(); // Properly destroy cropper instance
-                });
-              }
-            }
-          };
-
-          // Ensure Cropper instance cleanup after modal hides
-          document.getElementById('cropModal').addEventListener(
-            'hidden.bs.modal',
-            function cleanupCropper() {
-              if (cropper) {
-                cropper.destroy(); // Destroy the cropper instance
-                cropper = null; // Avoid memory leaks
-              }
-              this.removeEventListener('hidden.bs.modal', cleanupCropper); // Avoid stacking
-            }
-          );
-        };
-
-        reader.readAsDataURL(file); // Load file as Data URL
-      }
+  // Add stock data
+  const sizes = document.getElementsByName('size[]');
+  const quantities = document.getElementsByName('quantity[]');
+  const stockData = [];
+  for (let i = 0; i < sizes.length; i++) {
+    stockData.push({
+      size: sizes[i].value,
+      quantity: quantities[i].value
     });
-  });
-});
-</script>
-</main>
-<script src="/js/jquery-3.6.0.min.js"></script>
-<script src="/js/bootstrap.bundle.min.js"></script>
-<script src="/js/select2.min.js"></script>
-<script src="/js/perfect-scrollbar.js"></script>
-<script src="/js/jquery.fullscreen.min.js"></script>
-<script src="/js/chart.js"></script>
-<!-- Main Script -->
-<script src="/js/main.js" type="text/javascript"></script>
-<script src="/js/custom-chart.js" type="text/javascript"></script>
+  }
+  formData.append('stock', JSON.stringify(stockData));
 
-</body>
-</html>
+  // Add existing and new images
+  document.getElementsByName('existingImages[]').forEach(input => {
+    if (!document.querySelector(`input[name="imagesToDelete[]"][value="${input.value}"]`).checked) {
+      formData.append('existingImages', input.value);
+    }
+  });
+
+  document.getElementsByName('images').forEach(input => {
+    if (input.files[0]) {
+      formData.append('images', input.files[0]);
+    }
+  });
+
+  try {
+    const response = await fetch(`/admin/updateProduct/<%= product._id %>`, {
+      method: 'POST',
+      body: formData
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      showNotification('success', 'Product updated successfully');
+      setTimeout(() => {
+        window.location.href = '/admin/products';
+      }, 1500);
+    } else {
+      showNotification('error', data.message || 'Failed to update product');
+    }
+  } catch (error) {
+    showNotification('error', 'An error occurred while updating the product');
+  }
+});
+
+// Initialize cropping functionality
+document.addEventListener('DOMContentLoaded', function() {
+  const fileInputs = document.querySelectorAll('.file-input');
+  fileInputs.forEach(input => initializeFileInput(input));
+});
+
+function initializeFileInput(input) {
+  input.addEventListener('change', function(event) {
+    if (event.target.files && event.target.files[0]) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+      const cropperImage = document.getElementById('cropperImage');
+      const cropModal = new bootstrap.Modal(document.getElementById('cropModal'));
+      let cropper;
+
+      reader.onload = function(e) {
+        cropperImage.src = e.target.result;
+        cropModal.show();
+
+        document.getElementById('cropModal').addEventListener('shown.bs.modal', function initCropper() {
+          cropper = new Cropper(cropperImage, {
+            aspectRatio: 1,
+            viewMode: 2,
+          });
+          this.removeEventListener('shown.bs.modal', initCropper);
+        });
+
+        document.getElementById('cropButton').onclick = function() {
+          const canvas = cropper.getCroppedCanvas();
+          if (canvas) {
+            canvas.toBlob(blob => {
+              const previewImg = input.closest('.card').querySelector('.preview-img');
+              const url = URL.createObjectURL(blob);
+              previewImg.src = url;
+
+              const croppedFile = new File([blob], `${Date.now()}_cropped.jpg`, { type: 'image/jpeg' });
+              const dataTransfer = new DataTransfer();
+              dataTransfer.items.add(croppedFile);
+              input.files = dataTransfer.files;
+
+              cropModal.hide();
+              if (cropper) cropper.destroy();
+            });
+          }
+        };
+      };
+
+      reader.readAsDataURL(file);
+    }
+  });
+}
+
+</script>
+
+
+<%- include('../partials/admin_footer.ejs') %>

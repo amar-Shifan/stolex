@@ -6,7 +6,7 @@ const categoryController = require('../controller/adminControllers/categoryContr
 const productController = require('../controller/adminControllers/productController');
 const env = require('../utils/env_var')
 const upload = require('../middlewares/upload')
-const Product = require('../model/productSchema')
+const { handleProductImages } = require('../middlewares/delete');
 
 
 router.get('/',(req,res)=>{
@@ -36,21 +36,15 @@ router.post('/createCategory', categoryController.createCategory);
 // Get all main categories
 router.get('/categories', categoryController.getMainCategories);
 
-// router.get('/new',async (req,res)=>{
-//     const products = await Product.find({})
-//     console.log(products);
-//     res.render('admin/update-product',{product:products})
-// })
-
-// Update category
-router.patch('/updateCategory', categoryController.updateCategory);
-
 router.get('/add-products',productController.getAddProduct);
 router.get('/update-product/:id',productController.getUpdate);
-router.post('/update-product/:id',productController.updateProduct);
 
 router.post('/add-products', upload.array('images', 5), productController.addProduct);
-router.patch('/updateProduct/:id', upload.array('images', 5), productController.updateProduct);
+router.post('/updateProduct/:id', 
+    upload.array('images'),    // Middleware to handle new images
+    handleProductImages,       // Middleware to process images
+    productController.updateProduct // Controller function to update the product
+);
 
 
 

@@ -1,7 +1,8 @@
 const Product = require('../../model/productSchema');
 const Category = require('../../model/categorySchema');
-const { deleteFromCloudinary } = require('../../middlewares/delete');
+const { uploadToCloudinary, deleteFromCloudinary } = require('../../middlewares/delete');
 const mongoose = require('mongoose')
+const fs = require('fs');
 
 const addProduct = async (req, res) => {
   try {
@@ -171,13 +172,9 @@ const getProducts = async (req, res) => {
         try {
 
             const productId = req.params.id;
-            console.log('req.body',req.params.id);
 
             const product = await Product.findById(productId);
             const categories = await Category.find({level:1})
-
-            console.log('product',product);
-            console.log('categories',categories);
 
             if(!product){
                 return res.status(404).send("Product not found")
@@ -191,102 +188,88 @@ const getProducts = async (req, res) => {
         
     }
 
-//   const getUpdateProduct =  async (req, res) => {
-//     try {
-//       const productId = req.params.id;
-//       console.log("req.params",productId)
-
-//        const product =  await Product.findById(productId)
-//        const categories = await Category.find({ level: 1 })
-
-       
-      
-
-    //   if (!product) {
-    //     console.log('entererde');
-        
-    //     return res.status(404).render('error', { message: 'Product not found' });
-    //   }
-    //   console.log('workind');
-      
-    //   res.render('admin/update-product',{product:product,categories})
-
-    // } catch (error) {
-    //   console.error('Error in getUpdateProduct:', error);
-    //   res.status(500).render('error', { message: 'Internal server error' });
-    // }
-//   }
-
   // Update product
   const updateProduct = async (req, res) => {
     try {
-      console.log("working");
       const productId = req.params.id;
-      const {
-        name,
-        description,
-        price,
-        stock,
-        brand,
-        category,
-        status,
-        existingImages
-      } = req.body;
-      console.log("req.body:{" ,req.body);
   
-      // Find the existing product
-      const product = await Product.findById(productId);
-      if (!product) {
-        return res.status(404).json({success:true, message:"Product not found"});
+      // Parse stock data from the request body
+      let stockData = [];
+      if (req.body.stock) {
+        try {
+          stockData = JSON.parse(req.body.stock);
+        } catch {
+          return res.status(400).json({ success: false, message: 'Invalid stock data format' });
+        }
       }
   
-      // Handle image updates
-      let updatedImages = existingImages || [];
-      
-      if (req.files && req.files.images) {
-        const imageFiles = Array.isArray(req.files.images)
-          ? req.files.images
-          : [req.files.images];
+      // Handle images uploaded in the request
+      let updatedImages = req.processedImages || [];
   
-        // Upload new images
-        const uploadPromises = imageFiles.map(file => uploadToCloudinary(file.path));
+      // If there are new image uploads (from multer or another source)
+      if (req.files && req.files.newImages) {
+        const newImages = Array.isArray(req.files.newImages) ? req.files.newImages : [req.files.newImages];
+  
+        // Upload each new image to Cloudinary
+        const uploadPromises = newImages.map((file) => uploadToCloudinary(file.path)); // Assuming you are passing the file path
         const uploadedImages = await Promise.all(uploadPromises);
   
-        // Add new image URLs to existing ones
-        updatedImages = [...updatedImages, ...uploadedImages.map(img => img.url)];
-      }
-      console.log("working",updatedImages);
-      
-      // Identify images to be removed
-      const removedImages = product.images.filter(img => !updatedImages.includes(img));
-      await Promise.all(removedImages.map(img => deleteFromCloudinary(img)));
-      console.log("working" , existingImages);
-      console.log("working" , removedImages);
-      
+        // Add uploaded image URLs to the updatedImages array
+        updatedImages = [...updatedImages, ...uploadedImages.map((img) => img.url)];
   
-      // Update the product with new data
-      const updatedProduct = await Product.findByIdAndUpdate(
-        productId,
-        {
-          name,
-          description,
-          price,
-          stock,
-          brand,
-          category,
-          status,
-          images: updatedImages
-        },
-        { new: true }
-      );
-      console.log(updatedProduct,"is it saved")
-      
-      res.status(202).json({success:true , message:'successfully updated'})
+        // Cleanup temporary image files after upload
+        cleanupTempFiles(newImages);
+      }
+  
+      // Update product details
+      const updateData = {
+        name: req.body.name,
+        description: req.body.description,
+        price: req.body.price,
+        stock: stockData,
+        brand: req.body.brand,
+        category: req.body.category,
+        status: req.body.status,
+        images: updatedImages, // Updated images with Cloudinary URLs
+      };
+  
+      // Perform the update in the database
+      const updatedProduct = await Product.findByIdAndUpdate(productId, updateData, {
+        new: true,
+        runValidators: true,
+      });
+  
+      if (!updatedProduct) {
+        return res.status(404).json({ success: false, message: 'Failed to update product' });
+      }
+  
+      res.status(200).json({
+        success: true,
+        message: 'Product updated successfully',
+        product: updatedProduct,
+      });
     } catch (error) {
       console.error('Error updating product:', error);
-      res.status(402).json({success:false,message:'Somthing went wrong'});
+      res.status(500).json({
+        success: false,
+        message: 'An error occurred while updating the product',
+      });
     }
   };
   
+  // Helper function to cleanup temporary files after upload
+  const cleanupTempFiles = (files) => {
+    if (!files) return;
+  
+    const fileArray = Array.isArray(files) ? files : [files];
+    fileArray.forEach((file) => {
+      if (file.path) {
+        fs.unlink(file.path, (err) => {
+          if (err) console.error('Error deleting temp file:', err);
+        });
+      }
+    });
+  };
+  
 
-module.exports = {addProduct , getAddProduct ,getProducts ,updateProduct , getUpdate ,updateProduct} 
+module.exports = {addProduct , getAddProduct ,getProducts ,updateProduct , getUpdate } 
