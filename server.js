@@ -29,6 +29,7 @@ app.use(express.json())
 
 connectDB();
 
+app.use('/public', express.static(path.join(__dirname, 'public')));
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static('public'));
 
@@ -43,8 +44,6 @@ const adminRoutes = require('./router/admin.js')
 app.use('/',userRoutes)
 app.use('/admin',adminRoutes)
 
-// const adminRoute = require('./router/admin.js');
-// app.use(adminRoute)
 
 
 const PORT = env.PORT || 3001;

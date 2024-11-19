@@ -1,9 +1,11 @@
 const User = require('../../model/userSchema');
+const Product = require('../../model/productSchema')
 const bcrypt = require('bcrypt');
 const generateOtp = require('../../utils/generateOtp');
 const Otp = require('../../model/otpSchema');
 const sendOtpToMail = require('../../service/mailService');
 const env = require('../../utils/env_var');
+
 
 const logout = async (req,res)=>{
     try {
@@ -45,6 +47,16 @@ const userLogin = async (req, res) => {
 
 };
 
+const getHomePage = async (req,res)=>{
+    try {
+        
+        const products = await Product.find({});
+        res.render('user/user_home',{products});
+
+    } catch (error) {
+        console.log("error in getting home ",error.message)
+    }
+}
 
 const insertUser = async(req,res)=>{
     
@@ -199,5 +211,6 @@ module.exports = {
     insertUser,
     otpVerification,
     userLogin,
-    resendOtp
+    resendOtp,
+    getHomePage
 }

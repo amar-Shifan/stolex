@@ -1,12 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const controller = require('../controller/userControllers/authController');
+const productController = require('../controller/userControllers/productController');
 const passport = require('passport');
 
 // Routes
-router.get('/', (req, res) => {
-    res.render('user/user_home');
-});
+router.get('/', controller.getHomePage);
 
 // Login Page
 router.get('/user-login', (req, res) => {
@@ -35,6 +34,8 @@ router.get('/auth/google',passport.authenticate('google',{scope:['profile','emai
 router.get('/google/callback',passport.authenticate('google',{failureRedirect:'/register'}),(req,res)=>{
     res.redirect('/')
 })
+
+router.get('/productDetails/:id',productController.getProductDetail);
 
 // POST Routes
 router.post('/otp-verification', controller.otpVerification);

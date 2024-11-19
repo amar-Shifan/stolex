@@ -1,9 +1,8 @@
 // public/js/categories.js
+console.log('working');
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Initial load
-    loadCategories();
-    loadParentCategories();
+    
 
     // Event Listeners
     document.getElementById('categoryType').addEventListener('change', toggleParentCategory);
@@ -218,3 +217,6 @@ function showToast(message, type = 'info') {
     // Implement your preferred toast notification here
     alert(message); // Basic alternative
 }
+
+
+

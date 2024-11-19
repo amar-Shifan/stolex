@@ -1,0 +1,263 @@
+<%-include('../partials/admin_header.ejs') %>
+
+<div class="container my-5">
+  <h1 class="mb-4 text-center">Update Product</h1>
+  <form id="updateForm" >
+    <div class="row mb-4" id="image-container">
+        <% product.images.forEach((image, index) => { %>
+            <div class="col-md-4 mb-3">
+              <div class="card h-100">
+                <img src="<%= image %>" class="card-img-top preview-img" alt="Image <%= index + 1 %>">
+                <div class="card-body d-flex flex-column justify-content-end">
+                  <!-- Hidden input to preserve existing images -->
+                  <input type="hidden" name="existingImages[]" value="<%= image %>">
+          
+                  <!-- Checkbox to mark this image for deletion -->
+                  <div class="form-check">
+                    <input 
+                      class="form-check-input" 
+                      type="checkbox" 
+                      name="imagesToDelete[]" 
+                      value="<%= image %>" 
+                      id="delete-image-<%= index %>">
+                    <label class="form-check-label" for="delete-image-<%= index %>">
+                      Remove this image
+                    </label>
+                  </div>
+          
+                  <!-- Input to replace current image -->
+                  <label for="replace-image-<%= index %>" class="form-label mt-2">Replace with new image:</label>
+                  <input type="file" class="form-control file-input" name="images" accept="image/*" id="replace-image-<%= index %>">
+                </div>
+              </div>
+            </div>
+          <% }) %>
+          
+    </div>
+    <div class="d-flex justify-content-center mb-3">
+      <button type="button" class="btn btn-outline-primary" onclick="addImage()">+ Add More Images</button>
+    </div>
+    <div class="row mb-4">
+      <div class="col-md-6 mb-3">
+        <label for="name" class="form-label">Product Name</label>
+        <input type="text" class="form-control" id="name" name="name" value="<%= product.name %>" required>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label for="description" class="form-label">Description</label>
+        <textarea class="form-control" id="description" name="description" rows="2" required><%= product.description %></textarea>
+      </div>
+    </div>
+    <div class="row mb-4">
+      <div class="col-md-6 mb-3">
+        <label for="price" class="form-label">Price</label>
+        <input type="number" class="form-control" id="price" name="price" value="<%= product.price %>" required>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label for="stock" class="form-label">Stock Quantity</label>
+        <input type="number" class="form-control" id="stock" name="stock" value="<%= product.stock %>" required>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label for="brand" class="form-label">Brand Name</label>
+        <input type="text" class="form-control" id="brand" name="brand" value="<%= product.brand %>" required>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label for="category" class="form-label">Category</label>
+        <select class="form-select" name="category" id="parentCategoryFilter">
+          <% categories.forEach((category) => { %>
+            <option value="<%= category._id %>" <%= category._id === product.category ? 'selected' : '' %>><%= category.name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label for="status" class="form-label">Status</label>
+        <select class="form-select" id="status" name="status" required>
+          <option value="Active" <%= product.status === 'Active' ? 'selected' : '' %>>Active</option>
+          <option value="Inactive" <%= product.status === 'Inactive' ? 'selected' : '' %>>Inactive</option>
+        </select>
+      </div>
+    </div>
+    <div class="text-center">
+      <button type="submit" class="btn btn-primary btn-lg">Update Product</button>
+    </div>
+  </form>
+</div>
+
+
+<!-- Modal for cropping -->
+
+<div class="modal fade" id="cropModal" tabindex="-1" aria-labelledby="cropModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="cropModalLabel">Crop Image</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="img-container">
+          <img id="cropperImage" src="" alt="Crop Preview">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="cropButton">Crop & Save</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/public/js/showNotification.js"></script>
+<script>
+  let imageCount = <%= product.images.length %>;
+
+  function addImage() {
+    imageCount++;
+    const row = document.createElement('div');
+    row.className = 'col-md-4 mb-3';
+    row.innerHTML = 
+      `<div class="card h-100">
+        <img src="/api/placeholder/300/200" class="card-img-top preview-img" alt="Image ${imageCount}">
+        <div class="card-body d-flex flex-column justify-content-end">
+          <input type="file" class="form-control file-input" name="images" accept="image/*">
+        </div>
+      </div>`;
+    document.getElementById('image-container').appendChild(row);
+  }
+
+  document.addEventListener('change', function(e) {
+    if (e.target && e.target.classList.contains('file-input')) {
+      const file = e.target.files[0];
+      const preview = e.target.closest('.card').querySelector('.preview-img');
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          preview.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+  });
+
+  document.getElementById('updateForm').addEventListener('submit',()=>{
+
+    const name = document.getElementById('name').value
+    const description = document.getElementById('description').value
+    const brand = document.getElementById('brand').value
+    const category = document.getElementById('category').value
+    const status = document.getElementById('status').value
+    const stock = document.getElementById('stock').value
+    const existingImages = document.getElementById('existingImages').value
+
+    fetch("/admin/update-product/<%= product._id %>",{
+        method:'post',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({name,
+        description,
+        price,
+        stock,
+        brand,
+        category,
+        status,
+        existingImages})
+    })
+    .then((res)=>res.json)
+    .then((data)=>{
+        if(data.success){
+            showNotification('success',data.message)
+            console.log("working success");
+            
+        }else{
+            showNotification('error',data.message)
+            console.log('not working ')
+        }
+        setTimeout(()=>{
+            window.location.href = '/admin/products'
+        },1000)
+    })
+  })
+// CROPPING 
+  document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.file-input').forEach((input) => {
+    input.addEventListener('change', function (event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        const cropperImage = document.getElementById('cropperImage');
+        const cropModal = new bootstrap.Modal(document.getElementById('cropModal'));
+        let cropper; // Unique cropper instance for each modal session
+
+        reader.onload = function (e) {
+          cropperImage.src = e.target.result; // Set image source for cropping
+          cropModal.show();
+
+          // Initialize CropperJS only after the modal is fully shown
+          document.getElementById('cropModal').addEventListener(
+            'shown.bs.modal',
+            function initCropper() {
+              if (cropper) cropper.destroy(); // Destroy existing instance (if any)
+              cropper = new Cropper(cropperImage, {
+                aspectRatio: 1,
+                viewMode: 2,
+              });
+
+              // Unbind to prevent stacking this listener
+              this.removeEventListener('shown.bs.modal', initCropper);
+            }
+          );
+
+          // Bind "Crop & Save" functionality
+          document.getElementById('cropButton').onclick = function () {
+            if (cropper) {
+              const canvas = cropper.getCroppedCanvas();
+
+              if (canvas) {
+                canvas.toBlob((blob) => {
+                  const previewImage = input.closest('.card').querySelector('.preview-img');
+                  const url = URL.createObjectURL(blob);
+                  previewImage.src = url; // Display cropped image
+
+                  // Replace original file input with cropped image blob
+                  const croppedFile = new File([blob], `${Date.now()}_cropped.jpg`, { type: 'image/jpeg' });
+                  const dataTransfer = new DataTransfer();
+                  dataTransfer.items.add(croppedFile);
+                  input.files = dataTransfer.files;
+
+                  // Clean up and hide modal
+                  cropModal.hide();
+                  cropper.destroy(); // Properly destroy cropper instance
+                });
+              }
+            }
+          };
+
+          // Ensure Cropper instance cleanup after modal hides
+          document.getElementById('cropModal').addEventListener(
+            'hidden.bs.modal',
+            function cleanupCropper() {
+              if (cropper) {
+                cropper.destroy(); // Destroy the cropper instance
+                cropper = null; // Avoid memory leaks
+              }
+              this.removeEventListener('hidden.bs.modal', cleanupCropper); // Avoid stacking
+            }
+          );
+        };
+
+        reader.readAsDataURL(file); // Load file as Data URL
+      }
+    });
+  });
+});
+</script>
+</main>
+<script src="/js/jquery-3.6.0.min.js"></script>
+<script src="/js/bootstrap.bundle.min.js"></script>
+<script src="/js/select2.min.js"></script>
+<script src="/js/perfect-scrollbar.js"></script>
+<script src="/js/jquery.fullscreen.min.js"></script>
+<script src="/js/chart.js"></script>
+<!-- Main Script -->
+<script src="/js/main.js" type="text/javascript"></script>
+<script src="/js/custom-chart.js" type="text/javascript"></script>
+
+</body>
+</html>

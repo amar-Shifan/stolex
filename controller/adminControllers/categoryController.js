@@ -1,17 +1,17 @@
 const Category = require('../../model/categorySchema');
 
     const categoryController = {
-        // Create category or subcategory
         createCategory: async (req, res) => {
             try {
                 console.log("entered in controller .......")
+
                 const { name, description, parentCategory, status, type } = req.body;
                 console.log('name',name,'des',description,'parent',parentCategory,'stat',status,type)
                 console.log('working');
                 
                 // Check if category with same name exists
                 const existingCategory = await Category.findOne({name});
-                console.log("existingCategory ",existingCategory)
+                console.log("existingCategory",existingCategory)
                 if (existingCategory) {
                     return res.status(400).json({
                         success: false,
@@ -42,7 +42,7 @@ const Category = require('../../model/categorySchema');
                     
 
                     // Verify parent category exists
-                    const parentCategoryDoc = await Category.findOne({name:parentCategory})
+                    const parentCategoryDoc = await Category.findOne({_id:parentCategory})
                     console.log('verify parent',parentCategoryDoc);
                     
                     if (!parentCategoryDoc) {
@@ -61,7 +61,7 @@ const Category = require('../../model/categorySchema');
                         });
                     }
 
-                    categoryData.parentCategory = parentCategory;
+                    categoryData.parentCategory = parentCategoryDoc.name;
                     console.log('saved' ,categoryData);
                 }
 
@@ -129,6 +129,7 @@ const Category = require('../../model/categorySchema');
          
         updateCategory: async (req, res) => {
             try {
+                console.log("working ......")
                 const { categoryId , name, description, status } = req.body;
                 
 

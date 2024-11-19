@@ -202,41 +202,22 @@
         </div>
     </div>
 
-    <% const products = [
-  { image: "images/item-1.jpg", name: "Women's Boots Shoes Maca", price: "$139.00" },
-  { image: "images/item-2.jpg", name: "Women's Minam Meaghan", price: "$139.00" },
-  { image: "images/item-3.jpg", name: "Men's Taja Commissioner", price: "$139.00" },
-  { image: "images/item-4.jpg", name: "Russ Men's Sneakers", price: "$139.00" },
-  { image: "images/item-5.jpg", name: "Women's Boots Shoes Maca", price: "$139.00" },
-  { image: "images/item-6.jpg", name: "Women's Boots Shoes Maca", price: "$139.00" },
-  { image: "images/item-7.jpg", name: "Women's Boots Shoes Maca", price: "$139.00" },
-  { image: "images/item-8.jpg", name: "Women's Boots Shoes Maca", price: "$139.00" },
-  { image: "images/item-9.jpg", name: "Women's Boots Shoes Maca", price: "$139.00" },
-  { image: "images/item-10.jpg", name: "Women's Boots Shoes Maca", price: "$139.00" },
-  { image: "images/item-11.jpg", name: "Women's Boots Shoes Maca", price: "$139.00" },
-  { image: "images/item-12.jpg", name: "Women's Boots Shoes Maca", price: "$139.00" },
-  { image: "images/item-13.jpg", name: "Women's Boots Shoes Maca", price: "$139.00" },
-  { image: "images/item-14.jpg", name: "Women's Boots Shoes Maca", price: "$139.00" },
-  { image: "images/item-15.jpg", name: "Women's Boots Shoes Maca", price: "$139.00" },
-  { image: "images/item-16.jpg", name: "Women's Boots Shoes Maca", price: "$139.00" }
-]; %>
-
 <div class="colorlib-product">
   <div class="container">
     <div class="row">
       <div class="col-sm-8 offset-sm-2 text-center colorlib-heading">
-        <h2>Categories</h2>
+        <h2>Products</h2>
       </div>
     </div>
     <div class="row row-pb-md">
       <% products.map((product, index) => { %>
         <div class="col-lg-3 mb-4 text-center">
           <div class="product-entry border">
-            <a href="#" class="prod-img">
-              <img src="<%= product.image %>" class="img-fluid" alt="<%= product.name %>">
+            <a href="/productDetails/<%=product._id %>" class="prod-img">
+              <img src="<%= product.images[0] %>" class="img-fluid" alt="<%= product.name %>">
             </a>
             <div class="desc">
-              <h2><a href="#"><%= product.name %></a></h2>
+              <h2><a href="/productDetails/<%=product._id %>" ><%= product.name %></a></h2>
               <span class="price"><%= product.price %></span>
             </div>
           </div>

@@ -1,377 +1,366 @@
-<%-include('../partials/admin_header.ejs',{title:"admin page"})%>
+<%- include('../partials/admin_header.ejs', {title: "Add Product"}) %>
+<style>
+  .img-container {
+  max-width: 100%;
+  max-height: 500px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
-<section class="content-main">
-    <div class="content-header">
-      <div>
-        <h2 class="content-title card-title">Add Product</h2>
-        <p>Add a new product to your store</p>
-      </div>
-      <div>
-        <a href="/products" class="btn btn-primary"><i class="text-muted material-icons md-arrow_back"></i>Back to Products</a>
-      </div>
-    </div>
-    <div class="card mb-4">
-      <header class="card-header">
-        <div class="row gx-3">
-          <div class="col-lg-4 col-md-6 me-auto">
-            <input type="text" placeholder="Product Name" class="form-control">
-          </div>
-          <div class="col-lg-2 col-6 col-md-3">
-            <select class="form-select">
-              <option>Select Category</option>
-              <option>Electronics</option>
-              <option>Clothing</option>
-              <option>Home & Garden</option>
-            </select>
-          </div>
-          <div class="col-lg-2 col-6 col-md-3">
-            <select class="form-select">
-              <option>Select Vendor</option>
-              <option>Vendor 1</option>
-              <option>Vendor 2</option>
-              <option>Vendor 3</option>
-            </select>
-          </div>
-        </div>
-      </header>
-      <div class="card-body">
-        <div class="row">
-          <div class="col-lg-4">
-            <div class="mb-4">
-              <label for="product-image" class="form-label">Product Image</label>
-              <input class="form-control" type="file" id="product-image">
-            </div>
-          </div>
-          <div class="col-lg-8">
-            <div class="mb-4">
-              <label class="form-label">Description</label>
-              <textarea class="form-control" rows="4"></textarea>
-            </div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-lg-4">
-            <div class="mb-4">
-              <label class="form-label">Price</label>
-              <input type="text" placeholder="Enter price" class="form-control">
-            </div>
-          </div>
-          <div class="col-lg-4">
-            <div class="mb-4">
-              <label class="form-label">Quantity</label>
-              <input type="text" placeholder="Enter quantity" class="form-control">
-            </div>
-          </div>
-          <div class="col-lg-4">
-            <div class="mb-4">
-              <label class="form-label">Sku</label>
-              <input type="text" placeholder="Enter SKU" class="form-control">
-            </div>
-          </div>
-        </div>
-        <div class="d-grid">
-          <button class="btn btn-primary">Save Product</button>
-        </div>
-      </div>
-    </div>
-  </section>
+#cropperImage {
+  max-width: 100%;
+  height: auto;
+}
+</style>
 
-  <section class="content-main">
-    <div class="content-header">
-      <div>
-        <h2 class="content-title card-title">Add Product</h2>
-        <p>Add a new product to your store</p>
-      </div>
-      <div>
-        <a href="/products" class="btn btn-primary"><i class="text-muted material-icons md-arrow_back"></i>Back to Products</a>
-      </div>
-    </div>
-    <div class="card mb-4">
-      <header class="card-header">
-        <div class="row gx-3">
-          <div class="col-lg-4 col-md-6 me-auto">
-            <input type="text" placeholder="Product Name" class="form-control">
-          </div>
-          <div class="col-lg-2 col-6 col-md-3">
-            <select class="form-select">
-              <option>Select Category</option>
-              <option>Electronics</option>
-              <option>Clothing</option>
-              <option>Home & Garden</option>
-            </select>
-          </div>
-          <div class="col-lg-2 col-6 col-md-3">
-            <select class="form-select">
-              <option>Select Vendor</option>
-              <option>Vendor 1</option>
-              <option>Vendor 2</option>
-              <option>Vendor 3</option>
-            </select>
-          </div>
-        </div>
-      </header>
-      <div class="card-body">
-        <div class="row">
-          <div class="col-lg-4">
-            <div class="mb-4">
-              <label for="product-image" class="form-label">Product Image</label>
-              <input class="form-control" type="file" id="product-image">
-            </div>
-          </div>
-          <div class="col-lg-8">
-            <div class="mb-4">
-              <label class="form-label">Description</label>
-              <textarea class="form-control" rows="4"></textarea>
-            </div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-lg-4">
-            <div class="mb-4">
-              <label class="form-label">Price</label>
-              <input type="text" placeholder="Enter price" class="form-control">
-            </div>
-          </div>
-          <div class="col-lg-4">
-            <div class="mb-4">
-              <label class="form-label">Quantity</label>
-              <input type="text" placeholder="Enter quantity" class="form-control">
-            </div>
-          </div>
-          <div class="col-lg-4">
-            <div class="mb-4">
-              <label class="form-label">Sku</label>
-              <input type="text" placeholder="Enter SKU" class="form-control">
-            </div>
-          </div>
-        </div>
-        <div class="d-grid">
-          <button class="btn btn-primary">Save Product</button>
-        </div>
-      </div>
-    </div>
-  </section><section class="content-main">
-    <div class="content-header">
-      <div>
-        <h2 class="content-title card-title">Add Product</h2>
-        <p>Add a new product to your store</p>
-      </div>
-      <div>
-        <a href="/products" class="btn btn-primary"><i class="text-muted material-icons md-arrow_back"></i>Back to Products</a>
-      </div>
-    </div>
-    <div class="card mb-4">
-      <header class="card-header">
-        <div class="row gx-3">
-          <div class="col-lg-4 col-md-6 me-auto">
-            <input type="text" placeholder="Product Name" class="form-control">
-          </div>
-          <div class="col-lg-2 col-6 col-md-3">
-            <select class="form-select">
-              <option>Select Category</option>
-              <option>Electronics</option>
-              <option>Clothing</option>
-              <option>Home & Garden</option>
-            </select>
-          </div>
-          <div class="col-lg-2 col-6 col-md-3">
-            <select class="form-select">
-              <option>Select Vendor</option>
-              <option>Vendor 1</option>
-              <option>Vendor 2</option>
-              <option>Vendor 3</option>
-            </select>
-          </div>
-        </div>
-      </header>
-      <div class="card-body">
-        <div class="row">
-          <div class="col-lg-4">
-            <div class="mb-4">
-              <label for="product-image" class="form-label">Product Image</label>
-              <input class="form-control" type="file" id="product-image">
-            </div>
-          </div>
-          <div class="col-lg-8">
-            <div class="mb-4">
-              <label class="form-label">Description</label>
-              <textarea class="form-control" rows="4"></textarea>
-            </div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-lg-4">
-            <div class="mb-4">
-              <label class="form-label">Price</label>
-              <input type="text" placeholder="Enter price" class="form-control">
-            </div>
-          </div>
-          <div class="col-lg-4">
-            <div class="mb-4">
-              <label class="form-label">Quantity</label>
-              <input type="text" placeholder="Enter quantity" class="form-control">
-            </div>
-          </div>
-          <div class="col-lg-4">
-            <div class="mb-4">
-              <label class="form-label">Sku</label>
-              <input type="text" placeholder="Enter SKU" class="form-control">
-            </div>
-          </div>
-        </div>
-        <div class="d-grid">
-          <button class="btn btn-primary">Save Product</button>
-        </div>
-      </div>
-    </div>
-  </section><section class="content-main">
-    <div class="content-header">
-      <div>
-        <h2 class="content-title card-title">Add Product</h2>
-        <p>Add a new product to your store</p>
-      </div>
-      <div>
-        <a href="/products" class="btn btn-primary"><i class="text-muted material-icons md-arrow_back"></i>Back to Products</a>
-      </div>
-    </div>
-    <div class="card mb-4">
-      <header class="card-header">
-        <div class="row gx-3">
-          <div class="col-lg-4 col-md-6 me-auto">
-            <input type="text" placeholder="Product Name" class="form-control">
-          </div>
-          <div class="col-lg-2 col-6 col-md-3">
-            <select class="form-select">
-              <option>Select Category</option>
-              <option>Electronics</option>
-              <option>Clothing</option>
-              <option>Home & Garden</option>
-            </select>
-          </div>
-          <div class="col-lg-2 col-6 col-md-3">
-            <select class="form-select">
-              <option>Select Vendor</option>
-              <option>Vendor 1</option>
-              <option>Vendor 2</option>
-              <option>Vendor 3</option>
-            </select>
-          </div>
-        </div>
-      </header>
-      <div class="card-body">
-        <div class="row">
-          <div class="col-lg-4">
-            <div class="mb-4">
-              <label for="product-image" class="form-label">Product Image</label>
-              <input class="form-control" type="file" id="product-image">
-            </div>
-          </div>
-          <div class="col-lg-8">
-            <div class="mb-4">
-              <label class="form-label">Description</label>
-              <textarea class="form-control" rows="4"></textarea>
-            </div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-lg-4">
-            <div class="mb-4">
-              <label class="form-label">Price</label>
-              <input type="text" placeholder="Enter price" class="form-control">
-            </div>
-          </div>
-          <div class="col-lg-4">
-            <div class="mb-4">
-              <label class="form-label">Quantity</label>
-              <input type="text" placeholder="Enter quantity" class="form-control">
-            </div>
-          </div>
-          <div class="col-lg-4">
-            <div class="mb-4">
-              <label class="form-label">Sku</label>
-              <input type="text" placeholder="Enter SKU" class="form-control">
-            </div>
-          </div>
-        </div>
-        <div class="d-grid">
-          <button class="btn btn-primary">Save Product</button>
-        </div>
-      </div>
-    </div>
-  </section><section class="content-main">
-    <div class="content-header">
-      <div>
-        <h2 class="content-title card-title">Add Product</h2>
-        <p>Add a new product to your store</p>
-      </div>
-      <div>
-        <a href="/products" class="btn btn-primary"><i class="text-muted material-icons md-arrow_back"></i>Back to Products</a>
-      </div>
-    </div>
-    <div class="card mb-4">
-      <header class="card-header">
-        <div class="row gx-3">
-          <div class="col-lg-4 col-md-6 me-auto">
-            <input type="text" placeholder="Product Name" class="form-control">
-          </div>
-          <div class="col-lg-2 col-6 col-md-3">
-            <select class="form-select">
-              <option>Select Category</option>
-              <option>Electronics</option>
-              <option>Clothing</option>
-              <option>Home & Garden</option>
-            </select>
-          </div>
-          <div class="col-lg-2 col-6 col-md-3">
-            <select class="form-select">
-              <option>Select Vendor</option>
-              <option>Vendor 1</option>
-              <option>Vendor 2</option>
-              <option>Vendor 3</option>
-            </select>
-          </div>
-        </div>
-      </header>
-      <div class="card-body">
-        <div class="row">
-          <div class="col-lg-4">
-            <div class="mb-4">
-              <label for="product-image" class="form-label">Product Image</label>
-              <input class="form-control" type="file" id="product-image">
-            </div>
-          </div>
-          <div class="col-lg-8">
-            <div class="mb-4">
-              <label class="form-label">Description</label>
-              <textarea class="form-control" rows="4"></textarea>
-            </div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-lg-4">
-            <div class="mb-4">
-              <label class="form-label">Price</label>
-              <input type="text" placeholder="Enter price" class="form-control">
-            </div>
-          </div>
-          <div class="col-lg-4">
-            <div class="mb-4">
-              <label class="form-label">Quantity</label>
-              <input type="text" placeholder="Enter quantity" class="form-control">
-            </div>
-          </div>
-          <div class="col-lg-4">
-            <div class="mb-4">
-              <label class="form-label">Sku</label>
-              <input type="text" placeholder="Enter SKU" class="form-control">
-            </div>
-          </div>
-        </div>
-        <div class="d-grid">
-          <button class="btn btn-primary">Save Product</button>
-        </div>
-      </div>
-    </div>
-</section>
 
-<%-include('../partials/admin_footer.ejs')%>
+<div class="container my-5">
+  <h1 class="mb-4 text-center">Add New Product</h1>
+  <form id="productForm" enctype="multipart/form-data">
+    <div class="row mb-4" id="image-container">
+      <% for (let i = 0; i < 3; i++) { %>
+        <div class="col-md-4 mb-3">
+          <div class="card h-100">
+            <img src="/images/prev.jpg" class="card-img-top preview-img" alt="Image <%= i + 1 %>">
+            <div class="card-body d-flex flex-column justify-content-end">
+              <input type="file" class="form-control file-input" name="images" accept="image/*" required>
+            </div>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  
+    <div class="d-flex justify-content-center mb-3">
+      <button type="button" class="btn btn-outline-primary" onclick="addImage()">+ Add More Images</button>
+    </div>
+  
+    <div class="row mb-4">
+      <div class="col-md-6 mb-3">
+        <label for="name" class="form-label">Product Name</label>
+        <input type="text" class="form-control" id="name" name="name" placeholder="Enter product name" required>
+      </div>
+  
+      <div class="col-md-6 mb-3">
+        <label for="description" class="form-label">Description</label>
+        <textarea class="form-control" id="description" name="description" rows="2" placeholder="Enter product description" required></textarea>
+      </div>
+    </div>
+  
+    <div class="row mb-4">
+      <div class="col-md-6 mb-3">
+        <label for="price" class="form-label">Price</label>
+        <input type="number" class="form-control" id="price" name="price" placeholder="Enter price" required>
+      </div>
+  
+      <div class="col-md-6 mb-3">
+        <label for="category" class="form-label">Category</label>
+        <select class="form-select" name="category" id="parentCategoryFilter" onchange="handleCategoryChange(this)" required>
+          <option value="">Select a Category</option>
+          <% categories.forEach((category) => { %>
+            <% if (category.level === 1) { %>
+              <option value="<%= category._id %>" data-parent="<%= category.parentCategory %>"><%= category.name %></option>
+            <% } %>
+          <% }) %>
+        </select>
+      </div>
+    </div>
+  
+    <div class="row mb-4">
+      <div class="col-md-6 mb-3" id="dynamic-fields">
+        <!-- Dynamic size and stock fields will be injected here -->
+      </div>
+  
+      <div class="col-md-6 mb-3" id="dynamic-brand">
+        <!-- Dynamic brand options will be injected here -->
+      </div>
+    </div>
+  
+    <div class="row mb-4">
+      <div class="col-md-6 mb-3">
+        <label for="status" class="form-label">Status</label>
+        <select class="form-select" id="status" name="status" required>
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+      </div>
+    </div>
+  
+    <div class="text-center">
+      <button type="button" class="btn btn-primary btn-lg" id="submitFormBtn">Save Product</button>
+    </div>
+  </form>  
+  
+  
+</div>
+
+<!-- Modal for cropping -->
+
+<div class="modal fade" id="cropModal" tabindex="-1" aria-labelledby="cropModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="cropModalLabel">Crop Image</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="img-container">
+          <img id="cropperImage" src="" alt="Crop Preview">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="cropButton">Crop & Save</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+ <!--- notification div -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1070">
+  <% if(typeof message !== 'undefined' && message) { %>
+    <div id="notificationToast" class="toast show animate__animated animate__fadeInRight" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header <%= message.type === 'success' ? 'bg-success' : 'bg-danger' %> text-white">
+        <i class="fas <%= message.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle' %> me-2"></i>
+        <strong class="me-auto"><%= message.type === 'success' ? 'Success!' : 'Error!' %></strong>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="toast-body">
+        <%= message.text %>
+      </div>
+    </div>
+  <% } %>
+</div>
+
+<!-- Load Cropper.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+<!-- Load Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/showNotification.js"></script>
+
+
+<script>
+  let imageCount = 3;
+
+  function addImage() {
+    imageCount++;
+    const row = document.createElement('div');
+    row.className = 'col-md-4 mb-3';
+    row.innerHTML = 
+      `<div class="card h-100">
+        <img src="/api/placeholder/300/200" class="card-img-top preview-img" alt="Image ${imageCount}">
+        <div class="card-body d-flex flex-column justify-content-end">
+          <input type="file" class="form-control file-input" name="images[]" accept="image/*" required>
+        </div>
+      </div>`
+    ;
+    document.getElementById('image-container').appendChild(row);
+  }
+
+  document.addEventListener('change', function(e) {
+    if (e.target && e.target.classList.contains('file-input')) {
+      const file = e.target.files[0];
+      const preview = e.target.closest('.card').querySelector('.preview-img');
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          preview.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+  });
+
+
+  
+  document.getElementById('submitFormBtn').addEventListener('click', async () => {
+    const form = document.getElementById('productForm');
+    const formData = new FormData(form);
+    
+    // Client-side validation
+    if (!validateForm(formData)) return;
+
+    try {
+      const response = await fetch('/admin/add-products', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        showNotification('error', data.message || 'Something went wrong');
+      } else {
+        showNotification('success', data.message || 'Product added successfully');
+        form.reset(); // Reset the form on success
+        document.getElementById('dynamic-fields').innerHTML = ''; // Clear dynamic fields
+        document.getElementById('dynamic-brand').innerHTML = ''; // Clear dynamic brand field
+      }
+    } catch (error) {
+      showNotification('error', 'Network error, please try again later');
+    }
+  });
+
+  function validateForm(formData) {
+  const requiredFields = ['name', 'description', 'price', 'category', 'status'];
+
+  // Check required text fields
+  for (let field of requiredFields) {
+    if (!formData.get(field)) {
+      showNotification('error', `${field.charAt(0).toUpperCase() + field.slice(1)} is required`);
+      return false;
+    }
+  }
+
+  // Validate images
+  const imageFiles = formData.getAll('images').filter(file => file.size > 0);
+  if (imageFiles.length < 3) {
+    showNotification('error', 'Exactly 3 images are required');
+    return false;
+  } else if (imageFiles.length > 4) {
+    showNotification('error', 'Only 4 images are allowed');
+    return false;
+  }
+
+  return true;
+}
+
+  //sizes handler and brand 
+  function handleCategoryChange(selectElement) {
+  const selectedOption = selectElement.options[selectElement.selectedIndex];
+  const parentCategory = selectedOption.getAttribute('data-parent');
+
+  const sizeStockContainer = document.getElementById('dynamic-fields');
+  const brandContainer = document.getElementById('dynamic-brand');
+
+  sizeStockContainer.innerHTML = '';  // Clear previous size fields
+  brandContainer.innerHTML = '';      // Clear previous brand fields
+
+  let sizes = [];
+  let brands = [];
+
+  if (parentCategory === 'topwear') {
+    sizes = ['S', 'M', 'L', 'XL', 'XXL'];
+    brands = ['Nike', 'Adidas', 'Puma', 'Reebok'];
+  } else if (parentCategory === 'footwear') {
+    sizes = ['6', '7', '8', '9', '10'];
+    brands = ['Converse', 'Vans', 'Skechers', 'Timberland'];
+  }
+
+  // Dynamically generate size and quantity fields
+  if (sizes.length > 0) {
+    sizes.forEach((size, index) => {
+      const fieldHTML = `
+        <div class="col-md-6 mb-3">
+          <label for="size" class="form-label">Size</label>
+          <input type="text" class="form-control" name="stock[${index}][size]" value="${size}" readonly>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="quantity" class="form-label">Quantity</label>
+          <input type="number" class="form-control" name="stock[${index}][quantity]" placeholder="Stock for size ${size}" min="0" required>
+        </div>
+      `;
+      sizeStockContainer.innerHTML += fieldHTML;
+    });
+  }
+
+  // Dynamically generate brand select dropdown
+  if (brands.length > 0) {
+    let brandHTML = `
+      <label for="brand" class="form-label">Brand</label>
+      <select class="form-select" id="brand" name="brand" required>
+        <option value="">Select a Brand</option>
+    `;
+    brands.forEach(brand => {
+      brandHTML += `<option value="${brand}">${brand}</option>`;
+    });
+    brandHTML += `</select>`;
+    brandContainer.innerHTML = brandHTML;
+  }
+}
+
+
+
+  // cropping images
+  document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.file-input').forEach((input) => {
+    input.addEventListener('change', function (event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        const cropperImage = document.getElementById('cropperImage');
+        const cropModal = new bootstrap.Modal(document.getElementById('cropModal'));
+        let cropper; // Unique cropper instance for each modal session
+
+        reader.onload = function (e) {
+          cropperImage.src = e.target.result; // Set image source for cropping
+          cropModal.show();
+
+          // Initialize CropperJS only after the modal is fully shown
+          document.getElementById('cropModal').addEventListener(
+            'shown.bs.modal',
+            function initCropper() {
+              if (cropper) cropper.destroy(); // Destroy existing instance (if any)
+              cropper = new Cropper(cropperImage, {
+                aspectRatio: 1,
+                viewMode: 2,
+              });
+
+              // Unbind to prevent stacking this listener
+              this.removeEventListener('shown.bs.modal', initCropper);
+            }
+          );
+
+          // Bind "Crop & Save" functionality
+          document.getElementById('cropButton').onclick = function () {
+            if (cropper) {
+              const canvas = cropper.getCroppedCanvas();
+
+              if (canvas) {
+                canvas.toBlob((blob) => {
+                  const previewImage = input.closest('.card').querySelector('.preview-img');
+                  const url = URL.createObjectURL(blob);
+                  previewImage.src = url; // Display cropped image
+
+                  // Replace original file input with cropped image blob
+                  const croppedFile = new File([blob], `${Date.now()}_cropped.jpg`, { type: 'image/jpeg' });
+                  const dataTransfer = new DataTransfer();
+                  dataTransfer.items.add(croppedFile);
+                  input.files = dataTransfer.files;
+
+                  // Clean up and hide modal
+                  cropModal.hide();
+                  cropper.destroy(); // Properly destroy cropper instance
+                });
+              }
+            }
+          };
+
+          // Ensure Cropper instance cleanup after modal hides
+          document.getElementById('cropModal').addEventListener(
+            'hidden.bs.modal',
+            function cleanupCropper() {
+              if (cropper) {
+                cropper.destroy(); // Destroy the cropper instance
+                cropper = null; // Avoid memory leaks
+              }
+              this.removeEventListener('hidden.bs.modal', cleanupCropper); // Avoid stacking
+            }
+          );
+        };
+
+        reader.readAsDataURL(file); // Load file as Data URL
+      }
+    });
+  });
+});
+
+
+
+
+</script>
+
+</body>
+</html>

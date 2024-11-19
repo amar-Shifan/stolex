@@ -89,6 +89,9 @@ input[type=number]:focus,
 
 
 
+
+
+
 input:focus::-moz-placeholder {
   opacity: 0;
   -moz-transition: 0.4s;

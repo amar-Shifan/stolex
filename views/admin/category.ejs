@@ -40,7 +40,7 @@
                                             <td><%= category.status %></td>
                                             <td><%= category.description %></td>
                                             <td class="text-end">
-                                                <button class="btn btn-warning edit-btn" onclick="openEditModal(<%= JSON.stringify(category) %>)"  >
+                                                <button class="btn btn-warning edit-btn" onclick="openEditModal(<%= JSON.stringify(category) %>)">
                                                     <i class="fas fa-edit"></i> Edit
                                                 </button>
                                             </td>
@@ -86,7 +86,7 @@
 
 
 <!-- Category Modal -->
-<div class="modal fade" id="categoryModal" tabindex="-1">
+<div class="modal fade" id="categoryModal" >
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -164,7 +164,7 @@
           <h5 class="modal-title" id="editCategoryModalLabel">Edit Category</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <form id="editCategoryForm" method="POST">
+        <form id="editCategoryForm" method="post">
             <input type="hidden" name="_method" value="PATCH">
              
           <div class="modal-body">
@@ -200,15 +200,17 @@
 
 <script src="/js/showNotification.js"></script>
 <script src="/js/confirmation.js"></script>
+
 <script>
 
-const name = document.getElementById('categoryName')
-const description = document.getElementById('categoryDescription')
-const type = document.getElementById('categoryType')
-const status = document.getElementById('categoryStatus')
-const parentCategory = document.getElementById('parentCategory')
+const name = document.getElementById('categoryName');
+const description = document.getElementById('categoryDescription');
+const type = document.getElementById('categoryType');
+const status = document.getElementById('categoryStatus');
+const parentCategory = document.getElementById('parentCategoryFilter');
 
 document.getElementById('categoryForm').addEventListener('submit', (event) => {
+    
     event.preventDefault();
     fetch('/admin/createCategory', {
         method: 'POST',
@@ -235,12 +237,12 @@ document.getElementById('categoryForm').addEventListener('submit', (event) => {
     .catch((error) => {
         showNotification('error', 'An unexpected error occurred. Please try again later.');
     });
+
 });
 
 
 
 document.addEventListener('DOMContentLoaded', function() {
-
     document.getElementById('categoryType').addEventListener('change', toggleParentCategory);
 
 });
@@ -308,19 +310,7 @@ function openEditModal(category) {
     });
 });
 
-function deleteCategory(category){
-    confirmationUtil.confirm({
-    message:'are you sure you want to delete',
-    confirmText:'delete',
-    confirmButtonClass: 'btn-danger',
-    callback: (result) => {
-            if (result) {
-                window.location.href = `/admin/${category._id}`
-            }
-    }
-}) 
-}
-
+    // update category
 
     document.addEventListener('DOMContentLoaded', function() {
         const toggles = document.querySelectorAll('.isListedToggle');
@@ -351,9 +341,6 @@ function deleteCategory(category){
             });
         });
     });
-
-
-
 
 </script>
 

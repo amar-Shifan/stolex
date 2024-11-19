@@ -1,5 +1,39 @@
-<%-include('../partials/header.ejs',{title:"admin page",style:'/css/admin.css',bootstrap:'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css' })%>
+<%-include('../partials/header.ejs')%>
 
+<style>
+	 .zoom-container {
+      position: relative;
+      display: inline-block;
+      cursor: zoom-in;
+    }
+
+    #product-img {
+      width: 100%;
+      max-width: 500px;
+    }
+
+    #zoom-lens {
+      position: absolute;
+      border: 2px solid #000;
+      width: 100px;
+      height: 100px;
+      background: rgba(255, 255, 255, 0.4);
+      display: none;
+      pointer-events: none;
+    }
+
+    #zoom-result {
+      position: absolute;
+      top: 350px;
+      right: 400px;
+      width: 400px;
+      height: 400px;
+      border: 1px solid #d4d4d4;
+      background-color: #f1f1f1;
+      display: none;
+      background-repeat: no-repeat;
+    }
+</style>
 		<div class="breadcrumbs">
 			<div class="container">
 				<div class="row">
@@ -10,282 +44,89 @@
 			</div>
 		</div>
 
+		
+
 
 		<div class="colorlib-product">
 			<div class="container">
 				<div class="row row-pb-lg product-detail-wrap">
 					<div class="col-sm-8">
 						<div class="owl-carousel">
-							<div class="item">
-								<div class="product-entry border">
-									<a href="#" class="prod-img">
-										<img src="images/item-1.jpg" class="img-fluid" alt="Free html5 bootstrap 4 template">
-									</a>
+							<% product.images.forEach((image, index) => { %>
+								<div class="zoom-container">
+									<img id="product-img" src="<%= image %>" alt="Product <%= index + 1 %>" class="img-fluid" />
+									<div id="zoom-lens"></div>
 								</div>
-							</div>
-							<div class="item">
-								<div class="product-entry border">
-									<a href="#" class="prod-img">
-										<img src="images/item-2.jpg" class="img-fluid" alt="Free html5 bootstrap 4 template">
-									</a>
-								</div>
-							</div>
-							<div class="item">
-								<div class="product-entry border">
-									<a href="#" class="prod-img">
-										<img src="images/item-3.jpg" class="img-fluid" alt="Free html5 bootstrap 4 template">
-									</a>
-								</div>
-							</div>
-							<div class="item">
-								<div class="product-entry border">
-									<a href="#" class="prod-img">
-										<img src="images/item-4.jpg" class="img-fluid" alt="Free html5 bootstrap 4 template">
-									</a>
-								</div>
-							</div>
+							<% }) %>
+							<div id="zoom-result"></div>
 						</div>
 					</div>
 					<div class="col-sm-4">
 						<div class="product-desc">
-							<h3>Women's Boots Shoes Maca</h3>
+							<h3><%= product.name %></h3>
 							<p class="price">
-								<span>$68.00</span> 
-								<span class="rate">
-									<i class="icon-star-full"></i>
-									<i class="icon-star-full"></i>
-									<i class="icon-star-full"></i>
-									<i class="icon-star-full"></i>
-									<i class="icon-star-half"></i>
-									(74 Rating)
-								</span>
+								<span>$<%= product.price.toFixed(2) %></span>
 							</p>
-							<p>Even the all-powerful Pointing has no control about the blind texts it is an almost unorthographic life One day however a small line of blind text by the name of Lorem Ipsum decided to leave for the far World of Grammar.</p>
+							<p><%= product.description %></p>
 							<div class="size-wrap">
-								<div class="block-26 mb-2">
-									<h4>Size</h4>
-				               <ul>
-				                  <li><a href="#">7</a></li>
-				                  <li><a href="#">7.5</a></li>
-				                  <li><a href="#">8</a></li>
-				                  <li><a href="#">8.5</a></li>
-				                  <li><a href="#">9</a></li>
-				                  <li><a href="#">9.5</a></li>
-				                  <li><a href="#">10</a></li>
-				                  <li><a href="#">10.5</a></li>
-				                  <li><a href="#">11</a></li>
-				                  <li><a href="#">11.5</a></li>
-				                  <li><a href="#">12</a></li>
-				                  <li><a href="#">12.5</a></li>
-				                  <li><a href="#">13</a></li>
-				                  <li><a href="#">13.5</a></li>
-				                  <li><a href="#">14</a></li>
-				               </ul>
-				            </div>
-				            <div class="block-26 mb-4">
-									<h4>Width</h4>
-				               <ul>
-				                  <li><a href="#">M</a></li>
-				                  <li><a href="#">W</a></li>
-				               </ul>
-				            </div>
+								<div class="block-26 mb-4">
+									<h4>Stock</h4>
+									<p><%= product.stock > 0 ? `${product.stock} available` : 'Out of stock' %></p>
+								</div>
 							</div>
-                     <div class="input-group mb-4">
-                     	<span class="input-group-btn">
-                        	<button type="button" class="quantity-left-minus btn"  data-type="minus" data-field="">
-                           <i class="icon-minus2"></i>
-                        	</button>
-                    		</span>
-                     	<input type="text" id="quantity" name="quantity" class="form-control input-number" value="1" min="1" max="100">
-                     	<span class="input-group-btn ml-1">
-                        	<button type="button" class="quantity-right-plus btn" data-type="plus" data-field="">
-                             <i class="icon-plus2"></i>
-                         </button>
-                     	</span>
-                  	</div>
-                  	<div class="row">
-	                  	<div class="col-sm-12 text-center">
-									<p class="addtocart"><a href="cart.html" class="btn btn-primary btn-addtocart"><i class="icon-shopping-cart"></i> Add to Cart</a></p>
+							<div class="input-group mb-4">
+								<span class="input-group-btn">
+									<button type="button" class="quantity-left-minus btn" data-type="minus">
+										<i class="icon-minus2"></i>
+									</button>
+								</span>
+								<input type="text" id="quantity" name="quantity" class="form-control input-number" value="1" min="1" max="<%= product.stock %>">
+								<span class="input-group-btn ml-1">
+									<button type="button" class="quantity-right-plus btn" data-type="plus">
+										<i class="icon-plus2"></i>
+									</button>
+								</span>
+							</div>
+							<div class="row">
+								<div class="col-sm-12 text-center">
+									<p class="addtocart"><a href="/cart/add/<%= product._id %>" class="btn btn-primary btn-addtocart"><i class="icon-shopping-cart"></i> Add to Cart</a></p>
 								</div>
 							</div>
 						</div>
 					</div>
 				</div>
-
+		
 				<div class="row">
 					<div class="col-sm-12">
 						<div class="row">
 							<div class="col-md-12 pills">
 								<div class="bd-example bd-example-tabs">
-								  <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
-
-								    <li class="nav-item">
-								      <a class="nav-link active" id="pills-description-tab" data-toggle="pill" href="#pills-description" role="tab" aria-controls="pills-description" aria-expanded="true">Description</a>
-								    </li>
-								    <li class="nav-item">
-								      <a class="nav-link" id="pills-manufacturer-tab" data-toggle="pill" href="#pills-manufacturer" role="tab" aria-controls="pills-manufacturer" aria-expanded="true">Manufacturer</a>
-								    </li>
-								    <li class="nav-item">
-								      <a class="nav-link" id="pills-review-tab" data-toggle="pill" href="#pills-review" role="tab" aria-controls="pills-review" aria-expanded="true">Review</a>
-								    </li>
-								  </ul>
-
-								  <div class="tab-content" id="pills-tabContent">
-								    <div class="tab-pane border fade show active" id="pills-description" role="tabpanel" aria-labelledby="pills-description-tab">
-								      <p>Even the all-powerful Pointing has no control about the blind texts it is an almost unorthographic life One day however a small line of blind text by the name of Lorem Ipsum decided to leave for the far World of Grammar.</p>
-										<p>When she reached the first hills of the Italic Mountains, she had a last view back on the skyline of her hometown Bookmarksgrove, the headline of Alphabet Village and the subline of her own road, the Line Lane. Pityful a rethoric question ran over her cheek, then she continued her way.</p>
-										<ul>
-											<li>The Big Oxmox advised her not to do so</li>
-											<li>Because there were thousands of bad Commas</li>
-											<li>Wild Question Marks and devious Semikoli</li>
-											<li>She packed her seven versalia</li>
-											<li>tial into the belt and made herself on the way.</li>
-										</ul>
-								    </div>
-
-								    <div class="tab-pane border fade" id="pills-manufacturer" role="tabpanel" aria-labelledby="pills-manufacturer-tab">
-								      <p>Even the all-powerful Pointing has no control about the blind texts it is an almost unorthographic life One day however a small line of blind text by the name of Lorem Ipsum decided to leave for the far World of Grammar.</p>
-										<p>When she reached the first hills of the Italic Mountains, she had a last view back on the skyline of her hometown Bookmarksgrove, the headline of Alphabet Village and the subline of her own road, the Line Lane. Pityful a rethoric question ran over her cheek, then she continued her way.</p>
-								    </div>
-
-								    <div class="tab-pane border fade" id="pills-review" role="tabpanel" aria-labelledby="pills-review-tab">
-								      <div class="row">
-								   		<div class="col-md-8">
-								   			<h3 class="head">23 Reviews</h3>
-								   			<div class="review">
-										   		<div class="user-img" style="background-image: url(images/person1.jpg)"></div>
-										   		<div class="desc">
-										   			<h4>
-										   				<span class="text-left">Jacob Webb</span>
-										   				<span class="text-right">14 March 2018</span>
-										   			</h4>
-										   			<p class="star">
-										   				<span>
-										   					<i class="icon-star-full"></i>
-										   					<i class="icon-star-full"></i>
-										   					<i class="icon-star-full"></i>
-										   					<i class="icon-star-half"></i>
-										   					<i class="icon-star-empty"></i>
-									   					</span>
-									   					<span class="text-right"><a href="#" class="reply"><i class="icon-reply"></i></a></span>
-										   			</p>
-										   			<p>When she reached the first hills of the Italic Mountains, she had a last view back on the skyline of her hometown Bookmarksgrov</p>
-										   		</div>
-										   	</div>
-										   	<div class="review">
-										   		<div class="user-img" style="background-image: url(images/person2.jpg)"></div>
-										   		<div class="desc">
-										   			<h4>
-										   				<span class="text-left">Jacob Webb</span>
-										   				<span class="text-right">14 March 2018</span>
-										   			</h4>
-										   			<p class="star">
-										   				<span>
-										   					<i class="icon-star-full"></i>
-										   					<i class="icon-star-full"></i>
-										   					<i class="icon-star-full"></i>
-										   					<i class="icon-star-half"></i>
-										   					<i class="icon-star-empty"></i>
-									   					</span>
-									   					<span class="text-right"><a href="#" class="reply"><i class="icon-reply"></i></a></span>
-										   			</p>
-										   			<p>When she reached the first hills of the Italic Mountains, she had a last view back on the skyline of her hometown Bookmarksgrov</p>
-										   		</div>
-										   	</div>
-										   	<div class="review">
-										   		<div class="user-img" style="background-image: url(images/person3.jpg)"></div>
-										   		<div class="desc">
-										   			<h4>
-										   				<span class="text-left">Jacob Webb</span>
-										   				<span class="text-right">14 March 2018</span>
-										   			</h4>
-										   			<p class="star">
-										   				<span>
-										   					<i class="icon-star-full"></i>
-										   					<i class="icon-star-full"></i>
-										   					<i class="icon-star-full"></i>
-										   					<i class="icon-star-half"></i>
-										   					<i class="icon-star-empty"></i>
-									   					</span>
-									   					<span class="text-right"><a href="#" class="reply"><i class="icon-reply"></i></a></span>
-										   			</p>
-										   			<p>When she reached the first hills of the Italic Mountains, she had a last view back on the skyline of her hometown Bookmarksgrov</p>
-										   		</div>
-										   	</div>
-								   		</div>
-								   		<div class="col-md-4">
-								   			<div class="rating-wrap">
-									   			<h3 class="head">Give a Review</h3>
-									   			<div class="wrap">
-										   			<p class="star">
-										   				<span>
-										   					<i class="icon-star-full"></i>
-										   					<i class="icon-star-full"></i>
-										   					<i class="icon-star-full"></i>
-										   					<i class="icon-star-full"></i>
-										   					<i class="icon-star-full"></i>
-										   					(98%)
-									   					</span>
-									   					<span>20 Reviews</span>
-										   			</p>
-										   			<p class="star">
-										   				<span>
-										   					<i class="icon-star-full"></i>
-										   					<i class="icon-star-full"></i>
-										   					<i class="icon-star-full"></i>
-										   					<i class="icon-star-full"></i>
-										   					<i class="icon-star-empty"></i>
-										   					(85%)
-									   					</span>
-									   					<span>10 Reviews</span>
-										   			</p>
-										   			<p class="star">
-										   				<span>
-										   					<i class="icon-star-full"></i>
-										   					<i class="icon-star-full"></i>
-										   					<i class="icon-star-full"></i>
-										   					<i class="icon-star-empty"></i>
-										   					<i class="icon-star-empty"></i>
-										   					(70%)
-									   					</span>
-									   					<span>5 Reviews</span>
-										   			</p>
-										   			<p class="star">
-										   				<span>
-										   					<i class="icon-star-full"></i>
-										   					<i class="icon-star-full"></i>
-										   					<i class="icon-star-empty"></i>
-										   					<i class="icon-star-empty"></i>
-										   					<i class="icon-star-empty"></i>
-										   					(10%)
-									   					</span>
-									   					<span>0 Reviews</span>
-										   			</p>
-										   			<p class="star">
-										   				<span>
-										   					<i class="icon-star-full"></i>
-										   					<i class="icon-star-empty"></i>
-										   					<i class="icon-star-empty"></i>
-										   					<i class="icon-star-empty"></i>
-										   					<i class="icon-star-empty"></i>
-										   					(0%)
-									   					</span>
-									   					<span>0 Reviews</span>
-										   			</p>
-										   		</div>
-									   		</div>
-								   		</div>
-								   	</div>
-								    </div>
-								  </div>
+									<ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+										<li class="nav-item">
+											<a class="nav-link active" id="pills-description-tab" data-toggle="pill" href="#pills-description" role="tab" aria-controls="pills-description" aria-expanded="true">Description</a>
+										</li>
+										<li class="nav-item">
+											<a class="nav-link" id="pills-manufacturer-tab" data-toggle="pill" href="#pills-manufacturer" role="tab" aria-controls="pills-manufacturer" aria-expanded="true">Brand</a>
+										</li>
+									</ul>
+		
+									<div class="tab-content" id="pills-tabContent">
+										<div class="tab-pane border fade show active" id="pills-description" role="tabpanel" aria-labelledby="pills-description-tab">
+											<p><%= product.description %></p>
+										</div>
+		
+										<div class="tab-pane border fade" id="pills-manufacturer" role="tabpanel" aria-labelledby="pills-manufacturer-tab">
+											<p>Brand: <%= product.brand || 'N/A' %></p>
+										</div>
+									</div>
 								</div>
-				         </div>
+							</div>
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
-
+		
 		<footer id="colorlib-footer" role="contentinfo">
 			<div class="container">
 				<div class="row row-pb-md">
@@ -327,7 +168,7 @@
 							</ul>
 						</p>
 					</div>
-
+					
 					<div class="col footer-col">
 						<h4>News</h4>
 						<ul class="colorlib-footer-links">
@@ -336,7 +177,7 @@
 							<li><a href="#">Exhibitions</a></li>
 						</ul>
 					</div>
-
+					
 					<div class="col footer-col">
 						<h4>Contact Information</h4>
 						<ul class="colorlib-footer-links">
@@ -353,22 +194,25 @@
 					<div class="col-sm-12 text-center">
 						<p>
 							<span><!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-Copyright &copy;<script>document.write(new Date().getFullYear());</script> All rights reserved | This template is made with <i class="icon-heart" aria-hidden="true"></i> by <a href="https://colorlib.com" target="_blank">Colorlib</a>
-<!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. --></span> 
-							<span class="block">Demo Images: <a href="http://unsplash.co/" target="_blank">Unsplash</a> , <a href="http://pexels.com/" target="_blank">Pexels.com</a></span>
-						</p>
+								Copyright &copy;<script>document.write(new Date().getFullYear());</script> All rights reserved | This template is made with <i class="icon-heart" aria-hidden="true"></i> by <a href="https://colorlib.com" target="_blank">Colorlib</a>
+								<!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. --></span> 
+								<span class="block">Demo Images: <a href="http://unsplash.co/" target="_blank">Unsplash</a> , <a href="http://pexels.com/" target="_blank">Pexels.com</a></span>
+							</p>
+						</div>
 					</div>
 				</div>
-			</div>
-		</footer>
-	</div>
-
-	<div class="gototop js-top">
-		<a href="#" class="js-gotop"><i class="ion-ios-arrow-up"></i></a>
-	</div>    
-	
-	<!-- jQuery -->
-	<script src="js/jquery.min.js"></script>
+			</footer>
+		</div>
+		
+		<div class="gototop js-top">
+			<a href="#" class="js-gotop"><i class="ion-ios-arrow-up"></i></a>
+		</div>    
+		
+		<%-include('../partials/footer.ejs')%>
+		<!-- jQuery -->
+		<script src="js/jquery.min.js"></script>
+		<!-- jQuery Zoom plugin -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-zoom/1.7.21/jquery.zoom.min.js"></script>
    <!-- popper -->
    <script src="js/popper.min.js"></script>
    <!-- bootstrap 4.1 -->
@@ -392,6 +236,51 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> All r
 	<script src="js/main.js"></script>
 
 	<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Your existing zoom and quantity control code here
+});
+		 document.addEventListener('DOMContentLoaded', function() {
+      var img = document.getElementById('product-img');
+      var lens = document.getElementById('zoom-lens');
+      var result = document.createElement('div');
+      result.id = 'zoom-result';
+      document.body.appendChild(result);
+
+      function zoom(e) {
+        var imgWidth = img.width;
+        var imgHeight = img.height;
+        var lensWidth = lens.offsetWidth;
+        var lensHeight = lens.offsetHeight;
+        var x = e.pageX - img.offsetLeft;
+        var y = e.pageY - img.offsetTop;
+
+        var lensX = x - lensWidth / 2;
+        var lensY = y - lensHeight / 2;
+
+        lens.style.left = lensX + 'px';
+        lens.style.top = lensY + 'px';
+
+        result.style.backgroundImage = 'url(' + img.src + ')';
+        result.style.backgroundSize = imgWidth * 2 + 'px ' + imgHeight * 2 + 'px';
+        result.style.backgroundPosition = '-' + lensX * 2 + 'px -' + lensY * 2 + 'px';
+        result.style.display = 'block';
+      }
+
+      function hideZoom() {
+        result.style.display = 'none';
+        lens.style.display = 'none';
+      }
+
+      img.addEventListener('mousemove', function(e) {
+        lens.style.display = 'block';
+        zoom(e);
+      });
+
+      img.addEventListener('mouseleave', hideZoom);
+    });
+
+
 		$(document).ready(function(){
 
 		var quantitiy=0;
@@ -429,6 +318,4 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> All r
 	</script>
 
 
-	</body>
-</html>
 
