@@ -1,6 +1,5 @@
 const nodemailer = require('nodemailer');
 const env = require('../utils/env_var')
-console.log('mail serivce');
 
 
 const transporter = nodemailer.createTransport({
@@ -12,7 +11,7 @@ const transporter = nodemailer.createTransport({
         pass : env.PASS_KEY
     }
 })
-console.log("transporter");
+
 
 
 module.exports = async (to, sub, msg)=>{

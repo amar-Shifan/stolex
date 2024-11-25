@@ -1,0 +1,16 @@
+<!-- _authRedirect.ejs -->
+<% if (message) { %>
+    <div class="alert alert-warning">
+        <%= message %>
+    </div>
+<% } %>
+
+<script>
+    // Redirect only if `redirect` and `redirectUrl` are defined
+    <% if (redirect && redirectUrl) { %>
+        setTimeout(() => {
+            window.location.href = "<%= redirectUrl %>";
+        }, 2000); // Delay of 2 seconds
+    <% } %>
+</script>
+

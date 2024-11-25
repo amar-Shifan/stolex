@@ -129,10 +129,9 @@ const Category = require('../../model/categorySchema');
          
         updateCategory: async (req, res) => {
             try {
-                console.log("working ......")
-                const { categoryId , name, description, status } = req.body;
-                
-
+                console.log("Working ......");
+                const { categoryId, name, description, status, isListed } = req.body;
+        
                 // Check if category exists
                 const category = await Category.findById(categoryId);
                 if (!category) {
@@ -141,7 +140,7 @@ const Category = require('../../model/categorySchema');
                         message: 'Category not found'
                     });
                 }
-
+        
                 // If name is being updated, check for duplicates
                 if (name && name !== category.name) {
                     const existingCategory = await Category.findOne({ name });
@@ -152,13 +151,19 @@ const Category = require('../../model/categorySchema');
                         });
                     }
                 }
-
+        
+                // Update the category fields
+                const updates = { name, description, status };
+                if (typeof isListed !== 'undefined') {
+                    updates.isListed = isListed; // Update isListed if provided
+                }
+        
                 const updatedCategory = await Category.findByIdAndUpdate(
                     categoryId,
-                    { name, description, status },
+                    updates,
                     { new: true, runValidators: true }
                 );
-
+        
                 res.status(200).json({
                     success: true,
                     message: 'Category updated successfully',
@@ -171,7 +176,7 @@ const Category = require('../../model/categorySchema');
                     error: error.message
                 });
             }
-        },
+        }        
 
     };
 

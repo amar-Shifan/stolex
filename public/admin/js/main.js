@@ -1,14 +1,14 @@
 !(function (e) {
   "use strict";
   if (
-    (e(".menu-item.has-submenu .menu-link").on("click", function (s) {
+    e(".menu-item.has-submenu .menu-link").on("click", function (s) {
       s.preventDefault(),
         e(this).next(".submenu").is(":hidden") &&
-          e(this)
-            .parent(".has-submenu")
-            .siblings()
-            .find(".submenu")
-            .slideUp(200),
+        e(this)
+          .parent(".has-submenu")
+          .siblings()
+          .find(".submenu")
+          .slideUp(200),
         e(this).next(".submenu").slideToggle(200);
     }),
     e("[data-trigger]").on("click", function (s) {
@@ -31,11 +31,12 @@
           e("body").removeClass("offcanvas-active"))
         : e("body").toggleClass("aside-mini");
     }),
-    e(".select-nice").length && e(".select-nice").select2(),
-    e("#offcanvas_aside").length)
+    e(".select-nice").length && 
+    typeof e().select2 === "function" && 
+    e(".select-nice").select2(), // Check before calling select2
+    e("#offcanvas_aside").length
   ) {
     const e = document.querySelector("#offcanvas_aside");
     new PerfectScrollbar(e);
   }
-  
 })(jQuery);

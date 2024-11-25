@@ -7,45 +7,30 @@ const productController = require('../controller/adminControllers/productControl
 const env = require('../utils/env_var')
 const upload = require('../middlewares/upload')
 const { handleProductImages } = require('../middlewares/delete');
+const { isAuthenticated , preventAccessIfAuthenticated} = require('../middlewares/admin-middleware');
 
 
-router.get('/',(req,res)=>{
-    res.render('admin/admin');
-})
-router.get('/login',(req,res)=>{
-    res.render('admin/adminLogin');
-})
-router.get('/products', productController.getProducts)
-// router.get('/categories',(req,res)=>{
-//     res.render("admin/category");
-// })
-router.get('/add-category',(req,res)=>{
+// Apply middleware only to routes that need admin access
+router.get('/', isAuthenticated, controller.renderHome);
+router.get('/products', isAuthenticated, productController.getProducts);
+router.get('/add-category', isAuthenticated, (req, res) => {
     res.render('admin/add-category');
-})
-router.get("/users",userController.listUsers);
-router.get('/logout',controller.logout);
-router.get(`/search`,userController.searchUsers)
+});
+router.get('/users', isAuthenticated, userController.listUsers);
+router.get('/logout', isAuthenticated, controller.logout);
+router.get('/search', isAuthenticated, userController.searchUsers);
+router.patch('/users/toggleStatus/:userId', isAuthenticated, userController.toggleStatus);
+router.post('/createCategory', isAuthenticated, categoryController.createCategory);
+router.get('/categories', isAuthenticated, categoryController.getMainCategories);
+router.patch('/:id' , isAuthenticated , categoryController.updateCategory);
+router.get('/add-products', isAuthenticated, productController.getAddProduct);
+router.get('/update-product/:id', isAuthenticated, productController.getUpdate);
+router.post('/add-products', isAuthenticated, upload.array('images', 5), productController.addProduct);
+router.post('/updateProduct/:id', isAuthenticated, upload.array('images'), handleProductImages, productController.updateProduct);
 
+
+router.get('/login',preventAccessIfAuthenticated, controller.renderLogin);
 router.post('/verifyLogin', controller.adminLogin);
-router.post('/addUser', userController.addUser);
-
-router.patch('/users/toggleStatus/:userId', userController.toggleStatus);
-
-router.post('/createCategory', categoryController.createCategory);
-
-// Get all main categories
-router.get('/categories', categoryController.getMainCategories);
-
-router.get('/add-products',productController.getAddProduct);
-router.get('/update-product/:id',productController.getUpdate);
-
-router.post('/add-products', upload.array('images', 5), productController.addProduct);
-router.post('/updateProduct/:id', 
-    upload.array('images'),    // Middleware to handle new images
-    handleProductImages,       // Middleware to process images
-    productController.updateProduct // Controller function to update the product
-);
-
 
 
 module.exports = router

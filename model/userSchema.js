@@ -1,15 +1,4 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
-
-const addressSchema = new mongoose.Schema({
-    fullName: { type: String, required: true },
-    landmark: { type: String, required: true },
-    city: { type: String, required: true },
-    state: { type: String, required: true },
-    pinCode: { type: Number, required: true },
-    phoneNumber: { type: Number, required: true },
-    placeDetails: { type: String }
-});
 
 const userSchema = new mongoose.Schema(
     {
@@ -18,8 +7,9 @@ const userSchema = new mongoose.Schema(
         password: { type: String },
         phoneNumber: { type: String ,required:false , sparse:true , default: null},
         profile: { type: String },
+        dob:{type: Date },
         block: { type: Boolean, required: true, default: false },
-        address: [addressSchema],
+        address:[{type : mongoose.Schema.Types.ObjectId , ref:'Address'}],
         verified : {type : Boolean},
         googleId: {type : String , default:null}
     },
@@ -27,18 +17,5 @@ const userSchema = new mongoose.Schema(
         timestamps: true
     }
 );
-
-userSchema.pre('save', async function (next) {
-    if (!this.isModified('password')) {
-      return next();
-    }
-    try {
-      const salt = await bcrypt.genSalt(10);
-      this.password = await bcrypt.hash(this.password, salt);
-      next();
-    } catch (err) {
-      next(err);
-    }
-});
 
 module.exports = mongoose.model('User',userSchema);

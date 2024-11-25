@@ -1,43 +1,46 @@
 const bcrypt = require('bcrypt')
 const Admin = require('../../model/adminSchema');
 
+const renderHome = async (req,res)=>{
+    res.render('admin/admin');
+}
+
+const renderLogin = async(req,res)=>{
+    res.render('admin/adminLogin');
+}
 const adminLogin = async (req, res) => {
     try {
-        const { email, password } = req.body;
-        console.log("email and pass",email,password);
+        const { email, password } = req.body; // Log the incoming body to check
+        console.log("Received email and password:", email, password);
 
         if (!email || !password) {
-            console.log("entered not equal")
-            req.session.msg = 'Email and password are required.';
-            return res.redirect('/admin/login');
+            console.log("Missing email or password");
+            return res.status(400).json({ success: false, message: 'Email and password are required.' });
         }
-
 
         const admin = await Admin.findOne({ email });
-        console.log('')
-        if (!admin) {
-            console.log("not admin")
-            req.session.msg = 'Admin not found. Please check your credentials.';
-            return res.redirect('/admin/login');
-        }
+        console.log("Admin found:", admin);
 
+        if (!admin) {
+            console.log("Admin not found");
+            return res.status(400).json({ success: false, message: 'Admin not found. Please check your credentials.' });
+        }
 
         const isPasswordMatch = await bcrypt.compare(password, admin.password);
+        console.log("Password match:", isPasswordMatch);
+
         if (!isPasswordMatch) {
-            console.log("not password ")
-            req.session.msg = 'Incorrect email or password.';
-            return res.redirect('/admin/login');
+            console.log("Incorrect password");
+            return res.status(400).json({ success: false, message: 'Incorrect email or password.' });
         }
 
+        req.session.isAuthenticated = true;
+        req.session.admin = { id: admin._id, email: admin.email };
+        return res.status(200).json({ success: true, message: 'Admin login successful!' });
 
-        console.log("succes ful login")
-        req.session.admin = { id: admin._id, email: admin.email, role: admin.role };
-        req.session.msg = 'Admin login successful!';
-        return res.redirect('/admin');
     } catch (error) {
         console.error('Error during admin login:', error);
-        req.session.msg = 'An error occurred. Please try again later.';
-        return res.redirect('/admin/login');
+        return res.status(500).json({ success: false, message: 'An error occurred. Please try again later.' });
     }
 };
 
@@ -54,4 +57,4 @@ const logout = async(req,res)=>{
 }
     
 
-module.exports = { adminLogin , logout };
+module.exports = { adminLogin , logout ,renderHome ,renderLogin};

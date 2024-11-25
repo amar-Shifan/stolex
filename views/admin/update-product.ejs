@@ -294,23 +294,28 @@ document.getElementById('updateForm').addEventListener('submit', async (e) => {
 
   try {
     const response = await fetch(`/admin/updateProduct/<%= product._id %>`, {
-      method: 'POST',
-      body: formData
-    });
-    
-    const data = await response.json();
-    
-    if (data.success) {
-      showNotification('success', 'Product updated successfully');
-      setTimeout(() => {
-        window.location.href = '/admin/products';
-      }, 1500);
-    } else {
-      showNotification('error', data.message || 'Failed to update product');
-    }
-  } catch (error) {
-    showNotification('error', 'An error occurred while updating the product');
+    method: 'POST',
+    body: formData
+  });
+
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
   }
+
+  const data = await response.json();
+
+  if (data.success) {
+    showNotification('success', 'Product updated successfully');
+    setTimeout(() => {
+      window.location.href = '/admin/products'; 
+    }, 1000);
+  } else {
+    showNotification('error', data.message || 'Failed to update product');
+  }
+} catch (error) {
+  console.error('Fetch error:', error);
+  showNotification('error', 'An error occurred while updating the product.');
+}
 });
 
 // Initialize cropping functionality
@@ -366,6 +371,5 @@ function initializeFileInput(input) {
 }
 
 </script>
-
 
 <%- include('../partials/admin_footer.ejs') %>

@@ -8,6 +8,8 @@ const session = require('express-session');
 const nocache = require('nocache');
 const passport = require('./service/googleAuth.js')
 const methodOverride = require('method-override')
+const flash = require('connect-flash')
+const globalVarsMiddleware = require('./middlewares/user-middleware.js');
 
 
 app.use(nocache());
@@ -37,6 +39,8 @@ app.use(passport.initialize())
 app.use(passport.session())
 
 app.use(methodOverride('_method')) // to get put and patch
+app.use(flash());
+app.use(globalVarsMiddleware.globalVarsMiddleware);
 
 const userRoutes = require('./router/user.js')
 const adminRoutes = require('./router/admin.js')

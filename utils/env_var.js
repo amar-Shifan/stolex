@@ -5,6 +5,7 @@ const sessionSecret = require('crypto').randomBytes(64).toString('hex');
 module.exports = {
     PORT : process.env.PORT,
     HOST : process.env.HOST,
+    BASE_URL : process.env.BASE_URL,
     MONGO_URL : process.env.MONGO_URL,
     EMAIL_ID : process.env.EMAIL_ID,
     PASS_KEY : process.env.PASS_KEY,

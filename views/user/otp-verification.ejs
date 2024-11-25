@@ -115,12 +115,9 @@
 <div class="container">
     <div class="verification-container">
         <h2 class="verification-title">Verify Your Email</h2>
-        <p class="verification-text">We've sent a verification code to<br><strong><%= message %></strong></p>
-        
-        <div class="alert alert-danger" id="error-message" role="alert"><% error %></div>
-        <div class="alert alert-success" id="success-message" role="alert"><% message %></div>
+        <p class="verification-text">We've sent a verification </p>
 
-        <form id="otpForm" action="/otp-verification" method="post">
+        <form id="otpVerification">
             <div class="otp-input-group">
                 <input type="number" class="otp-input" maxlength="1" name="otp1" required>
                 <input type="number" class="otp-input" maxlength="1" name="otp2" required>
@@ -138,135 +135,150 @@
     </div>
 </div>
 
+<script src="/js/showNotification.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const inputs = document.querySelectorAll('.otp-input');
-        const form = document.getElementById('otpForm');
-        const verifyBtn = document.getElementById('verifyBtn');
-        const resendBtn = document.getElementById('resendBtn');
-        const countdownEl = document.getElementById('countdown');
-        const errorMessage = document.getElementById('error-message');
-        const successMessage = document.getElementById('success-message');
-        
-        let countdown = 30;
-        let countdownInterval;
 
-        // Start initial countdown
-        startCountdown();
+    // document.getElementById('otpVerification').addEventListener('submit',async(e)=>{
+    //     const form = e.target;
+    //     const formData = new FormData(form);
 
-        // Handle input behavior
-        inputs.forEach((input, index) => {
-            // Prevent non-numeric input
-            input.addEventListener('input', function(e) {
-                this.value = this.value.replace(/[^0-9]/g, '');
-                
-                // Move to next input
-                if (this.value && index < inputs.length - 1) {
-                    inputs[index + 1].focus();
-                }
-                
-                // Enable/disable verify button
-                verifyBtn.disabled = !isFormComplete();
-            });
-
-            // Handle backspace
-            input.addEventListener('keydown', function(e) {
-                if (e.key === 'Backspace' && !this.value && index > 0) {
-                    inputs[index - 1].focus();
-                }
-            });
-
-            // Clear error on focus
-            input.addEventListener('focus', function() {
-                errorMessage.style.display = 'none';
-                this.select();
-            });
-        });
-
-        // Handle resend
-        resendBtn.addEventListener('click', function() {
-            // Show loading state
-            resendBtn.disabled = true;
+    //     try {
             
-            // Simulate resend API call
-            setTimeout(() => {
-                showSuccess('New verification code sent!');
-                resetInputs();
-                startCountdown();
-            }, 1500);
-        });
+    //         const formObject = Object.fromEntries(formData.entries());
+    //         const response = await fetch("/otp-verification",{
+    //             method : 'post',
+    //             headers:{
+    //                 'Content-Type':'application/json'
+    //             },
+    //             body : JSON.stringify(formObject)
+    //         })
 
-        function startCountdown() {
-            countdown = 60;
-            resendBtn.disabled = true;
-            updateCountdown();
-            
-            if (countdownInterval) {
-                clearInterval(countdownInterval);
-            }
-            
-            countdownInterval = setInterval(() => {
-                countdown--;
-                updateCountdown();
-                
-                if (countdown === 0) {
-                    clearInterval(countdownInterval);
-                    resendBtn.disabled = false;
-                    document.getElementById('timer').style.display = 'none';
-                }
-            }, 1000);
-        }
+    //         const data = await response.json();
 
-        function updateCountdown() {
-            countdownEl.textContent = countdown;
-        }
+    //         if(data.success){
+    //             showNotification('success',data.message);
+    //             setTimeout(()=>{
+    //                 window.location.href = '/'
+    //             },2000)
+    //         }else{
+    //             showNotification('error',data.message);
+    //         }
 
-        function isFormComplete() {
-            return Array.from(inputs).every(input => input.value.length === 1);
+    //     } catch (error) {
+    //         console.log(error)
+    //         showNotification('error','Something went wrong!')
+    //     }
+    // })
+    document.addEventListener('DOMContentLoaded', () => {
+    const countdownElement = document.getElementById('countdown');
+    const resendButton = document.getElementById('resendBtn');
+    const otpVerificationForm = document.getElementById('otpVerification');
+    
+    let timeLeft = <%= remainingTime %>; // Ensure this is correctly rendered and use let
+    
+    function updateTimer() {
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            countdownElement.textContent = "0";
+            resendButton.disabled = false;
+        } else {
+            countdownElement.textContent = timeLeft;
+            timeLeft--;
         }
+    }
 
-        function resetInputs() {
-            inputs.forEach(input => input.value = '');
-            inputs[0].focus();
-            verifyBtn.disabled = true;
-        }
+    // Start the timer
+    let timerInterval = setInterval(updateTimer, 1000);
+    updateTimer(); 
 
-        function showError(message) {
-            errorMessage.textContent = message;
-            errorMessage.style.display = 'block';
-            successMessage.style.display = 'none';
-        }
+    // Resend button logic
+    resendButton.addEventListener('click', async () => {
+    try {
+        resendButton.disabled = true;
 
-        function showSuccess(message) {
-            successMessage.textContent = message;
-            successMessage.style.display = 'block';
-            errorMessage.style.display = 'none';
+        // Make the request to resend OTP
+        const response = await fetch('/resend-otp', { method: 'POST' });
+        const data = await response.json();
+
+        if (data.success) {
+            showNotification('success',data.message)
+            const now = Date.now();
+            const newExpiresAt = data.expiresAt;
+            timeLeft = Math.max(0, Math.floor((newExpiresAt - now) / 1000)); // Calculate time left
+
+            // Restart the timer
+            clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 1000);
+            updateTimer(); // Immediate update
+        } else {
+            showNotification('error', data.message);
         }
+    } catch (error) {
+        showNotification('error', 'Failed to resend OTP');
+    } finally {
+        resendButton.disabled = false;
+    }
     });
 
 
-    resendBtn.addEventListener('click', async function () {
-    try {
-        const response = await fetch('/resend-otp', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-        const result = await response.json();
 
-        if (response.ok) {
-            showSuccess('New verification code sent!');
-            resetInputs();
-            startCountdown();
-        } else {
-            showError(result.message || 'Failed to resend OTP. Please try again.');
+    // Form submit logic
+    otpVerificationForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+
+        try {
+            const formObject = Object.fromEntries(formData.entries());
+            const response = await fetch("/otp-verification", {
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formObject)
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showNotification('success', data.message);
+                setTimeout(() => {
+                    window.location.href = '/'
+                }, 2000);
+            } else {
+                showNotification('error', data.message);
+            }
+        } catch (error) {
+            console.log(error);
+            showNotification('error', 'Something went wrong!');
         }
-    } catch (error) {
-        showError('An error occurred while resending OTP. Please try again.');
-        console.error(error);
-    }
+    });
 });
+
+
+
+//     resendBtn.addEventListener('click', async function () {
+//     try {
+//         const response = await fetch('/resend-otp', {
+//             method: 'POST',
+//             headers: {
+//                 'Content-Type': 'application/json',
+//             },
+//         });
+//         const result = await response.json();
+
+//         if (response.ok) {
+//             showSuccess('New verification code sent!');
+//             resetInputs();
+//             startCountdown();
+//         } else {
+//             showError(result.message || 'Failed to resend OTP. Please try again.');
+//         }
+//     } catch (error) {
+//         showError('An error occurred while resending OTP. Please try again.');
+//         console.error(error);
+//     }
+// });
 
 </script>
 
