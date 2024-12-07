@@ -8,14 +8,12 @@ console.log(env.CLOUDINARY_API_SECRET)
 console.log(env.CLOUDINARY_CLOUD_NAME)
 
 
-// Configure Cloudinary with credentials
 cloudinary.config({
     cloud_name: env.CLOUDINARY_CLOUD_NAME,
     api_key: env.CLOUDINARY_API_KEY,
     api_secret: env.CLOUDINARY_API_SECRET,
 });
 
-// Configure Cloudinary storage for Multer
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     folder: 'products',  // Cloudinary folder to store the images

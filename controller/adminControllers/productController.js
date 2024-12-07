@@ -4,23 +4,40 @@ const { uploadToCloudinary, deleteFromCloudinary } = require('../../middlewares/
 const mongoose = require('mongoose')
 const fs = require('fs');
 
+const brandFetch = async(req,res)=>{
+  try {
+   
+      try {
+        const category = await Category.findById(req.params.id)
+        if (!category) {
+          return res.status(404).json({ error: 'Category not found' });
+        }
+        res.json(category);
+      } catch (err) {
+        console.error(err);
+      }
+    
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({success:false , message : 'something wetn wrong'})
+  }
+}
+
+//ADD PRODUCT
 const addProduct = async (req, res) => {
   try {
     const { name, description, price, stock, brand, category, status } = req.body;
 
-    // Validate if required fields are present
     if (!name || !description || !price || !category || !status) {
       return res.status(400).json({ message: 'All required fields must be filled.' });
     }
 
-    // Validate if exactly 3 images are uploaded
     if (!req.files || req.files.length !== 3) {
       return res.status(400).json({ message: 'Exactly 3 images are required.' });
     }
 
     const imageUrls = req.files.map(file => file.path);
 
-    // Create new product instance
     const newProduct = new Product({
       name,
       description,
@@ -32,7 +49,6 @@ const addProduct = async (req, res) => {
       status: status || 'Active',
     });
 
-    // Save the product to the database
     await newProduct.save();
 
     return res.status(200).json({ message: 'Product added successfully.' });
@@ -44,9 +60,9 @@ const addProduct = async (req, res) => {
 
 
 
-const getAddProduct  =  async (req, res) => {
+const getAddProduct = async (req, res) => {
     try {
-        const categories = await Category.find({}); 
+        const categories = await Category.find({}).populate('brands', 'name'); 
         res.render('admin/add-product', { categories });
     } catch (error) {
         console.error('Error fetching categories:', error);
@@ -77,20 +93,18 @@ const getProducts = async (req, res) => {
 
     // Add category filter if category is selected
     if (categoryFilter && mongoose.Types.ObjectId.isValid(categoryFilter)) {
-        // First, get the selected category and any child categories
+
         const selectedCategory = await Category.findById(categoryFilter);
         if (selectedCategory) {
             const childCategories = await Category.find({
                 parentCategory: selectedCategory._id
             });
             
-            // Include both the selected category and its children in the filter
             const categoryIds = [selectedCategory._id, ...childCategories.map(c => c._id)];
             filter.category = { $in: categoryIds };
         }
     }
 
-    // Build sort object
     let sort = {};
     switch (sortOption) {
         case 'latest':
@@ -150,7 +164,6 @@ const getProducts = async (req, res) => {
         });
     }
 
-    // Render the full page for non-AJAX requests
     res.render('admin/products', {
         products,
         currentPage: page,
@@ -193,7 +206,6 @@ const getProducts = async (req, res) => {
     try {
       const productId = req.params.id;
   
-      // Parse stock data from the request body
       let stockData = [];
       if (req.body.stock) {
         try {
@@ -203,25 +215,19 @@ const getProducts = async (req, res) => {
         }
       }
   
-      // Handle images uploaded in the request
       let updatedImages = req.processedImages || [];
   
-      // If there are new image uploads (from multer or another source)
       if (req.files && req.files.newImages) {
         const newImages = Array.isArray(req.files.newImages) ? req.files.newImages : [req.files.newImages];
   
-        // Upload each new image to Cloudinary
-        const uploadPromises = newImages.map((file) => uploadToCloudinary(file.path)); // Assuming you are passing the file path
+        const uploadPromises = newImages.map((file) => uploadToCloudinary(file.path)); 
         const uploadedImages = await Promise.all(uploadPromises);
   
-        // Add uploaded image URLs to the updatedImages array
         updatedImages = [...updatedImages, ...uploadedImages.map((img) => img.url)];
   
-        // Cleanup temporary image files after upload
         cleanupTempFiles(newImages);
       }
   
-      // Update product details
       const updateData = {
         name: req.body.name,
         description: req.body.description,
@@ -230,10 +236,9 @@ const getProducts = async (req, res) => {
         brand: req.body.brand,
         category: req.body.category,
         status: req.body.status,
-        images: updatedImages, // Updated images with Cloudinary URLs
+        images: updatedImages, 
       };
   
-      // Perform the update in the database
       const updatedProduct = await Product.findByIdAndUpdate(productId, updateData, {
         new: true,
         runValidators: true,
@@ -271,5 +276,78 @@ const getProducts = async (req, res) => {
     });
   };
   
+  const getStocks = async (req, res) => {
+    try {
+      const { search } = req.query;
+      let filter = {}; 
+      
+      if (search) {
+        filter = {
+          $or: [
+            { "brand": { $regex: search, $options: 'i' } },
+            { "category.name": { $regex: search, $options: 'i' } },
+            { "name": { $regex: search, $options: 'i' } },
+            { "description": { $regex: search, $options: 'i' } },
+          ]
+        }
+      }
+      
+      const products = await Product.find(filter).populate('category', 'name'); 
+      res.render('admin/stock-manage', { products });
+    } catch (error) {
+      console.error(error);
+      res.render('error', { message: 'Something went wrong!' });
+    }
+  };
+  
 
-module.exports = {addProduct , getAddProduct ,getProducts ,updateProduct , getUpdate } 
+  const addStock = async (req, res) => {
+    try {
+
+      const { productId, size, quantity } = req.body;
+      console.log(productId,'productId' , size ,'size ', quantity , 'quantity');
+      
+  
+      if (!productId || !size || !quantity || quantity <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid input: Ensure all fields are provided and quantity is greater than 0.',
+        });
+      }
+  
+      const product = await Product.findById(productId);
+  
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message: 'Product not found.',
+        });
+      }
+  
+      const stockEntry = product.stock.find((stock) => stock.size === size);
+  
+      if (!stockEntry) {
+        return res.status(404).json({
+          success: false,
+          message: `No stock entry found for size ${size}.`,
+        });
+      }
+  
+      stockEntry.quantity += parseInt(quantity, 10);
+  
+      await product.save();
+  
+      res.status(200).json({
+        success: true,
+        message: 'Stock updated successfully.',
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        success: false,
+        message: 'Server error. Please try again later.',
+      });
+    }
+  };
+  
+module.exports = {addProduct , getAddProduct ,getProducts ,updateProduct , getUpdate , getStocks ,addStock ,brandFetch} 

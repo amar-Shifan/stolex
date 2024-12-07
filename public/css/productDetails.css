@@ -1,0 +1,82 @@
+/* Wishlist container styling */
+.wishlist-container {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 36px;
+    height: 36px;
+    border: 2px solid black;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  /* Default heart style (white heart inside black border) */
+  .wishlist-heart {
+    font-size: 20px;
+    color: black; 
+    transition: color 0.3s ease;
+  }
+  
+  /* Background remains white by default */
+  .wishlist-container {
+    background-color: white;
+  }
+  
+  /* When clicked (add active class), heart turns red */
+  .wishlist-container.active {
+    border-color: red;
+    background-color: red;
+  }
+  
+  .wishlist-container.active .wishlist-heart {
+    color: white; /* Heart remains white when active */
+  }
+  
+  /* Hover effect (optional) */
+  .wishlist-container:hover {
+    transform: scale(1.1);
+  }
+  
+  
+  .star {
+      margin-right: 5px;
+      color: #dcdcdc; /* Light gray color for empty stars */
+  }
+  
+  .star.filled {
+      color: #f0b400; /* Yellow color for filled stars */
+  }
+  
+  .rating-text {
+      margin-left: 10px;
+      font-size: 14px;
+      color: #555; /* Text color for the rating description */
+  }
+  
+      .size-option {
+      color: #000000; /* Default color */
+      background-color: #ffffff; 
+      padding: 5px 10px;
+      border: 1px solid #ddd;
+      cursor: pointer;
+      text-decoration: none;
+  }
+  
+  .size-option.selected {
+      color: #fff; /* Dark text color */
+      background-color: #000; /* Dark background */
+      border: 1px solid #000;
+  }
+  .zoom-container {
+      overflow: hidden;
+      position: relative;
+  }
+  
+  .zoom-image {
+      transition: transform 0.2s ease;
+      cursor: zoom-in;
+  }
+  
+  .zoom-container:hover .zoom-image {
+      cursor: zoom-out;
+  }

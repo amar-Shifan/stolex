@@ -1,0 +1,73 @@
+<%- include('../partials/admin_header.ejs') %>
+        
+
+        <!-- Orders Section -->
+        <section class="content-main">
+            <div class="content-header">
+                <h2 class="content-title card-title">Orders</h2>
+                <p>Manage all your orders here</p>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>OrderStatus</th>
+                                    <th>Total</th>
+                                    <th>Placed On</th>
+                                    <th>paymentStatus</th>
+                                    <th>paymentMethod</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% orders.forEach(function(order) { %>
+                                    <tr>
+                                        <td>#<%= order._id %></td>
+                                        <td><%= order.userId.username %></td>
+                                        <td>
+                                            <span 
+                                              class="badge rounded-pill 
+                                              <%= order.orderStatus.toLowerCase() %> 
+                                              <%= order.orderStatus === 'delivered' ? 'bg-success' : order.orderStatus === 'processing' ? 'bg-warning text-dark' : 'bg-danger' %>">
+                                              <%= order.orderStatus %>
+                                            </span>
+                                        </td>
+                                          
+                                        <td>₹<%= order.totalAmount.toFixed(2) %></td>
+                                        <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
+                                        <td><%= order.paymentStatus %></td>
+                                        <td><%= order.paymentMethod %></td>
+                                        <td class="text-end">
+                                            <a href="/admin/orders/<%= order._id %>" class="btn btn-sm btn-outline-primary">View</a>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- <div class="pagination-area">
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item">
+                            <a class="page-link" href="#" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div> -->
+        </section>
+
+
+<%- include('../partials/admin_footer.ejs') %>

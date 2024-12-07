@@ -1,153 +1,345 @@
-<%-include('../partials/header.ejs',{title:"admin page",style:'/css/admin.css',bootstrap:'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css' })%>
+<%-include('../partials/header.ejs',{title:"admin page",style:'/css/shoppingPage.css' })%>
 
 <style>
-	.card {
-  border-radius: 10px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+	
+.colorlib-product {
+    background-color: #ffffff;
 }
 
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+.product-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #e0e0e0 !important;
 }
 
-.card img {
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
 }
 
-.card-title {
-  font-size: 1rem;
-  line-height: 1.2;
+.btn-dark {
+    background-color: #000;
+    border-color: #000;
+    transition: background-color 0.3s ease;
 }
 
-.card-text {
-  font-size: 0.9rem;
+.btn-dark:hover {
+    background-color: #333;
 }
 
 .price {
-  font-size: 1.2rem;
-  font-weight: bold;
+    color: #000 !important;
+    font-weight: bold;
 }
 
-.btn {
-  font-size: 0.85rem;
-  padding: 0.5rem 1rem;
+/* Sidebar Styling */
+.list-unstyled li {
+    margin-bottom: 0.5rem;
 }
 
+.list-unstyled input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .colorlib-product .row {
+        flex-direction: column;
+    }
+}
+
+/* Search and Sort Styling */
+#searchForm .form-control {
+    border: 1px solid #000;
+}
+
+#sortSelect {
+    border: 1px solid #000;
+    color: #000;
+}
+
+.breadcrumbs {
+    background-color: #f8f9fa;
+    padding: 15px 0;
+}
+
+.breadcrumbs a {
+    color: #000;
+    text-decoration: none;
+}
+
+.breadcrumbs a:hover {
+    text-decoration: underline;
+}
+/* Sidebar Filter Styling */
+.filter-sidebar {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.filter-sidebar h4 {
+    color: #333;
+    border-bottom: 2px solid #000;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.filter-sidebar ul {
+    padding-left: 0;
+}
+
+.filter-sidebar li {
+    position: relative;
+    margin-bottom: 10px;
+}
+
+/* Hide default checkbox */
+.filter-sidebar input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+/* Custom checkbox styling */
+.filter-sidebar label {
+    display: block;
+    position: relative;
+    padding-left: 35px;
+    cursor: pointer;
+    font-size: 16px;
+    user-select: none;
+    transition: all 0.3s ease;
+}
+
+/* Custom checkbox design */
+.filter-sidebar label::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 24px;
+    height: 24px;
+    border: 1px solid #000;
+    background-color: #fff;
+    transition: all 0.3s ease;
+}
+
+/* Hover effect */
+.filter-sidebar label:hover::before {
+    background-color: #f0f0f0;
+}
+
+/* Checked state */
+.filter-sidebar input[type="checkbox"]:checked + label {
+    font-weight: bold;
+}
+
+.filter-sidebar input[type="checkbox"]:checked + label::before {
+    background-color: #000;
+    border-color: #000;
+}
+
+/* Checked state pseudo-element */
+.filter-sidebar input[type="checkbox"]:checked + label::after {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 4px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+/* Apply Filter Button */
+.filter-sidebar .btn-primary {
+    width: 100%;
+    background-color: #000;
+    border-color: #000;
+    transition: background-color 0.3s ease;
+}
+
+.filter-sidebar .btn-primary:hover {
+    background-color: #333;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .filter-sidebar {
+        border-radius: 0;
+    }
+}
 </style>
 		<div class="breadcrumbs">
 			<div class="container">
 				<div class="row">
 					<div class="col">
-						<p class="bread"><span><a href="index.html">Home</a></span> / <span>topwear</span></p>
+						<p class="bread"><span><a href="/">Home</a></span> / <span><%= selectedName %></span></p>
 					</div>
 				</div>
 			</div>
 		</div>
 
 		<div class="colorlib-product">
-			<div class="container-fluid p-5">
+			<div class="container-fluid py-5">
 				<div class="row">
-					<div class="col-lg-3 col-xl-3">
-						<div class="row">
-							<div class="col-sm-12">
-								<div class="side border mb-1">
-									<h3>Brand</h3>
-									<ul>
-										<li><a href="#">Nike</a></li>
-										<li><a href="#">Adidas</a></li>
-										<li><a href="#">Merrel</a></li>
-										<li><a href="#">Gucci</a></li>
-										<li><a href="#">Skechers</a></li>
-									</ul>
-								</div>
+					<!-- Sidebar -->
+					<div class="col-lg-3 col-xl-3 border-end pe-4 filter-sidebar">
+						<form id="filteringForm" method="GET" action="/products">
+							<!-- Brands Section -->
+							<div class="mb-4">
+								<h4 class="fw-bold">Brand</h4>
+								<ul class="list-unstyled">
+									<% if (brands && brands.length > 0) { %>
+										<% brands.forEach(brand => { %>
+											<li class="mb-2">
+												<input type="checkbox" id="brand_<%= brand.name || 'unknown' %>" name="brand" 
+													value="<%= brand.name || '' %>" 
+													<%= selectedFilters.brand && selectedFilters.brand.includes(brand.name) ? 'checked' : '' %>>
+												<label for="brand_<%= brand.name || 'unknown' %>">
+													<%= brand.name || 'Unknown Brand' %>
+												</label>
+											</li>
+										<% }) %>
+									<% } else { %>
+										<p>No brands available</p>
+									<% } %>
+								</ul>
 							</div>
-							<div class="col-sm-12">
-								<div class="side border mb-1">
-									<h3>Size/Width</h3>
-									<div class="block-26 mb-2">
-										<h4>Size</h4>
-					               <ul>
-									
-					                  <li><a href="#">6</a></li>
-					                  <li><a href="#">7</a></li>
-					                  <li><a href="#">8</a></li>
-					                  <li><a href="#">9</a></li>
-					                  <li><a href="#">10</a></li>
-					                  
-					               </ul>
-					            </div>
-								</div>
-							</div>
-							<div class="col-sm-12">
-								<div class="side border mb-1">
-									<h3>Style</h3>
-									<ul>
-										<li><a href="#">Slip Ons</a></li>
-										<li><a href="#">Boots</a></li>
-										<li><a href="#">Sandals</a></li>
-										<li><a href="#">Lace Ups</a></li>
-										<li><a href="#">Oxfords</a></li>
-									</ul>
-								</div>
+						
+							<!-- Sizes Section -->
+							<div class="mb-4">
+								<h4 class="fw-bold">Size</h4>
+								<ul class="list-unstyled">
+									<% if (sizes && sizes.length > 0) { %>
+										<% sizes.forEach(size => { %>
+											<li class="mb-2">
+												<input type="checkbox" id="size_<%= size || 'unknown' %>" name="size" 
+													value="<%= size || '' %>" 
+													<%= selectedFilters.size && selectedFilters.size.includes(size) ? 'checked' : '' %>>
+												<label for="size_<%= size || 'unknown' %>">
+													<%= size || 'Unknown Size' %>
+												</label>
+											</li>
+										<% }) %>
+									<% } else { %>
+										<p>No sizes available</p>
+									<% } %>
+								</ul>
 							</div>
 							
-						</div>
+						
+							<!-- Styles Section -->
+							<div class="mb-4">
+								<h4 class="fw-bold">Style</h4>
+								<ul class="list-unstyled">
+									<% if (styles && styles.length > 0) { %>
+										<% styles.forEach(category => { %>
+											<li class="mb-2">
+												<input type="checkbox" id="category_<%= category.name || 'unknown' %>" name="category" 
+													value="<%= category.name || '' %>" 
+													<%= selectedFilters.category && selectedFilters.category.includes(category.name) ? 'checked' : '' %>>
+												<label for="category_<%= category.name || 'unknown' %>">
+													<%= category.name || 'Unknown Category' %>
+												</label>
+											</li>
+										<% }) %>
+									<% } else { %>
+										<p>No categories available</p>
+									<% } %>
+								</ul>
+								
+							</div>
+							<input type="text"  name="parentCategoryName" value="<%= products[0].category.parentCategory %>" hidden>
+							<button type="submit" class="btn btn-primary">Apply Filter</button>
+						</form>
+						
+						
 					</div>
+			
+					<!-- Products Section -->
 					<div class="col-lg-9 col-xl-9">
-						<div class="container my-5">
-							<h2 class="text-center mb-4">Products in <span class="text-primary"><%= selectedName %></span></h2>
-							<div class="row g-4">
-								<% if (products.length > 0) { %>
-									<div class="col-12">
-									  <h3 class="text-secondary border-bottom pb-2">Products in <%= selectedName %></h3>
-									</div>
-									<% products.forEach(product => { %>
-									  <div class="col-6 col-md-4 col-lg-3">
-										<div class="card h-100 w-100 shadow-sm border-0 d-flex flex-column">
-										  <img src="<%= product.images[0] || '/api/placeholder/400/400' %>" 
-											   alt="<%= product.name %>" 
-											   class="card-img-top img-fluid" 
-											   style="height: 200px; object-fit: cover;">
-										  <div class="card-body text-center d-flex flex-column justify-content-between">
-											<h5 class="card-title fw-bold text-truncate" style="max-width: 100%;"><%= product.name %></h5>
-											<p class="card-text text-muted small text-truncate" style="max-width: 100%;"><%= product.description ? product.description.substring(0, 50) + '...' : 'No description available' %></p>
-											<p class="price text-success fw-bold fs-5 mb-0">$<%= product.price.toFixed(2) %></p>
-											<a href="/product/<%= product._id %>" class="btn btn-dark btn-sm mt-3">View Details</a>
-										  </div>
-										</div>
-									  </div>
-									<% }); %>
-								  <% } else { %>
-									<div class="col-12 text-center">
-									  <p class="text-muted">No products available for <%= selectedName %>.</p>
-									</div>
-								  <% } %>
-								  
+						<div class="row mb-4 align-items-center">
+							<div class="col-md-4">
+								<h2 class="text-center mb-0">Products in <span class="text-primary"><%= selectedName %></span></h2>
+							</div>
+							<div class="col-md-8">
+								<div class="d-flex justify-content-end align-items-center">
+									<!-- Search Input -->
+									<form class="d-flex me-3" id="searchForm" method="GET" action="/products">
+										<input 
+											class="form-control me-2" 
+											type="search" 
+											placeholder="Search products..." 
+											aria-label="Search"
+											name="search"
+											value="<%= locals.searchQuery || '' %>"
+										>
+										<input 
+											type="text" 
+											hidden 
+											value="<%= products.length > 0 ? products[0].category.parentCategory : '' %>" 
+											name="parentCategoryName"
+										>
+										<button class="btn btn-outline-dark" type="submit">
+											<i class="bi bi-search"></i>
+										</button>
+									</form>
+		
+									<!-- Sorting Dropdown -->
+									<select
+										id="sortSelect"
+										class="form-select form-select-sm"
+										style="width: auto;"
+										onchange="applySort()"
+									>
+										<option value="">Sort By</option>
+										<option value="price_asc">Price: Low to High</option>
+										<option value="price_desc">Price: High to Low</option>
+										<option value="rating_desc">Average Rating</option>
+										<option value="new_arrivals">New Arrivals</option>
+										<option value="name_asc">A-Z</option>
+										<option value="name_desc">Z-A</option>
+									</select>
+									
+								</div>
 							</div>
 						</div>
-						
-						
-						<div class="row">
-							<div class="col-md-12 text-center">
-								<div class="block-27">
-				               <ul>
-					               <li><a href="#"><i class="ion-ios-arrow-back"></i></a></li>
-				                  <li class="active"><span>1</span></li>
-				                  <li><a href="#">2</a></li>
-				                  <li><a href="#">3</a></li>
-				                  <li><a href="#">4</a></li>
-				                  <li><a href="#">5</a></li>
-				                  <li><a href="#"><i class="ion-ios-arrow-forward"></i></a></li>
-				               </ul>
-				            </div>
+		
+						<div class="row g-4">
+							<% if (products.length > 0) { %>
+							<% products.forEach(product => { %>
+							<div class="col-6 col-md-4 col-lg-3">
+								<div class="card h-100 shadow-sm border-0 product-card">
+									<img src="<%= product.images[0] || '/api/placeholder/400/400' %>" alt="<%= product.name %>" class="card-img-top img-fluid" style="height: 200px; object-fit: cover;">
+									<div class="card-body text-center">
+										<h5 class="card-title text-truncate"><%= product.name %></h5>
+										<p class="card-text text-muted small text-truncate"><%= product.description ? product.description.substring(0, 50) + '...' : 'No description available' %></p>
+										<p class="price text-dark fw-bold fs-5">₹<%= product.price.toFixed(2) %></p>
+										<a href="/productDetails/<%= product._id %>" class="btn btn-dark btn-sm">View Details</a>
+									</div>
+								</div>
 							</div>
+							<% }); %>
+							<% } else { %>
+							<div class="col-12 text-center">
+								<p class="text-muted">No products available for <%= selectedName %>.</p>
+							</div>
+							<% } %>
 						</div>
 					</div>
 				</div>
+				</div>
 			</div>
+			
 		</div>
+
 
 		<div class="colorlib-partner">
 			<div class="container">
@@ -175,5 +367,21 @@
 				</div>
 			</div>
 		</div>
+
+		<script>
+			function applySort() {
+				const sortValue = document.getElementById('sortSelect').value;
+				const url = new URL(window.location.href);
+		
+				// Update query parameter for sorting
+				if (sortValue) {
+					url.searchParams.set('sort', sortValue);
+				} else {
+					url.searchParams.delete('sort'); // Remove if no sorting
+				}
+		
+				window.location.href = url.toString(); // Reload with updated query
+			}
+		</script>
 
 <%- include('../partials/footer.ejs')%>

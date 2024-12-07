@@ -26,13 +26,35 @@
 
 
 </head>
+<style>
+    /* General styling for the logo container */
+.logo-container {
+    height: 100px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Center the logo horizontally */
+    overflow: hidden;
+}
+
+/* Ensure the logo image scales properly */
+.logo-container img {
+    max-height: 100%; /* Constrain the height */
+    max-width: 100%; /* Constrain the width */
+    object-fit: contain; /* Keep the aspect ratio intact */
+}
+</style>
 
 <body>
     <div class="screen-overlay"></div>
     <aside class="navbar-aside" id="offcanvas_aside">
         <div class="aside-top">
             <a href="/admin" class="brand-wrap">
-                <h2>Stolex</h2>
+                <div id="colorlib-logo" class="logo-container">
+                    <a href="/">
+                        <img src="/images/logo.png" alt="Logo">
+                    </a>
+                </div>
             </a>
             <div>
                 <button class="btn btn-icon btn-aside-minimize"><i class="text-muted material-icons md-menu_open"></i></button>
@@ -54,6 +76,7 @@
                     <div class="submenu">
                         <a href="/admin/products">Product List</a>
                         <a href="/admin/add-products">Add Product</a>
+                        <a href="/admin/stock">Stock Manage</a>
                     </div>
                 </li>
                 <li class="menu-item has-submenu">

@@ -19,75 +19,83 @@ const logout = async (req,res)=>{
 }
 
 const userLogin = async (req, res) => {
-    
+
     try {
+
         const { email, password } = req.body;
-        if (!email || !password) {
-            req.session.msg = 'Email and password are required.';
-            return res.redirect('/user-login');
-        }
 
-        // Find user by email
-        const user = await User.findOne({ email });
-        if (!user) {
-            req.session.msg = 'User does not exist. Please sign up first.';
-            return res.redirect('/user-login');
-        }
-        console.log(user)
-
-        // Check if the password is correct
-        console.log(password,"password", user.password)
-        const verifypass = await bcrypt.compare(password, user.password)
-        if(verifypass) {
-            req.session.userId = user._id;
-            const redirectUrl = req.query.redirect || '/'; 
-            return res.redirect(redirectUrl);
-        }
-
+        if (!email || !password) return res.status(400).json({ success: false, message: 'Email and password are required.' });
         
-    } catch (error) {
-        console.error("Error during login:", error);
-        req.session.msg = 'An error occurred. Please try again later.';
-        return res.redirect('/user-login');
-    }
 
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ success: false, message: 'User does not exist. Please sign up first.' });
+        
+
+        if (user.block) return res.status(403).json({ success: false, message: 'You are blocked!' });
+        
+
+        const verifypass = await bcrypt.compare(password, user.password);
+        if (!verifypass) return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+        
+
+        req.session.userId = user._id;
+
+        const redirectUrl = req.query.redirect || '/';
+        return res.status(200).json({
+            success: true,
+            message: 'User logged in successfully.',
+            redirectUrl,
+        });
+
+    } catch (error) {
+        console.error('Login Error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'An error occurred. Please try again later.',
+        });
+    }
+    
 };
 
+const getSignup = async(req,res)=>{
+    try {
+            res.render('user/signup');
+    } catch (error) {
+        console.log('error',error);
+        res.render('user/error' , {message:'Something went wrong'})
+    }
+}
 
 const getHomePage = async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1; // Current page number from query params
-        const limit = 6; // Number of spotlight products per page
-        const skip = (page - 1) * limit; // Calculate the number of documents to skip
+        const page = parseInt(req.query.page) || 1; 
+        const limit = 6; 
+        const skip = (page - 1) * limit; 
 
-        // Fetch all products
-        const products = await Product.find({});
+        const products = await Product.find({status:'Active'}).limit(8)
 
-        // Fetch all subcategories (level 1 categories)
         const categories = await Category.find({ level: 1, status: 'Active' });
 
-        // Fetch one product for each subcategory
         const categoryProducts = await Promise.all(
-            categories.map(async (category) => {
-                const product = await Product.findOne({ category: category._id, status: 'Active' })
-                    .select('name images') // Only fetch relevant fields
-                    .exec();
-                return {
-                    category: category.name,
-                    product,
-                };
-            })
+            categories
+                .filter(category => category.status === 'Active') 
+                .map(async (category) => {
+                    const product = await Product.findOne({ category: category._id, status: 'Active' })
+                        .populate('category');
+                    return {
+                        category: category.name,
+                        product,
+                    };
+                })
         );
+        
 
-        // Fetch all distinct brands
         const brands = await Product.distinct('brand');
 
-        // Fetch one product for each brand
         const brandProducts = await Promise.all(
             brands.map(async (brand) => {
                 const product = await Product.findOne({ brand, status: 'Active' })
-                    .select('name images price') // Only fetch relevant fields
-                    .exec();
+                    .populate('category')
                 return {
                     brand,
                     product,
@@ -95,22 +103,18 @@ const getHomePage = async (req, res) => {
             })
         );
 
-        // Filter out null products (if no active product exists for a brand)
         const allSpotlightProducts = brandProducts.filter((item) => item.product);
 
-        // Apply pagination for spotlight products
         const spotlightProducts = allSpotlightProducts.slice(skip, skip + limit);
 
-        // Calculate total pages for spotlight products
         const totalPages = Math.ceil(allSpotlightProducts.length / limit);
 
-        // Render the home page template
         res.render('user/user_home', {
             categoryProducts,
             products,
-            spotlightProducts, // Spotlight products for the current page
+            spotlightProducts, 
             currentPage: page,
-            totalPages, // Total pages for pagination
+            totalPages, 
         });
     } catch (error) {
         console.log("Error in getting home: ", error.message);
@@ -130,8 +134,8 @@ const insertUser = async(req,res)=>{
             return;
         }
 
-        // Generate and send OTP 
         const otp = generateOtp();
+
         const otpMail = await sendOtpToMail(
             email,
             "Your OTP Code", 
@@ -186,7 +190,6 @@ const getOtp = async (req, res) => {
         remainingTime = Math.max(0, Math.floor((new Date(otpDoc.expiresAt) - now) / 1000));
     }
 
-    // Pass the remaining time to the EJS template
     res.render('user/otp-verification', { remainingTime });
 };
 
@@ -199,45 +202,39 @@ const otpVerification = async (req, res) => {
         const otp = `${otp1}${otp2}${otp3}${otp4}`;
         console.log('Combined OTP:', otp);
 
-        // Check OTP validity
         const validOtp = await Otp.findOne({ otp, email });
         if (!validOtp) {
             console.log('OTP is not valid!');
             return res.status(401).json({ success: false, message: 'Please enter a valid OTP' });
         }
 
-        // Check if OTP has expired
         if (validOtp.expiresAt < Date.now()) {
             console.log('OTP has expired!');
             return res.status(401).json({ success: false, message: 'OTP has expired. Please request a new one.' });
         }
 
-        // Delete the OTP from the database
         const deletedOtp = await Otp.deleteOne({ email, otp });
         if (deletedOtp.deletedCount === 0) {
             return res.status(500).json({ success: false, message: 'Error during OTP deletion. Please try again.' });
         }
 
-        // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create a new user
         const newUser = new User({
             username,
             email,
             password: hashedPassword,
             dob,
             phoneNumber,
-            verified: true,
         });
 
         await newUser.save();
 
-        // Clear temp user data and create session
         delete req.session.tempUserData;
         req.session.userId = newUser._id;
 
-        return res.status(200).json({ success: true, message: 'Signup successful' });
+        return res.status(200).json({ success: true, message: 'Signed in Successfully' });
+
     } catch (error) {
         console.error('Error in OTP verification:', error);
         return res.status(500).json({ success: false, message: 'An error occurred. Please try again later.' });
@@ -254,11 +251,9 @@ const resendOtp = async (req, res) => {
 
         const { email } = tempUserData;
 
-        // Generate a new OTP and set its expiration
-        const otp = generateOtp(); // Function to generate a random OTP
-        const expiresAt = Date.now() + 2 * 60 * 1000; // 2 minutes expiration
+        const otp = generateOtp(); 
+        const expiresAt = Date.now() + 1 * 60 * 1000; // 1 minutes 
 
-        // Update or create the OTP in the database
         const updatedOtp = await Otp.findOneAndUpdate(
             { email },
             { otp, expiresAt },
@@ -268,7 +263,6 @@ const resendOtp = async (req, res) => {
         console.log(`OTP sent to ${email}: ${otp}`);
         console.log('New OTP:', updatedOtp);
 
-        // Send OTP email using nodemailer
         const otpMail = await sendOtpToMail(
             email,
             "Your OTP Code", 
@@ -286,10 +280,8 @@ const resendOtp = async (req, res) => {
             `
         );
 
-        // Log email success
         console.log('OTP email sent:', otpMail);
 
-        // Respond with success and send updated expiresAt
         res.status(200).json({
             success:true,
             message: 'OTP has been resent successfully.',
@@ -302,8 +294,6 @@ const resendOtp = async (req, res) => {
     }
 };
 
-
-
 module.exports = {
     logout,
     insertUser,
@@ -311,5 +301,6 @@ module.exports = {
     userLogin,
     resendOtp,
     getHomePage,
-    getOtp
+    getOtp,
+    getSignup
 }

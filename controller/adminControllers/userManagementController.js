@@ -6,9 +6,7 @@ const listUsers = async (req, res) => {
         const { page = 1, limit = 10 } = req.query; 
         const skip = (page - 1) * limit;
 
-
         const users = await User.find().skip(skip).limit(limit);
-
 
         const totalUsers = await User.countDocuments();
 
@@ -25,6 +23,7 @@ const listUsers = async (req, res) => {
 
 const toggleStatus = async (req, res) => {
     try {
+
         const { userId } = req.params;
         console.log("req.params:",req.params);
         
@@ -46,6 +45,7 @@ const toggleStatus = async (req, res) => {
             message: `User status updated to ${user.block ? 'Blocked' : 'Active'}`, 
             status: user.block 
         });
+
     } catch (error) {
         console.error('Error toggling user status:', error);
         return res.status(500).json({ message: 'An error occurred. Please try again.' });
@@ -61,7 +61,7 @@ const addUser = async (req, res) => {
         if (!username || !email || !password || !phoneNumber) {
             return res.status(400).json({ success: false, message: 'All fields are required!' });
         }
-
+        
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ success: false, message: 'Email already exists!' });

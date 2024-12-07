@@ -1,0 +1,47 @@
+<%-include('../partials/header.ejs',{title:"Forgot Password",style:'/css/forgotPassword.css' })%>
+
+<div class="container">
+    <div class="form-container">
+        <h3 class="text-center mb-4">Forgot Password</h3>
+        <form id="forgotPasswordForm">
+            <div class="mb-3">
+                <label for="email" class="form-label">Enter the email that you have logged in with</label>
+                <input type="email" name="email" id="email" class="form-control" placeholder="Your email address" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Submit</button>
+        </form>
+    </div>
+</div>
+
+<script src="/js/showNotification.js"></script>
+
+<script>
+    document.getElementById("forgotPasswordForm").addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+
+        try {
+            const formObject = Object.fromEntries(formData.entries());
+            const response = await fetch('/verifyEmail', {
+                method: 'post',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formObject)
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showNotification('success', data.message);
+            } else {
+                showNotification('error', data.message);
+            }
+
+        } catch (error) {
+            console.error(error);
+            showNotification('error', 'Something went wrong!');
+        }
+    });
+</script>
+
+<%-include('../partials/footer.ejs')%>

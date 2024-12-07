@@ -1,7 +1,5 @@
-<%-include('../partials/header.ejs')%>
+<%-include('../partials/header.ejs' ,{title:'Storex' , style: null})%>
 <%- include('../partials/authRedirect') %>
-
-
 
     <aside id="colorlib-hero">
         <div class="flexslider">
@@ -17,7 +15,7 @@
                                        <h2 class="head-2" style="color: black;">Shoes</h2>
                                        <h2 class="head-3" style="color: black;">Collection</h2>
                                        <p class="category" ><span style="color: black;">New trending shoes</span></p>
-                                       <p><a href="#" class="btn btn-primary">Shop Collection</a></p>
+                                       <p><a href="/products?parentCategoryName=footwear" class="btn btn-primary">Shop Collection</a></p>
                                    </div>
                                </div>
                            </div>
@@ -31,8 +29,8 @@
                            <div class="col-sm-6 offset-sm-3 text-center slider-text">
                                <div class="slider-text-inner">
                                    <div class="desc">
-                                       <h1 class="head-1" style="color: black;">Huge</h1>
-                                       <h2 class="head-2" style="color: black;">Sale</h2>
+                                       <h1 class="head-1" style="color: black;">Men's</h1>
+                                       <h2 class="head-2" style="color: black;">Sandals</h2>
                                        <h2 class="head-3" style="color: black;"><strong class="font-weight-bold">50%</strong> Off</h2>
                                        <p class="category" ><span style="color: black;">Big sale sandals</span></p>
                                        <p><a href="#" class="btn btn-primary">Shop Collection</a></p>
@@ -46,14 +44,14 @@
                    <div class="overlay"></div>
                    <div class="container-fluid">
                        <div class="row">
-                           <div class="col-sm-6 offset-sm-3 text-center slider-text">
+                          <div class="col-sm-6 offset-sm-3 text-center slider-text">
                                <div class="slider-text-inner">
                                    <div class="desc">
-                                       <h1 class="head-1" style="color: black;">New</h1>
-                                       <h2 class="head-2" style="color: black;">Arrival</h2>
-                                       <h2 class="head-3" style="color: black;">up to <strong class="font-weight-bold">30%</strong> off</h2>
-                                       <p class="category" ><span style="color: black;">New stylish shoes for men</span></p>
-                                       <p><a href="#" class="btn btn-primary">Shop Collection</a></p>
+                                       <h1 class="head-1" style="color: black;">Men's</h1>
+                                       <h2 class="head-2" style="color: black;">Topwears</h2>
+                                       <h2 class="head-3" style="color: black;">Collection<strong class="font-weight-bold">30%</strong> off</h2>
+                                       <p class="category" ><span style="color: black;">New stylish topwear for men</span></p>
+                                       <p><a href="/products?parentCategoryName=footwear" class="btn btn-primary">Shop Collection</a></p>
                                    </div>
                                </div>
                            </div>
@@ -70,7 +68,7 @@
         <div class="row g-4 justify-content-center align-items-stretch">
             <% categoryProducts.forEach(item => { %>
                 <div class="col-6 col-sm-4 col-lg-2">
-                    <a href="/products?category=<%= item.category %>" class="text-decoration-none text-dark">
+                    <a href="/products?category=<%= item.category %>&parentCategoryName=<%= encodeURIComponent(item.product.category.parentCategory) %>" class="text-decoration-none text-dark">
                         <div class="category-item border rounded shadow-sm p-3 text-center">
                             <div class="category-image mb-3">
                                 <% if (item.product) { %>
@@ -86,10 +84,6 @@
             <% }); %>
         </div>
           
-          
-      
-
-
         <div class="container my-5">
           <h2 class="text-center mb-4">Brands in Spotlight</h2>
           <div class="row">
@@ -101,12 +95,12 @@
                     </div>
                     <!-- Add brand link -->
                     <h5 class="brand-title">
-                      <a href="/products?brand=<%= encodeURIComponent(item.brand) %>" class="text-decoration-none text-dark">
+                      <a href="/products?brand=<%= encodeURIComponent(item.brand) %>&parentCategoryName=<%= encodeURIComponent(item.product.category.parentCategory) %>" class="text-decoration-none text-dark">
                         <%= item.brand %>
                       </a>
                     </h5>
                     <div class="product-name text-muted small"><%= item.product.name %></div>
-                    <div class="product-price text-success">$<%= item.product.price %></div>
+                    <div class="product-price text-success">₹<%= item.product.price %></div>
                   </div>
                 </div>
               <% }); %>
@@ -145,7 +139,7 @@
             </a>
             <div class="desc">
               <h2><a href="/productDetails/<%=product._id %>" ><%= product.name %></a></h2>
-              <span class="price"><%= product.price %></span>
+              <span class="price">₹<%= product.price %></span>
             </div>
           </div>
         </div>
@@ -156,7 +150,7 @@
     </div>
     <div class="row">
       <div class="col-md-12 text-center">
-        <p><a href="#" class="btn btn-primary btn-lg">Shop All Products</a></p>
+        <p><a href="/products?parentCategoryName=all" class="btn btn-primary btn-lg">Shop All Products</a></p>
       </div>
     </div>
   </div>

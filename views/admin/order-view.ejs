@@ -1,0 +1,146 @@
+<%- include('../partials/admin_header.ejs', { title: "Admin Order Details", style: null }) %>
+
+<div class="col-md-9 col-lg-10 p-4">
+    <!-- Header Section -->
+    <div class="bg-white rounded-3 p-4 shadow-sm mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <a href="/admin/orders" class="text-decoration-none text-muted mb-2 d-inline-block">
+                    <i class="bi bi-arrow-left"></i> Back to Orders
+                </a>
+                <h2 class="mb-0">Order #<%= order._id %></h2>
+                <p class="text-muted mb-0">Placed on <%= new Date(order.createdAt).toLocaleDateString() %></p>
+            </div>
+            <!-- Order Status Update Button -->
+            <div class="d-flex align-items-center">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
+                    Update Status
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Items -->
+    <div class="bg-white rounded-3 shadow-sm p-4 mb-4">
+        <h4 class="mb-4">Order Items</h4>
+        <% order.items.forEach(item => { %>
+            <div class="card mb-3 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-2">
+                            <img src="<%= item.productId.images[0] || 'https://via.placeholder.com/100x100' %>" 
+                                class="img-fluid rounded" 
+                                style="width: 100%; height: 100%; object-fit: contain;" 
+                                alt="<%= item.productId.name %>">
+                        </div>
+                        <div class="col-md-4">
+                            <h5><%= item.productId.name %></h5>
+                            <p class="text-muted mb-0">Size: <%= item.size || 'N/A' %></p>
+                            <p class="text-muted mb-0">Qty: <%= item.quantity %></p>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="fw-bold mb-0">$<%= item.price.toFixed(2) %></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <% }) %>
+    </div>
+
+    <!-- Shipping Details -->
+    <div class="bg-white rounded-3 shadow-sm p-4 mb-4">
+        <h4 class="mb-4">Shipping Details</h4>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card bg-light border-0">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-3 text-muted">Delivery Address</h6>
+                        <h5 class="mb-2"><%= order.shippingAddress.name %></h5>
+                        <p class="mb-1"><%= order.shippingAddress.address %></p>
+                        <p class="mb-1"><%= order.shippingAddress.city %>, <%= order.shippingAddress.state %>, <%= order.shippingAddress.zip %></p>
+                        <p class="mb-0"><%= order.shippingAddress.country %></p>
+                        <p class="mb-0">Phone: <%= order.shippingAddress.phone %></p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card bg-light border-0">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-3 text-muted">Payment Details</h6>
+                        <p class="mb-2">Method: <%= order.paymentMethod %></p>
+                        <p class="mb-2">Status: <span class="<%= order.paymentStatus === 'paid' ? 'text-success' : 'text-danger' %>">
+                            <%= order.paymentStatus.charAt(0).toUpperCase() + order.paymentStatus.slice(1) %>
+                        </span></p>
+                        <p>Total Amount: <strong>$<%= order.totalAmount.toFixed(2) %></strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Status Modal -->
+<div class="modal fade" id="updateStatusModal" tabindex="-1" aria-labelledby="updateStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="updateStatusModalLabel">Update Order Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form  id="statusForm">
+                    <div class="mb-3">
+                        <label for="orderStatus" class="form-label">Order Status</label>
+                        <select class="form-select" id="orderStatus" name="orderStatus" required>
+                            <option value="pending" <%= order.orderStatus === 'pending' ? 'selected' : '' %>>Pending</option>
+                            <option value="shipped" <%= order.orderStatus === 'shipped' ? 'selected' : '' %>>Shipped</option>
+                            <option value="delivered" <%= order.orderStatus === 'delivered' ? 'selected' : '' %>>Delivered</option>
+                            <option value="cancelled" <%= order.orderStatus === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('statusForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const form = e.target;
+        const formData = new FormData(form);
+
+        try {
+            const formObject = Object.fromEntries(formData.entries());
+
+            const res = await fetch(`/admin/orders/update-status/<%= order._id %>`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formObject),
+            });
+
+            if (!res.ok) throw new Error('Network response was not ok');
+
+            const data = await res.json();
+
+            if (data.success) {
+                showNotification('success', data.message);
+
+                setTimeout(() => {
+                    window.location.reload(); 
+                }, 1500);
+            } else {
+                showNotification('error', data.message || 'Something went wrong!');
+            }
+        } catch (error) {
+            showNotification('error', 'An error occurred while updating the status');
+        }
+    });
+
+</script>
+<%- include('../partials/admin_footer.ejs') %>

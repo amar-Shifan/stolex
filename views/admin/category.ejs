@@ -11,6 +11,9 @@
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#categoryModal">
                 <i class="material-icons md-plus"></i> Create Category
             </button>
+            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#brandModal">
+                <i class="material-icons md-plus"></i> Add Brand
+            </button>
         </div>
     </div>
 
@@ -197,6 +200,45 @@
     </div>
   </div>
 
+<!-- Brand Modal -->
+<div class="modal fade" id="brandModal" tabindex="-1" aria-labelledby="brandModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="brandModalLabel">Add Brand</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="brandForm">
+                    <div class="mb-3">
+                        <label for="brandName" class="form-label">Brand Name</label>
+                        <input type="text" class="form-control" id="brandName" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="brandDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="brandDescription" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="brandCategory" class="form-label">Category</label>
+                        <select class="form-select" id="brandCategory" name="category" required>
+                            <option value="">Select a Category</option>
+                            <% categories.forEach((category) => { %>
+                                <% if (category.level === 0) { %>
+                                    <option value="<%= category._id %>"><%= category.name %></option>
+                                <% } %>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save Brand</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script src="/js/showNotification.js"></script>
 <script src="/js/confirmation.js"></script>
@@ -269,6 +311,7 @@ function showToast(message, type = 'info') {
 
 // modal for edit
 function openEditModal(category) {
+
     document.getElementById('editCategoryId').value = category._id;
     document.getElementById('editCategoryName').value = category.name;
     document.getElementById('editCategoryDescription').value = category.description;
@@ -278,7 +321,8 @@ function openEditModal(category) {
     form.action = `/admin/updateCategory`; 
     const modal = new bootstrap.Modal(document.getElementById('editCategoryModal'));
     modal.show();
-  }
+}
+
 
 
   document.getElementById('editCategoryForm').addEventListener('submit', (event) => {
@@ -310,8 +354,7 @@ function openEditModal(category) {
     });
 });
 
-    // update category
-
+// update category
     document.addEventListener('DOMContentLoaded', function() {
         const toggles = document.querySelectorAll('.isListedToggle');
 
@@ -341,6 +384,38 @@ function openEditModal(category) {
             });
         });
     });
+
+    // Create brand 
+    document.getElementById('brandForm').addEventListener('submit', (event) => {
+    event.preventDefault();
+
+    const name = document.getElementById('brandName').value;
+    const description = document.getElementById('brandDescription').value;
+    const category = document.getElementById('brandCategory').value;
+
+    if(!name || !description || !category) return showNotification('error','All fields are required');
+
+    fetch('/admin/addBrand', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, description, category })
+    })
+    .then((res) => res.json())
+    .then((data) => {
+        if (data.success) {
+            showNotification('success', data.message);
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            showNotification('error', data.message);
+        }
+    })
+    .catch((error) => {
+        showNotification('error', 'An unexpected error occurred. Please try again.');
+    });
+});
+    
 
 </script>
 

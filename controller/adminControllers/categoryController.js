@@ -1,4 +1,5 @@
 const Category = require('../../model/categorySchema');
+const Brand = require('../../model/brandSchema');
 
     const categoryController = {
         createCategory: async (req, res) => {
@@ -176,7 +177,65 @@ const Category = require('../../model/categorySchema');
                     error: error.message
                 });
             }
-        }        
+        },
+        
+        addBrand: async (req,res)=>{
+            try {
+                const { name, description, category } = req.body;
+        
+                if (!name || !category) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Name and category are required fields.',
+                    });
+                }
+                
+                const existingBrand = await Brand.findOne({ name });
+
+                if (existingBrand) {
+                    // Check if this brand is already associated with the given category
+                    const existBrandInCategory = await Category.findOne({
+                        _id: category,
+                        brands: existingBrand._id, // Check if the brand ID exists in the category
+                    });
+
+                    if (existBrandInCategory) {
+                        return res.status(400).json({ 
+                            success: false, 
+                            message: "This brand name already exists in the category." 
+                        });
+                    }
+
+                    // If the brand exists but is not associated with the category, add it
+                    await Category.findByIdAndUpdate(
+                        category,
+                        { $push: { brands: existingBrand._id } },
+                        { new: true }
+                    );
+
+                    return res.status(200).json({ success: true, message: "Brand added to the category successfully." });
+                }
+
+                // If the brand does not exist, create it
+                const brand = new Brand({ name, description });
+                await brand.save();
+
+                // Add the new brand to the category
+                await Category.findByIdAndUpdate(
+                    category,
+                    { $push: { brands: brand._id } },
+                    { new: true }
+                );
+
+                return res.status(200).json({ success: true, message: "Brand created and added to the category successfully." });
+            } catch (error) {
+                console.error('Error in addBrand:', error);
+                res.status(500).json({
+                    success: false,
+                    message: 'Server error occurred while adding the brand.',
+                });
+            }
+        }
 
     };
 

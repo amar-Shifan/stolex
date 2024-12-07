@@ -1,4 +1,5 @@
 
+const User = require('../model/userSchema');
 
 const isAuthenticated = (req, res) => {
     if (req.session.userId) {        
@@ -16,5 +17,36 @@ const globalVarsMiddleware = (req, res, next) => {
     next();
 };
 
+const isAuthen = async (req, res, next) => {
+    try {
+      const userId = req.session.userId;
+  
+      // Check if userId exists in the session
+      if (!userId) {
+        return res.redirect('/user-login');
+      }
+  
+      // Query the database for the active user
+      const user = await User.findOne({ _id: userId, block:false });
+  
+      // If user exists and is active, proceed to the next middleware
+      if (user) {
+        return next();
+      }
+  
+      // Otherwise, redirect to login
+      return res.redirect('/user-login');
+    } catch (error) {
+      console.error('Authentication error:', error);
+      return res.status(500).send('Internal Server Error');
+    }
+  };
+  
+function preventAccessIfAuthenticated(req, res, next) {
+    if (req.session.userId) {
+        return res.redirect('/'); 
+    }
+    next();
+}
 
-module.exports = {isAuthenticated , globalVarsMiddleware}
+module.exports = {isAuthenticated , globalVarsMiddleware , preventAccessIfAuthenticated ,isAuthen}

@@ -10,12 +10,12 @@ const renderLogin = async(req,res)=>{
 }
 const adminLogin = async (req, res) => {
     try {
-        const { email, password } = req.body; // Log the incoming body to check
+        const { email, password } = req.body; 
         console.log("Received email and password:", email, password);
 
         if (!email || !password) {
             console.log("Missing email or password");
-            return res.status(400).json({ success: false, message: 'Email and password are required.' });
+            return res.status(400).json({ success: false, message: 'Email and password are required.'});
         }
 
         const admin = await Admin.findOne({ email });

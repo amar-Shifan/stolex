@@ -27,7 +27,14 @@ const categorySchema = new mongoose.Schema({
     slug: {
         type: String,
         unique: true
-    }
+    },
+    brands: [
+        {
+            type: mongoose.Types.ObjectId,
+            ref: 'Brand'
+        }
+    ],
+    isListed: {type : Boolean , default : true}
 }, {
     timestamps: true
 });

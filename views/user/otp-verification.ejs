@@ -1,116 +1,5 @@
-<%- include('../partials/header.ejs') %>
+<%-include('../partials/header.ejs',{title:"otp page",style:'/css/otp.css' })%>
 
-<style>
-    .verification-container {
-        max-width: 450px;
-        margin: 100px auto;
-        padding: 30px;
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-    }
-
-    .verification-title {
-        text-align: center;
-        color: #333;
-        margin-bottom: 10px;
-    }
-
-    .verification-text {
-        text-align: center;
-        color: #666;
-        font-size: 0.95rem;
-        margin-bottom: 30px;
-    }
-
-    .otp-input-group {
-        display: flex;
-        justify-content: center;
-        gap: 12px;
-        margin-bottom: 25px;
-    }
-
-    .otp-input {
-        width: 50px;
-        height: 50px;
-        text-align: center;
-        font-size: 1.2rem;
-        border: 2px solid #e0e0e0;
-        border-radius: 8px;
-        background: #f8f9fa;
-        transition: all 0.3s;
-    }
-
-    .otp-input:focus {
-        border-color: #68c3a3;
-        box-shadow: 0 0 0 0.2rem rgba(104, 195, 163, 0.25);
-        background: white;
-    }
-
-    .otp-input::-webkit-inner-spin-button,
-    .otp-input::-webkit-outer-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-    }
-
-    .verify-btn {
-        background: #68c3a3;
-        border: none;
-        padding: 12px 40px;
-        border-radius: 25px;
-        color: white;
-        font-weight: 500;
-        width: 100%;
-        transition: all 0.3s;
-    }
-
-    .verify-btn:hover {
-        background: #5ab094;
-        transform: translateY(-2px);
-    }
-
-    .verify-btn:disabled {
-        background: #cccccc;
-        cursor: not-allowed;
-        transform: none;
-    }
-
-    .resend-container {
-        text-align: center;
-        margin-top: 20px;
-    }
-
-    .timer {
-        color: #666;
-        font-size: 0.9rem;
-        margin-bottom: 10px;
-    }
-
-    .resend-btn {
-        background: none;
-        border: none;
-        color: #68c3a3;
-        font-weight: 500;
-        padding: 0;
-        cursor: pointer;
-        transition: all 0.3s;
-    }
-
-    .resend-btn:disabled {
-        color: #999;
-        cursor: not-allowed;
-    }
-
-    .resend-btn:hover:not(:disabled) {
-        color: #5ab094;
-        text-decoration: underline;
-    }
-
-    .alert {
-        display: none;
-        margin-bottom: 20px;
-    }
-</style>
 
 <div class="container">
     <div class="verification-container">
@@ -138,43 +27,12 @@
 <script src="/js/showNotification.js"></script>
 <script>
 
-    // document.getElementById('otpVerification').addEventListener('submit',async(e)=>{
-    //     const form = e.target;
-    //     const formData = new FormData(form);
-
-    //     try {
-            
-    //         const formObject = Object.fromEntries(formData.entries());
-    //         const response = await fetch("/otp-verification",{
-    //             method : 'post',
-    //             headers:{
-    //                 'Content-Type':'application/json'
-    //             },
-    //             body : JSON.stringify(formObject)
-    //         })
-
-    //         const data = await response.json();
-
-    //         if(data.success){
-    //             showNotification('success',data.message);
-    //             setTimeout(()=>{
-    //                 window.location.href = '/'
-    //             },2000)
-    //         }else{
-    //             showNotification('error',data.message);
-    //         }
-
-    //     } catch (error) {
-    //         console.log(error)
-    //         showNotification('error','Something went wrong!')
-    //     }
-    // })
-    document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
     const countdownElement = document.getElementById('countdown');
     const resendButton = document.getElementById('resendBtn');
     const otpVerificationForm = document.getElementById('otpVerification');
     
-    let timeLeft = <%= remainingTime %>; // Ensure this is correctly rendered and use let
+    let timeLeft = <%= remainingTime %>; 
     
     function updateTimer() {
         if (timeLeft <= 0) {
@@ -187,16 +45,13 @@
         }
     }
 
-    // Start the timer
     let timerInterval = setInterval(updateTimer, 1000);
     updateTimer(); 
 
-    // Resend button logic
     resendButton.addEventListener('click', async () => {
     try {
         resendButton.disabled = true;
 
-        // Make the request to resend OTP
         const response = await fetch('/resend-otp', { method: 'POST' });
         const data = await response.json();
 
@@ -204,12 +59,11 @@
             showNotification('success',data.message)
             const now = Date.now();
             const newExpiresAt = data.expiresAt;
-            timeLeft = Math.max(0, Math.floor((newExpiresAt - now) / 1000)); // Calculate time left
+            timeLeft = Math.max(0, Math.floor((newExpiresAt - now) / 1000)); 
 
-            // Restart the timer
             clearInterval(timerInterval);
             timerInterval = setInterval(updateTimer, 1000);
-            updateTimer(); // Immediate update
+            updateTimer(); 
         } else {
             showNotification('error', data.message);
         }
@@ -222,7 +76,6 @@
 
 
 
-    // Form submit logic
     otpVerificationForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const form = e.target;
@@ -255,30 +108,6 @@
     });
 });
 
-
-
-//     resendBtn.addEventListener('click', async function () {
-//     try {
-//         const response = await fetch('/resend-otp', {
-//             method: 'POST',
-//             headers: {
-//                 'Content-Type': 'application/json',
-//             },
-//         });
-//         const result = await response.json();
-
-//         if (response.ok) {
-//             showSuccess('New verification code sent!');
-//             resetInputs();
-//             startCountdown();
-//         } else {
-//             showError(result.message || 'Failed to resend OTP. Please try again.');
-//         }
-//     } catch (error) {
-//         showError('An error occurred while resending OTP. Please try again.');
-//         console.error(error);
-//     }
-// });
 
 </script>
 

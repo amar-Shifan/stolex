@@ -1,4 +1,5 @@
 <%- include('../partials/admin_header.ejs', { title: "Admin Page" }) %>
+
 <section class="content-main">
   <div class="content-header d-flex flex-column flex-md-row justify-content-between align-items-center">
     <div class="mb-3 mb-md-0">
@@ -99,9 +100,9 @@
 <script>
 
       document.getElementById('searchInput').addEventListener('input', async (e) => {
-        const searchQuery = e.target.value; // Get the search query from input
-        const page = 1; // Reset to page 1 for a new search
-        await fetchProducts(searchQuery, page); // Fetch products based on search
+        const searchQuery = e.target.value; 
+        const page = 1; 
+        await fetchProducts(searchQuery, page); 
       });
 
 
@@ -191,7 +192,7 @@
                       <button type="submit" class="btn btn-sm ${
                         product.status ? 'btn-success' : 'btn-danger'
                       }">
-                        ${product.status ? 'Active' : 'Inactive'}
+                        ${product.status === 'Active' ? 'Active' : 'Inactive'}
                       </button>
                     </form>
                   </td>

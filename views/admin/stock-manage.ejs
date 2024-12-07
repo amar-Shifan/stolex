@@ -1,0 +1,136 @@
+<%- include('../partials/admin_header.ejs', { title: "Stock Management" }) %>
+
+<section class="content-main">
+  <div class="content-header d-flex flex-column flex-md-row justify-content-between align-items-center">
+    <div class="mb-3 mb-md-0">
+      <h2 class="content-title">Stock Management</h2>
+      <p>Manage product stocks and sizes here.</p>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header">
+      <div class="row gx-3 gy-2">
+        <div class="col-12 col-md-6">
+          <div class="search-area mb-3">
+            <form action="/admin/stock" method="get">
+                <div class="input-group mb-3">
+                    <input 
+                      id="searchStockInput"
+                      type="text"
+                      class="form-control"
+                      placeholder="Search products by name or brand..."
+                      aria-label="Search products"
+                      name="search"
+                      value="<% locals.searchQuery || '' %>"
+                    />
+                    <button 
+                      class="btn btn-primary" 
+                      type="submit"
+                    >
+                      Search
+                    </button>
+                  </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="stockTableContainer" class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Product Name</th>
+            <th>Size</th>
+            <th>Current Stock</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% products.forEach((product) => { %>
+            <% product.stock.forEach((stock) => { %>
+              <tr>
+                <td><%= product.name %></td>
+                <td><%= stock.size %></td>
+                <td><%= stock.quantity %></td>
+                <td>
+                  <button class="btn btn-primary btn-sm" onclick="openAddStockModal('<%= product._id %>', '<%= stock.size %>')">Add Stock</button>
+                </td>
+              </tr>
+            <% }) %>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal for Adding Stock -->
+  <div class="modal fade" id="addStockModal" tabindex="-1" aria-labelledby="addStockModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addStockModalLabel">Add Stock</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="addStockForm">
+            <input type="hidden" id="addStockProductId" name="productId">
+            <input type="hidden" id="addStockSize" name="size">
+
+            <div class="mb-3">
+              <label for="addStockQuantity" class="form-label">Quantity</label>
+              <input type="number" class="form-control" id="addStockQuantity" name="quantity" required> 
+            </div>
+            <button type="submit" class="btn btn-primary">Add Stock</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<script>
+  function openAddStockModal(productId, size) {
+    document.getElementById('addStockProductId').value = productId;
+    document.getElementById('addStockSize').value = size;
+    new bootstrap.Modal(document.getElementById('addStockModal')).show();
+  }
+
+  document.getElementById('addStockForm').addEventListener('submit', async function (event) {
+    event.preventDefault();
+
+    try {
+
+        const formData = new FormData(event.target);
+        const formObject = Object.fromEntries(formData.entries());
+
+        const response = await fetch('/admin/add-stock', {
+        method: 'POST',
+        headers : {'Content-Type':'application/json'},
+        body: JSON.stringify(formObject),
+        });
+
+        const data = await response.json();
+
+        if(data.success){
+            showNotification('success' , data.message)
+
+            setTimeout(()=>{
+                location.reload();
+            },1500);
+
+        }else {
+            showNotification('error',data.message)
+        }
+
+    } catch (error) {
+        console.log(error);
+        showNotification('error',"Something went wrong!")
+    }
+  });
+
+</script>
+
+<%- include('../partials/admin_footer.ejs') %>

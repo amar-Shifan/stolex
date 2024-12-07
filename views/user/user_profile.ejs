@@ -1,147 +1,9 @@
-<%- include('../partials/header.ejs', { title: "Profile Management", style: '/css/admin.css', bootstrap: 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css' }) %>
+<%-include('../partials/header.ejs',{title:"userProfile",style:'/css/userProfile.css' })%>
 
-<style>
-/* Profile Image Container */
-.profile-image-container {
-    width: 120px;
-    height: 120px;
-    position: relative;
-    margin: auto;
-}
-
-/* Profile Image Styling */
-.profile-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border: 3px solid #333; /* Border color */
-    border-radius: 50%;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease; /* Subtle hover scale effect */
-}
-
-.profile-image-container:hover .profile-image {
-    transform: scale(1.05);
-}
-
-/* Hover Overlay Styling */
-.hover-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6); /* Dark semi-transparent overlay */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    opacity: 0; /* Hidden by default */
-    transition: opacity 0.3s ease-in-out; /* Smooth fade-in effect */
-    cursor: pointer; /* Indicate interactivity */
-}
-
-.profile-image {
-    transition: transform 0.3s ease, opacity 0.3s ease; /* Smooth transition for image changes */
-}
-
-.profile-image.updated {
-    transform: scale(1.1);
-    opacity: 0.9;
-}
-
-.profile-image-container:hover .hover-overlay {
-    opacity: 1;
-}
-
-/* Camera Icon Styling */
-.hover-overlay i {
-    color: #fff; /* White color for contrast */
-    font-size: 2rem; /* Larger size for better visibility */
-    pointer-events: none; /* Prevent hover interaction with the icon */
-}
-
-/* Hide the file input */
-input[type="file"] {
-    position: absolute;
-    top: 0;
-    left: 0;
-    opacity: 0;
-    width: 100%;
-    height: 100%;
-    cursor: pointer;
-    z-index: 2; /* Ensure it’s clickable */
-}
-
-/* Upload Button Styling */
-#userProfile button {
-    display: block;
-    width: 100%;
-    padding: 8px 16px;
-    margin-top: 10px;
-    background-color: #007bff;
-    border: none;
-    color: #fff;
-    border-radius: 5px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-#userProfile button:hover {
-    background-color: #0056b3;
-}
-
-
-/* Form Styling */
-.card .form-label {
-    font-weight: bold;
-    color: #333;
-}
-
-.card .form-control {
-    border: 1px solid #ddd;
-    border-radius: 0.25rem;
-    padding: 0.5rem;
-    font-size: 1rem;
-}
-
-/* Button Styling */
-.card .btn-primary {
-    background-color: rgb(69, 69, 69);
-    border: none;
-    transition: background-color 0.3s ease;
-}
-
-.card .btn-primary:hover {
-    background-color: #0056b3;
-}
-
-</style>
 <div class="container-fluid">
     <div class="row">
         <!-- Sidebar -->
-        <div class="col-md-3 col-lg-2 d-md-block bg-light shadow-sm p-3 min-vh-100">
-            <div class="list-group">
-                <a href="#" class="list-group-item list-group-item-action active">
-                    <i class="bi bi-person"></i> Profile
-                </a>
-                <a href="#" class="list-group-item list-group-item-action">
-                    <i class="bi bi-cart"></i> Orders
-                </a>
-                <a href="#" class="list-group-item list-group-item-action">
-                    <i class="bi bi-heart"></i> Wishlist
-                </a>
-                <a href="#" class="list-group-item list-group-item-action">
-                    <i class="bi bi-wallet"></i> Wallet
-                </a>
-            </div>
-            <div class="mt-auto pt-3">
-                <button class="btn btn-outline-danger w-100">
-                    Sign out
-                </button>
-            </div>
-        </div>
+        <%- include('../partials/user_sidebar.ejs') %>
 
         <!-- Main Content -->
         <div class="col-md-9 col-lg-10 p-4">
@@ -271,6 +133,7 @@ input[type="file"] {
                                                 class="btn btn-primary btn-sm me-2" 
                                                 data-bs-toggle="modal" 
                                                 data-bs-target="#editAddressModal" 
+                                                id="edit"
                                                 data-id="<%= address._id %>" 
                                                 data-fullname="<%= address.fullName %>" 
                                                 data-address="<%= address.address %>" 
@@ -283,6 +146,7 @@ input[type="file"] {
                                             </button>
                                             <button 
                                                 class="btn btn-danger btn-sm delete-address" 
+                                                id="delete-address"
                                                 data-id="<%= address._id %>"
                                             >
                                                 <i class="bi bi-trash"></i> Delete
@@ -306,59 +170,96 @@ input[type="file"] {
 <div class="modal fade" id="addAddressModal" tabindex="-1" aria-labelledby="addAddressModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form id="addAddress">
+            <form id="address-form">
                 <div class="modal-header">
                     <h5 class="modal-title" id="addAddressModalLabel">Add New Address</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Full Name</label>
-                        <input type="text" class="form-control" name="fullName" placeholder="Enter full name">
+                        <label for="NAME" class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="NAME" name="fullName" placeholder="Enter full name">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Address</label>
-                        <textarea class="form-control" rows="3" name="address" placeholder="Enter your address"></textarea>
+                        <label for="address" class="form-label">Address</label>
+                        <textarea class="form-control" id="address" rows="3" name="address" placeholder="Enter your address"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="pincode" class="form-label">PIN Code</label>
+                        <input type="text" class="form-control" id="pincode" name="pincode" placeholder="Enter PIN code">
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">City</label>
-                            <input type="text" class="form-control" name="city" placeholder="Enter city">
+                            <label for="state" class="form-label">State</label>
+                            <input type="text" class="form-control" id="state" name="state" readonly>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">State</label>
-                            <input type="text" class="form-control" name="state" placeholder="Enter state">
+                            <label for="city" class="form-label">City</label>
+                            <input type="text" class="form-control" id="city" name="city" readonly>
                         </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">ZIP Code</label>
-                        <input type="text" class="form-control" name="pincode" placeholder="Enter ZIP code">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Phone</label>
-                        <input type="tel" class="form-control"  name="phoneNumber" placeholder="Enter phone number">
+                        <input type="tel" class="form-control" id="phoneNumber"  name="phoneNumber" placeholder="Enter phone number">
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Save Address</button>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save Address</button>
+                    </div>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
+
 <!-- Edit Address Modal -->
 <div class="modal fade" id="editAddressModal" tabindex="-1" aria-labelledby="editAddressModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form>
+            <form id="editAddresssForm">
                 <div class="modal-header">
                     <h5 class="modal-title" id="editAddressModalLabel">Edit Address</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Same fields as Add Address Modal -->
+
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="name" name="fullName" placeholder="Enter full name">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Address</label>
+                            <textarea class="form-control" rows="3" id="address" name="address" placeholder="Enter your address"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="state" class="form-label">State</label>
+                                <select class="form-control" id="state" name="state">
+                                    <option value="" disabled selected>Select a state</option>
+                                    <!-- States will be dynamically populated here -->
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="city" class="form-label">City</label>
+                                <select class="form-control" id="city" name="city" disabled>
+                                    <option value="" disabled selected>Select a city</option>
+                                    <!-- Cities will be dynamically populated here -->
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="pincode" class="form-label">PIN Code</label>
+                            <input type="text" class="form-control" id="pincode" name="pincode" placeholder="Enter PIN code">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Phone</label>
+                            <input type="tel" class="form-control" id="phoneNumber"  name="phoneNumber" placeholder="Enter phone number">
+                        </div>
+                        <input type="text" class="form-control" hidden id="addressId" name="addressId" >
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -370,6 +271,46 @@ input[type="file"] {
 </div>
 
 <script>
+document.getElementById("pincode").addEventListener("input", async function () {
+    const pincode = this.value.trim();
+    const stateField = document.getElementById("state");
+    const cityField = document.getElementById("city");
+    const resultDiv = document.getElementById("validationResult");
+
+    if (pincode.length === 6) {
+
+        stateField.value = "";
+        cityField.value = "";
+
+        try {
+            const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+            const data = await response.json();
+
+            if (data[0].Status === "Success") {
+                const postOffices = data[0].PostOffice;
+
+                // Populate State and City fields
+                stateField.value = postOffices[0].State || "";
+                cityField.value = postOffices[0].District || "";
+
+                // Populate Place dropdown
+                postOffices.forEach((office) => {
+                    const option = document.createElement("option");
+                    option.value = office.Name;
+                    option.textContent = office.Name;
+                });
+
+                resultDiv.innerHTML = `<p class="text-success">Details fetched successfully!</p>`;
+            } else {
+                resultDiv.innerHTML = `<p class="text-danger">Invalid Pincode or No Data Found.</p>`;
+            }
+        } catch (error) {
+            console.error("Error fetching pincode data:", error);
+            resultDiv.innerHTML = `<p class="text-danger">Error: ${error.message}</p>`;
+        }
+    }
+});
+
 
 document.getElementById('userProfile').addEventListener('submit', async (e) => {
     e.preventDefault(); 
@@ -452,7 +393,7 @@ document.getElementById("userDetailsForm").addEventListener('submit', async (e) 
 
 // adding the user Address
 
-document.getElementById('addAddress').addEventListener('submit' , async(e)=>{
+document.getElementById('address-form').addEventListener('submit' , async(e)=>{
     e.preventDefault();
 
     const form = e.target 
@@ -538,6 +479,100 @@ document.getElementById('forgotPasswordForm').addEventListener('submit' , async(
         console.log(error);
         showNotification('error','Something went wrong!')
     }
+})
+
+// autofill the editAddressModal
+document.getElementById('editAddressModal').addEventListener('show.bs.modal', (e) => {
+    const button = e.relatedTarget; // The button that triggered the modal
+    const modal = e.target;
+
+    // Extract data from the button's attributes
+    const fullName = button.getAttribute('data-fullname');
+    const address = button.getAttribute('data-address');
+    const city = button.getAttribute('data-city');
+    const state = button.getAttribute('data-state');
+    const pincode = button.getAttribute('data-pincode');
+    const phoneNumber = button.getAttribute('data-phonenumber');
+    const addressId = button.getAttribute('data-id');
+
+    // Prefill modal fields
+    modal.querySelector('#name').value = fullName;
+    modal.querySelector('#address').value = address;
+    modal.querySelector('#city').value = city;
+    modal.querySelector('#state').value = state;
+    modal.querySelector('#pincode').value = pincode;
+    modal.querySelector('#phoneNumber').value = phoneNumber;
+    modal.querySelector('#addressId').value = addressId;
+});
+
+
+document.getElementById('editAddresssForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const form = e.target;
+    const formData = new FormData(form);
+
+    try {
+        const formObject = Object.fromEntries(formData.entries());
+
+        if (!formObject.fullName || !formObject.address || !formObject.city || !formObject.state || !formObject.pincode || !formObject.phoneNumber) {
+            showNotification('error', 'All fields are required!');
+            return;
+        }
+
+        const res = await fetch('/address/edit', {
+            method: 'PATCH', 
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formObject),
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+            showNotification('success', data.message);
+
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showNotification('error', data.message || 'Failed to update address.');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('error', 'Something went wrong!');
+    }
+});
+
+
+document.addEventListener('click',async(e)=>{
+
+    if(e.target.id === 'delete-address'){
+
+        const id = e.target.getAttribute('data-id');
+
+        if (!id) {
+            showNotification('error', 'Address ID not found!');
+            return;
+        }
+        try {
+            const res = await fetch(`/address/delete/${id}`, {
+                method: 'DELETE',
+            });
+            const data = await res.json();
+            if (data.success) {
+                showNotification('success', data.message);
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                showNotification('error', data.message);
+            }
+        } catch (error) {
+            console.error(error);
+            showNotification('error', 'Something went wrong!');
+        }
+    }
+    
 })
 
 </script>

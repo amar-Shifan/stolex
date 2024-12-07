@@ -364,8 +364,6 @@ document.getElementById('addUserForm').addEventListener('submit', async function
                     showNotification('error', data.message);
                 }
                 
-                console.log('data done');
-                
             } catch (error) {
                 console.log("Error in fetch:", error);
                 showNotification('error', 'An unexpected error occurred. Please try again later.');

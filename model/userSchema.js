@@ -9,7 +9,7 @@ const userSchema = new mongoose.Schema(
         profile: { type: String },
         dob:{type: Date },
         block: { type: Boolean, required: true, default: false },
-        address:[{type : mongoose.Schema.Types.ObjectId , ref:'Address'}],
+        address:[{type : mongoose.Schema.Types.ObjectId , ref:'Address'}],  
         verified : {type : Boolean},
         googleId: {type : String , default:null}
     },

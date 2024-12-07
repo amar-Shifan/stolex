@@ -1,94 +1,10 @@
-<%-include('../partials/header.ejs')%>
+<%-include('../partials/header.ejs',{title:"admin page",style:'/css/productDetails.css' })%>
 
-<style>
-	/* Wishlist container styling */
-.wishlist-container {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  width: 36px;
-  height: 36px;
-  border: 2px solid black;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-/* Default heart style (white heart inside black border) */
-.wishlist-heart {
-  font-size: 20px;
-  color: black; 
-  transition: color 0.3s ease;
-}
-
-/* Background remains white by default */
-.wishlist-container {
-  background-color: white;
-}
-
-/* When clicked (add active class), heart turns red */
-.wishlist-container.active {
-  border-color: red;
-  background-color: red;
-}
-
-.wishlist-container.active .wishlist-heart {
-  color: white; /* Heart remains white when active */
-}
-
-/* Hover effect (optional) */
-.wishlist-container:hover {
-  transform: scale(1.1);
-}
-
-
-.star {
-    margin-right: 5px;
-    color: #dcdcdc; /* Light gray color for empty stars */
-}
-
-.star.filled {
-    color: #f0b400; /* Yellow color for filled stars */
-}
-
-.rating-text {
-    margin-left: 10px;
-    font-size: 14px;
-    color: #555; /* Text color for the rating description */
-}
-
-	.size-option {
-    color: #000000; /* Default color */
-    background-color: #ffffff; 
-    padding: 5px 10px;
-    border: 1px solid #ddd;
-    cursor: pointer;
-    text-decoration: none;
-}
-
-.size-option.selected {
-    color: #fff; /* Dark text color */
-    background-color: #000; /* Dark background */
-    border: 1px solid #000;
-}
-.zoom-container {
-    overflow: hidden;
-    position: relative;
-}
-
-.zoom-image {
-    transition: transform 0.2s ease;
-    cursor: zoom-in;
-}
-
-.zoom-container:hover .zoom-image {
-    cursor: zoom-out;
-}
-</style>
 		<div class="breadcrumbs">
 			<div class="container">
 				<div class="row">
 					<div class="col">
-						<p class="bread"><span><a href="index.html">Home</a></span> / <span>Product Details</span></p>
+						<p class="bread"><span><a href="/">Home</a></span> / <span>Product Details</span></p>
 					</div>
 				</div>
 			</div>
@@ -176,13 +92,24 @@
 								<div class="col-sm-12 text-center">
 								  <div class="d-flex justify-content-center align-items-center">
 									<!-- Add to Cart Button -->
-									<a href="/cart/add/<%= product._id %>" class="btn btn-dark btn-addtocart mr-3">
-									  <i class="icon-shopping-cart"></i> Add to Cart
-									</a>
+
+									<form id="addToCart"> 
+										<input type="hidden" id="selected-size" name="size" value="">
+										<input type="hidden" id="product-id" name="productId" value="<%= product._id %>">
+										<input type="hidden" id="selected-quantity" name="quantity" value="1">
+										<button type="submit" class="btn btn-dark btn-addtocart mr-3" >
+										<i class="icon-shopping-cart"></i> Add to Cart
+										</button>
+									</form>
 							  
 									<!-- Add to Wishlist Button -->
 									<div class="wishlist-container">
-									  <i class="icon-heart wishlist-heart"></i>
+										<form id="wishlistForm">
+											<input type="text" hidden value="<%= product._id %>" name="productId">
+											<button type="submit">
+												<i class="icon-heart wishlist-heart"></i>
+											</button>
+										</form>										
 									</div>
 								  </div>
 								</div>
@@ -371,7 +298,7 @@
 							  <%= relatedProduct.name %>
 							</h5>
 							<p class="card-text">$<%= relatedProduct.price.toFixed(2) %></p>
-							<a href="/product/<%= relatedProduct._id %>" class="btn btn-outline-dark btn-sm">
+							<a href="/productDetails/<%= relatedProduct._id %>" class="btn btn-outline-dark btn-sm">
 							  View Details
 							</a>
 						  </div>
@@ -389,7 +316,9 @@
 		  
 		
 <script src="/js/confirmation.js"></script>
-	<script>
+<script src="/js/showNotification.js"></script>
+
+<script>
 		
 		// sizes and stocks 
 document.addEventListener('DOMContentLoaded', () => {
@@ -399,6 +328,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const quantityInput = document.getElementById('quantity');
     const minusButton = document.querySelector('.quantity-left-minus');
     const plusButton = document.querySelector('.quantity-right-plus');
+
+	const sizeInput = document.getElementById('selected-size');
+    const quantityInputHidden = document.getElementById('selected-quantity');
+    const visibleQuantityInput = document.getElementById('quantity');
 
     // Default stock to show total stock
     let totalStock = parseInt(totalStockElement.textContent, 10);
@@ -410,6 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
         option.addEventListener('click', (event) => {
             event.preventDefault(); // Prevent default link behavior
 
+			sizeInput.value = option.dataset.size;
             // Highlight the selected size
             sizeOptions.forEach(opt => opt.classList.remove('selected'));
             option.classList.add('selected');
@@ -425,12 +359,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Increment and decrement quantity
     if (minusButton && plusButton && quantityInput) {
+
+		
         // Decrement the quantity when the minus button is clicked
         minusButton.addEventListener('click', function (event) {
             event.preventDefault(); // Prevent any default behavior
             let currentValue = parseInt(quantityInput.value);
             if (currentValue > 1) {
                 quantityInput.value = currentValue - 1;
+				quantityInputHidden.value = visibleQuantityInput.value;
             }
         });
 
@@ -452,6 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (currentValue < maxValue) {
                 quantityInput.value = currentValue + 1;
+				quantityInputHidden.value = visibleQuantityInput.value;
             }
         });
 
@@ -478,7 +416,84 @@ document.addEventListener('DOMContentLoaded', () => {
             quantityInput.max = totalStock; // Reset max to total stock
         }
     });
+
+	// add to cart 
+    // Update hidden quantity input whenever the visible quantity changes
+    visibleQuantityInput.addEventListener('input', () => {
+        quantityInputHidden.value = visibleQuantityInput.value;
+    });
+
+
+	document.getElementById('addToCart').addEventListener('submit', async (e) => {
+    e.preventDefault(); 
+
+	console.log(location.pathname)
+    const authenticated = await isAuth(null, 'Oops! Login first', location.pathname );
+
+    if (authenticated) {
+        const form = e.target; 
+        const formData = new FormData(form);
+
+        try {
+
+            const objectForm = Object.fromEntries(formData.entries());
+            console.log('Form Data:', objectForm); 
+
+
+            const response = await fetch('/cart/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(objectForm),
+            });
+
+
+            const data = await response.json().catch(() => ({
+                success: false,
+                message: 'Invalid server response',
+            }));
+
+
+            if (data.success) {
+                showNotification('success', data.message);
+            } else {
+                showNotification('error', data.message);
+            }
+			
+        } catch (error) {
+            console.error('Error adding to cart:', error); 
+            showNotification('error', 'Something went wrong');
+        }
+    }
+	});
 });
+const form = document.getElementById('wishlistForm');
+
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(form);
+    const formObject = Object.fromEntries(formData.entries());
+
+    try {
+        const res = await fetch('/wishlist/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json', // Ensure Content-Type is correct
+            },
+            body: JSON.stringify(formObject), // Convert the object to a JSON string
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            showNotification('success', data.message);
+        } else {
+            showNotification('error', data.message);
+        }
+    } catch (error) {
+        showNotification('error', 'Something went wrong!');
+        console.log('Error:', error);
+    }
+});
+
 
 
 
@@ -506,40 +521,6 @@ zoomImages.forEach((image) => {
 
 
 
-		$(document).ready(function(){
-
-	var quantitiy=0;
-   $('.quantity-right-plus').click(function(e){
-		
-		// Stop acting like a button
-		e.preventDefault();
-		// Get the field name
-		var quantity = parseInt($('#quantity').val());
-		
-		// If is not undefined
-			
-			$('#quantity').val(quantity + 1);
-
-		  
-			// Increment
-		
-	});
-
-	 $('.quantity-left-minus').click(function(e){
-		// Stop acting like a button
-		e.preventDefault();
-		// Get the field name
-		var quantity = parseInt($('#quantity').val());
-		
-		// If is not undefined
-	  
-			// Increment
-			if(quantity>0){
-			$('#quantity').val(quantity - 1);
-			}
-	});
-	
-	});
 
 </script>
 <%-include('../partials/footer.ejs') %>

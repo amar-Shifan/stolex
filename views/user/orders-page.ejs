@@ -1,117 +1,193 @@
-<%-include('../partials/header.ejs',{title:"admin page",style:'/css/admin.css',bootstrap:'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css' })%>
+<%-include('../partials/header.ejs',{title:"admin page",style:null })%>
+<style>
+  .order-card {
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 20px;
+      background-color: #fff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+  }
+  .order-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+  }
+  .order-header .status {
+      font-size: 0.9rem;
+      padding: 5px 10px;
+      border-radius: 20px;
+      color: #fff;
+      background-color: #28a745;
+  }
+  .order-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+  }
+  .product-carousel {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 10px;
+      scrollbar-width: thin;
+  }
+  .product-card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      min-width: 120px;
+      flex: none;
+      background-color: #f9f9f9;
+  }
+  .product-card img {
+      width: 100px;
+      height: 70px;
+      object-fit: cover;
+      border-radius: 5px;
+      margin-bottom: 8px;
+  }
+  .order-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+  }
+</style>
+
 
 <div class="container-fluid">
-    <div class="row">
-        <!-- Sidebar -->
-        <div class="col-md-3 col-lg-2 d-md-block bg-white shadow-sm p-3 min-vh-100">
-            <div class="list-group">
-                <a href="#" class="list-group-item list-group-item-action">
-                    <i class="bi bi-person"></i> Profile
-                </a>
-                <a href="#" class="list-group-item list-group-item-action active">
-                    <i class="bi bi-cart"></i> Orders
-                </a>
-                <a href="#" class="list-group-item list-group-item-action">
-                    <i class="bi bi-heart"></i> Wishlist
-                </a>
-                <a href="#" class="list-group-item list-group-item-action">
-                    <i class="bi bi-wallet"></i> Wallet
-                </a>
-            </div>
-            <div class="mt-auto pt-3">
-                <button class="btn btn-outline-danger w-100">
-                    Sign out
-                </button>
-            </div>
-        </div>
+  <div class="row">
+      <!-- Sidebar -->
+      <div class="col-md-3 col-lg-2 d-md-block bg-white shadow-sm p-3 min-vh-100">
+          <div class="list-group">
+              <a href="#" class="list-group-item list-group-item-action"><i class="bi bi-person"></i> Profile</a>
+              <a href="#" class="list-group-item list-group-item-action active"><i class="bi bi-cart"></i> Orders</a>
+              <a href="#" class="list-group-item list-group-item-action"><i class="bi bi-heart"></i> Wishlist</a>
+              <a href="#" class="list-group-item list-group-item-action"><i class="bi bi-wallet"></i> Wallet</a>
+          </div>
+          <div class="mt-auto pt-3">
+              <button class="btn btn-outline-danger w-100">Sign out</button>
+          </div>
+      </div>
 
-        <!-- Main Content -->
-        <div class="col-md-9 col-lg-10 p-4">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2>My Orders</h2>
-                <div class="input-group w-auto">
-                    <input type="text" class="form-control" placeholder="Search orders...">
-                    <button class="btn btn-outline-secondary" type="button">Search</button>
-                </div>
-            </div>
+      <!-- Main Content -->
+      <div class="col-md-9 col-lg-10">
+          <div class="container orders-container">
+              <div class="row orders-header p-5">
+                  <div class="col-md-6">
+                      <h2 class="mb-0">Orders</h2>
+                  </div>
+                  <div class="col-md-6 text-end ">
+                      <div class="input-group">
+                          <input type="text" class="form-control" placeholder="Search orders..." aria-label="Search orders">
+                          <button class="btn btn-dark" type="button">Search</button>
+                      </div>
+                  </div>
+              </div>
 
-            <!-- Orders List -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <div class="order-item border-bottom pb-3 mb-3">
-                        <div class="row align-items-center">
-                            <div class="col-md-2">
-                                <img src="/api/placeholder/80/80" class="img-fluid" alt="Product">
+              <div class="order-list">
+                <% if (orders.length === 0) { %>
+                    <p class="text-center mt-5">No orders available.</p>
+                <% } else { %>
+                    <% orders.forEach(order => { %>
+                        <div class="order-card">
+                            <div class="order-header">
+                                <div>
+                                    <strong>Order ID:</strong> <%= order._id %>
+                                </div>
+                                <div class="status <%= order.orderStatus === 'delivered' ? 'bg-success' : order.orderStatus === 'processing' ? 'bg-warning text-dark' : 'bg-danger' %>">
+                                    <%= order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1) %>
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <h6 class="mb-1">Order #12345</h6>
-                                <p class="text-muted mb-1">Placed on: Oct 25, 2024</p>
-                                <span class="badge bg-success">Delivered</span>
+                            <div class="order-info">
+                                <div><i class="bi bi-geo-alt"></i> <%= order.shippingAddress.city %>, <%= order.shippingAddress.state %></div>
+                                <div><i class="bi bi-arrow-right"></i></div>
+                                <div><i class="bi bi-house"></i> <%= order.shippingAddress.address %></div>
+                                <div><small>Placed on: <%= new Date(order.createdAt).toLocaleDateString() %></small></div>
                             </div>
-                            <div class="col-md-2">
-                                <p class="fw-bold mb-0">$129.99</p>
+                            <div class="product-carousel">
+                                <% order.items.forEach(item => { %>
+                                    <div class="product-card">
+                                        <img src="<%= item.productId.images[0] || 'https://via.placeholder.com/100x70' %>" alt="<%= item.productId.name %>">
+                                        <div><%= item.productId.name %></div>
+                                        <div><strong>$<%= item.price.toFixed(2) %></strong> x<%= item.quantity %></div>
+                                        <div>Size: <%= item.size || 'N/A' %></div>
+                                    </div>
+                                <% }) %>
                             </div>
-                            <div class="col-md-2">
-                                <button class="btn btn-outline-primary btn-sm">View Details</button>
+                            <div class="order-footer">
+                                <div><strong>$<%= order.totalAmount.toFixed(2) %></strong> (<%= order.items.length %> items)</div>
+                                <div class="d-flex">
+                                    <a class="btn btn-dark btn-sm" href="/order/<%=order._id %>">Details</a>
+                                <% if (order.orderStatus !== 'cancelled' && order.orderStatus !== 'delivered') { %>
+                                    <form class="cancelFormClass">
+                                        <input type="hidden" name="orderId" value="<%= order._id %>">
+                                        <button type="submit" class="btn btn-outline-danger w-100">Cancel</button>
+                                    </form>
+                                <% } %>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    <% }) %>
+                <% } %>
+                
+              </div>
 
-                    <div class="order-item border-bottom pb-3 mb-3">
-                        <div class="row align-items-center">
-                            <div class="col-md-2">
-                                <img src="/api/placeholder/80/80" class="img-fluid" alt="Product">
-                            </div>
-                            <div class="col-md-6">
-                                <h6 class="mb-1">Order #12346</h6>
-                                <p class="text-muted mb-1">Placed on: Oct 23, 2024</p>
-                                <span class="badge bg-warning text-dark">Processing</span>
-                            </div>
-                            <div class="col-md-2">
-                                <p class="fw-bold mb-0">$79.99</p>
-                            </div>
-                            <div class="col-md-2">
-                                <button class="btn btn-outline-primary btn-sm">View Details</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="order-item">
-                        <div class="row align-items-center">
-                            <div class="col-md-2">
-                                <img src="/api/placeholder/80/80" class="img-fluid" alt="Product">
-                            </div>
-                            <div class="col-md-6">
-                                <h6 class="mb-1">Order #12347</h6>
-                                <p class="text-muted mb-1">Placed on: Oct 20, 2024</p>
-                                <span class="badge bg-danger">Cancelled</span>
-                            </div>
-                            <div class="col-md-2">
-                                <p class="fw-bold mb-0">$199.99</p>
-                            </div>
-                            <div class="col-md-2">
-                                <button class="btn btn-outline-primary btn-sm">View Details</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Pagination -->
-            <nav aria-label="Orders pagination">
-                <ul class="pagination justify-content-center">
-                    <li class="page-item disabled">
-                        <a class="page-link" href="#" tabindex="-1">Previous</a>
-                    </li>
-                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                    <li class="page-item">
-                        <a class="page-link" href="#">Next</a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-    </div>
+              <!-- Pagination (optional) -->
+              <nav aria-label="Order pages" class="p-3">
+                  <ul class="pagination justify-content-center">
+                      <!-- Pagination logic if implemented -->
+                  </ul>
+              </nav>
+          </div>
+      </div>
+  </div>
 </div>
-<%-include('../partials/footer.ejs')%>
+
+<script>
+    
+document.querySelectorAll('.cancelFormClass').forEach((form) => {
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(e.target);
+
+        confirmationUtil.confirm({
+                message: 'Are you sure to Cancel this Order?',
+                confirmText: 'Yes',
+                cancelText: 'No',
+                callback: async (confirmed) => {
+                    if (!confirmed) return; 
+
+                    try {
+                        const formObject = Object.fromEntries(formData.entries());
+                        const res = await fetch('/orders/cancel', {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(formObject),
+                        });
+                        const data = await res.json();
+
+                        if (data.success) {
+                            showNotification('success', data.message);
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1500);
+                        } else {
+                            showNotification('error', data.message);
+                        }
+                    } catch (error) {
+                        console.log(error);
+                        showNotification('error', 'Something went wrong!');
+                    }
+                },   
+        });
+    });
+});
+</script>
+<%- include('../partials/footer.ejs') %>

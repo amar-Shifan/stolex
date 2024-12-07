@@ -246,6 +246,26 @@ function validateForm() {
     return false;
   }
 
+  for (let i = 0; i < images.length; i++) {
+    const file = images[i].files[0];
+    if (file) {
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+
+        // File type validation
+        if (!allowedTypes.includes(file.type)) {
+            showNotification('error', 'Only JPG, JPEG, PNG, and WEBP files are allowed.');
+            return false;
+        }
+
+        // File size validation (5 MB = 5 * 1024 * 1024 bytes)
+        const maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+            showNotification('error', 'File size must be below 5 MB.');
+            return false;
+        }
+      }
+    }
+
   return true;
 }
 

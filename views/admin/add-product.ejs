@@ -194,9 +194,9 @@
         showNotification('error', data.message || 'Something went wrong');
       } else {
         showNotification('success', data.message || 'Product added successfully');
-        form.reset(); // Reset the form on success
-        document.getElementById('dynamic-fields').innerHTML = ''; // Clear dynamic fields
-        document.getElementById('dynamic-brand').innerHTML = ''; // Clear dynamic brand field
+        form.reset(); 
+        document.getElementById('dynamic-fields').innerHTML = ''; 
+        document.getElementById('dynamic-brand').innerHTML = ''; 
       }
     } catch (error) {
       showNotification('error', 'Network error, please try again later');
@@ -204,28 +204,84 @@
   });
 
   function validateForm(formData) {
+
   const requiredFields = ['name', 'description', 'price', 'category', 'status'];
 
-  // Check required text fields
   for (let field of requiredFields) {
-    if (!formData.get(field)) {
-      showNotification('error', `${field.charAt(0).toUpperCase() + field.slice(1)} is required`);
+    const value = formData.get(field)?.trim();
+    if (!value) {
+      showNotification('error', `${field.charAt(0).toUpperCase() + field.slice(1)} is required.`);
       return false;
+    }
+
+    if (field === 'name' && value.length < 3) {
+      showNotification('error', 'Product name must be at least 3 characters long.');
+      return false;
+    }
+
+    if (field === 'description' && value.length < 10) {
+      showNotification('error', 'Product description must be at least 10 characters long.');
+      return false;
+    }
+
+    if (field === 'price') {
+      const price = parseFloat(value);
+      if (isNaN(price) || price <= 0) {
+        showNotification('error', 'Please enter a valid price greater than 0.');
+        return false;
+      }
     }
   }
 
   // Validate images
   const imageFiles = formData.getAll('images').filter(file => file.size > 0);
+
+  // Ensure exactly 3 images are uploaded
   if (imageFiles.length < 3) {
-    showNotification('error', 'Exactly 3 images are required');
+    showNotification('error', 'Exactly 3 images are required.');
     return false;
   } else if (imageFiles.length > 4) {
-    showNotification('error', 'Only 4 images are allowed');
+    showNotification('error', 'Only 4 images are allowed.');
+    return false;
+  }
+
+  // Additional validation for each image (type and size)
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  const maxSize = 5 * 1024 * 1024; // 5 MB
+
+  for (let file of imageFiles) {
+    // File type validation
+    if (!allowedTypes.includes(file.type)) {
+      showNotification('error', 'Only JPG, JPEG, PNG, and WEBP files are allowed.');
+      return false;
+    }
+
+    // File size validation
+    if (file.size > maxSize) {
+      showNotification('error', 'File size must be below 5 MB.');
+      return false;
+    }
+  }
+
+  const stockEntries = formData.getAll('stock');
+
+  let stockValid = true;
+  stockEntries.forEach(entry => {
+    const size = entry.size?.trim();
+    const quantity = parseInt(entry.quantity);
+    if (!size || isNaN(quantity) || quantity <= 0) {
+      stockValid = false;
+    }
+  });
+
+  if (!stockValid) {
+    showNotification('error', 'Please provide valid stock entries with size and quantity.');
     return false;
   }
 
   return true;
 }
+
 
   //sizes handler and brand 
   function handleCategoryChange(selectElement) {
