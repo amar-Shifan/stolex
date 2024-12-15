@@ -340,13 +340,28 @@ const cancelOrder = async (req, res) => {
                 return res.status(400).json({ success: false, message: 'Item is already canceled or returned' });
             }
 
+            console.log('working reached the product ')
             const product = await Product.findById(item.productId._id);
+            console.log('got the product ', product);
+            
             if (product) {
+                console.log('enter in product')
                 const stockEntry = product.stock.find(stock => stock.size === item.size);
+                
                 if (stockEntry) {
                     stockEntry.quantity += item.quantity;
+    
+                    // Update the stock directly using Mongoose
+                    await Product.updateOne(
+                        { _id: item.productId._id, 'stock.size': item.size },
+                        { $inc: { 'stock.$.quantity': item.quantity } }
+                    );
+    
+                    console.log('Stock updated successfully');
+                } else {
+                    console.log('Stock entry not found');
                 }
-                await product.save();
+                
             }
 
             item.status = 'Cancelled';
@@ -361,11 +376,9 @@ const cancelOrder = async (req, res) => {
 
             await order.save();
         } else {
-            console.log('entered')
             // Cancel the entire order
             for (const item of order.items) {
                 if (item.status === 'Cancelled' || item.status === 'Returned') {
-                    // Skip already returned or canceled items
                     continue;
                 }
 
@@ -374,10 +387,18 @@ const cancelOrder = async (req, res) => {
                     const stockEntry = product.stock.find(stock => stock.size === item.size);
                     if (stockEntry) {
                         stockEntry.quantity += item.quantity;
+        
+                        // Update the stock directly using Mongoose
+                        await Product.updateOne(
+                            { _id: item.productId._id, 'stock.size': item.size },
+                            { $inc: { 'stock.$.quantity': item.quantity } }
+                        );
+        
+                        console.log('Stock updated successfully');
+                    } else {
+                        console.log('Stock entry not found');
                     }
-                    await product.save();
                 }
-                console.log(product , 'working')
                 item.status = 'Cancelled';
                 refundAmount += item.refundAmount; // Add only eligible refund amounts
             }
@@ -388,7 +409,6 @@ const cancelOrder = async (req, res) => {
             await order.save();
         }
 
-        console.log('erorrrorororworking!')
         // Handle wallet refund
         let wallet = await Wallet.findOne({ userId });
         if (!wallet) {
