@@ -106,6 +106,7 @@
             </div>
 
             <!-- Order Items -->
+            <!-- Order Items -->
             <div class="bg-white rounded-3 shadow-sm p-4 mb-4">
                 <h4 class="mb-4">Order Items</h4>
                 <% order.items.forEach(item => { %>
@@ -127,18 +128,53 @@
                                     <p class="fw-bold mb-0">$<%= item.price.toFixed(2) %></p>
                                 </div>
                                 <div class="col-md-3">
-                                    <button class="btn btn-light w-100 mb-2">Write Review</button>
-                                    <form class="cancelFormClass">
-                                        <input type="hidden" name="orderId" value="<%= order._id %>">
-                                        <input type="hidden" name="itemId" value="<%= item._id %>">
-                                        <button type="submit" class="btn btn-outline-danger w-100">Cancel</button>
-                                    </form>
+                                    <% if (order.orderStatus !== 'delivered' && order.orderStatus !== 'cancelled') { %>
+                                        <!-- Cancel Button -->
+                                        <form class="cancelFormClass">
+                                            <input type="hidden" name="orderId" value="<%= order._id %>">
+                                            <input type="hidden" name="itemId" value="<%= item._id %>">
+                                            <button type="submit" class="btn btn-outline-danger w-100">Cancel</button>
+                                        </form>
+                                    <% } else if (order.orderStatus === 'delivered') { %>
+                                        <!-- Return Button -->
+                                        <form class="returnFormClass">
+                                            <input type="hidden" name="orderId" value="<%= order._id %>">
+                                            <input type="hidden" name="itemId" value="<%= item._id %>">
+                                            <button type="submit" class="btn btn-outline-secondary w-100 returnButton" >Return</button>
+                                        </form>
+                                    <% } %>
                                 </div>
                             </div>
+
+                            <!-- Modal for Return Reason -->
+                            <div class="modal fade" id="returnReasonModal" tabindex="-1" aria-labelledby="returnReasonModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="returnReasonModalLabel">Return Order</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form id="returnReasonForm">
+                                                <input type="hidden" id="modalOrderId" name="orderId" value="">
+                                                <input type="hidden" id="modalItemId" name="itemId" value="">
+                                                <div class="mb-3">
+                                                    <label for="returnReason" class="form-label">Reason for Return</label>
+                                                    <textarea class="form-control" id="returnReason" name="reason" rows="3" required></textarea>
+                                                </div>
+                                                <button type="submit" class="btn btn-primary">Submit</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
                         </div>
                     </div>
                 <% }) %>
             </div>
+
 
             <!-- Shipping Details -->
             <div class="bg-white rounded-3 shadow-sm p-4">
@@ -207,6 +243,60 @@ document.querySelectorAll('.cancelFormClass').forEach((form) => {
         }
     });
 });
+
+
+document.querySelectorAll('.returnButton').forEach((button) => {
+    button.addEventListener('click', (e) => {
+        e.preventDefault(); // Prevent default form submission
+        
+        // Find the form and extract data
+        const form = e.target.closest('.returnFormClass');
+        if (!form) return;
+
+        const orderId = form.querySelector('input[name="orderId"]').value;
+        const itemId = form.querySelector('input[name="itemId"]').value;
+
+        // Set the order ID in the modal's hidden input field
+        document.getElementById('modalOrderId').value = orderId;
+        document.getElementById('modalItemId').value = itemId;
+
+        // Show the modal
+        const returnModal = new bootstrap.Modal(document.getElementById('returnReasonModal'));
+        returnModal.show();
+    });
+});
+
+
+document.getElementById('returnReasonForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+    const formObject = Object.fromEntries(formData.entries());
+
+    try {
+        const res = await fetch('/orders/return', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formObject),
+        });
+        const data = await res.json();
+
+        // Handle response
+        if (data.success) {
+            showNotification('success', data.message);
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showNotification('error', data.message);
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('error', 'Something went wrong!');
+    }
+});
+
+
 
 </script>
 

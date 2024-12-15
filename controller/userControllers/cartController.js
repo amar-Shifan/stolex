@@ -148,9 +148,12 @@ const remove = async (req, res) => {
         if (!stockForSize || quantity > stockForSize.quantity) {
             return res.status(400).json({ success: false, message: 'Requested quantity exceeds available stock' });
         }
-        
+
         item.quantity = quantity;
-        item.total = item.quantity * item.price;
+
+        // Calculate total based on offerPrice if available, else use item.price
+        const totalPrice = item.quantity * (product.discountedPrice || item.price);
+        item.total = totalPrice;
 
         await cart.save();
 
@@ -160,6 +163,7 @@ const remove = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
+
 
 
   

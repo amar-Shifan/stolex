@@ -3,10 +3,6 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
 const env = require('../utils/env_var')
 
-console.log(env.CLOUDINARY_API_KEY)
-console.log(env.CLOUDINARY_API_SECRET)
-console.log(env.CLOUDINARY_CLOUD_NAME)
-
 
 cloudinary.config({
     cloud_name: env.CLOUDINARY_CLOUD_NAME,

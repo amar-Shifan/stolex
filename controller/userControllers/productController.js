@@ -27,14 +27,13 @@ const getProductDetail = async (req, res) => {
 
   const getProducts = async (req, res) => {
     try {
-      const { category, brand, parentCategoryName, size, subCategory, search, sort } = req.query;
+    const { category, brand, parentCategoryName, size, subCategory, search, sort } = req.query;
   
       let products = [];
       let selectedName = '';
       let sizes = [];
       let styles = [];
       let filters = {};
-      
   
       if (brand) filters.brand = Array.isArray(brand) ? { $in: brand } : brand;
       if (size) filters["stock.size"] = Array.isArray(size) ? { $in: size } : size;
@@ -58,7 +57,7 @@ const getProductDetail = async (req, res) => {
   
       if (parentCategoryName) {
           if (parentCategoryName === 'all') {
-              products = await Product.find({ ...filters, status: 'Active' }).populate('category');
+              products = await Product.find({ ...filters, status: 'Active' }).populate('category').populate('offer');
           } else {
               products = await Product.find({ ...filters, status: 'Active' })
                   .populate({
@@ -75,10 +74,11 @@ const getProductDetail = async (req, res) => {
   
           products = await Product.find({ ...filters, category: categoryData._id, status: 'Active' })
               .populate('category')
+              .populate('offer')
               .exec();
           selectedName = categoryData.name;
       } else {
-          products = await Product.find({ ...filters, status: 'Active' }).populate('category').exec();
+          products = await Product.find({ ...filters, status: 'Active' }).populate('category').populate('offer').exec();
           selectedName = 'All Products';
       }
   
@@ -92,7 +92,7 @@ const getProductDetail = async (req, res) => {
               new_arrivals: { createdAt: -1 },
           };
           const sortQuery = sortOptions[sort] || {};
-          products = await Product.find({ ...filters, status: 'Active' }).populate('category').sort(sortQuery).exec();
+          products = await Product.find({ ...filters, status: 'Active' }).populate('category' ).populate('offer').sort(sortQuery).exec();
       }
   
       sizes = [...new Set(products.flatMap((product) => product.stock.map((stockItem) => stockItem.size)))];
@@ -137,5 +137,94 @@ const getProductDetail = async (req, res) => {
   }
 
 
+  const getShop = async (req, res) => {
+    try {
+        const { brand, size, category, search, sort, page = 1, limit = 12 } = req.query;
 
-module.exports = {getProductDetail , getProducts}
+        // Pagination
+        const skip = (page - 1) * limit;
+
+        // Building the Query
+        const filter = {};
+
+        // Filtering by Brand
+        if (brand) filter.brand = { $in: Array.isArray(brand) ? brand : [brand] };
+
+        // Filtering by Size
+        if (size) {
+            filter["stock.size"] = { $in: Array.isArray(size) ? size : [size] };
+        }
+
+        // Filtering by Category
+        if (category) filter.category = category;
+
+        // Searching by Product Name or Description
+        if (search) {
+            filter.$or = [
+                { name: { $regex: search, $options: "i" } },
+                { description: { $regex: search, $options: "i" } },
+            ];
+        }
+
+        // Sorting
+        let sortOption = {};
+        switch (sort) {
+            case "price_asc":
+                sortOption.price = 1;
+                break;
+            case "price_desc":
+                sortOption.price = -1;
+                break;
+            case "rating_desc":
+                sortOption.rating = -1;
+                break;
+            case "new_arrivals":
+                sortOption.createdAt = -1;
+                break;
+            case "name_asc":
+                sortOption.name = 1;
+                break;
+            case "name_desc":
+                sortOption.name = -1;
+                break;
+            default:
+                sortOption = {}; // No sorting by default
+        }
+
+        // Fetch filtered and sorted products
+        const totalProducts = await Product.countDocuments(filter); // Total products matching the filters
+        const products = await Product.find(filter)
+            .sort(sortOption)
+            .skip(skip)
+            .limit(limit);
+
+        // Fetch additional data
+        const styles = await Category.find({ status: "Active", level: 1 });
+        const brands = await Brand.find({});
+        const sizes = await Product.distinct("stock.size"); // Get unique sizes
+
+        const selectedName = req.query.category || "All Products";
+
+        // Render the page
+        res.render("user/footwear", {
+            products,
+            brands,
+            sizes,
+            styles,
+            selectedName,
+            currentPage: parseInt(page),
+            totalPages: Math.ceil(totalProducts / limit),
+            locals: {
+                searchQuery: search || "",
+                sort: sort || "",
+            },
+        });
+    } catch (error) {
+        console.error(error);
+        res.render("error", { message: "Something went wrong!" });
+    }
+};
+
+
+
+module.exports = {getProductDetail , getProducts ,getShop}

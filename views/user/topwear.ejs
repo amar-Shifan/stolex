@@ -314,25 +314,50 @@
 		
 						<div class="row g-4">
 							<% if (products.length > 0) { %>
-							<% products.forEach(product => { %>
-							<div class="col-6 col-md-4 col-lg-3">
-								<div class="card h-100 shadow-sm border-0 product-card">
+							  <% products.forEach(product => { %>
+								<div class="col-6 col-md-4 col-lg-3">
+								  <div class="card h-100 shadow-sm border-0 product-card">
+									
+									<!-- Ribbon or Badge for Offer -->
+									<% if (product.offer && product.discountedPrice) { %>
+									  <div class="position-absolute top-0 start-0 p-2 bg-danger text-white rounded-end" style="z-index: 1;">
+										<span><%= product.offer.discount%>% Offer</span>
+									  </div>
+									<% } %>
+						  
+									<!-- Product Image -->
 									<img src="<%= product.images[0] || '/api/placeholder/400/400' %>" alt="<%= product.name %>" class="card-img-top img-fluid" style="height: 200px; object-fit: cover;">
+						  
 									<div class="card-body text-center">
-										<h5 class="card-title text-truncate"><%= product.name %></h5>
-										<p class="card-text text-muted small text-truncate"><%= product.description ? product.description.substring(0, 50) + '...' : 'No description available' %></p>
+									  <h5 class="card-title text-truncate"><%= product.name %></h5>
+									  <p class="card-text text-muted small text-truncate">
+										<%= product.description ? product.description.substring(0, 50) + '...' : 'No description available' %>
+									  </p>
+						  
+									  <!-- Price Section -->
+									  <% if (product.offer && product.discountedPrice) { %>
+										<!-- Display the discounted price and strikethrough original price -->
+										<p class="price text-danger fw-bold fs-5">
+										  ₹<%= product.discountedPrice.toFixed(2) %> 
+										  <span class="text-muted text-decoration-line-through">₹<%= product.price.toFixed(2) %></span>
+										</p>
+									  <% } else { %>
+										<!-- Display original price if no offer -->
 										<p class="price text-dark fw-bold fs-5">₹<%= product.price.toFixed(2) %></p>
-										<a href="/productDetails/<%= product._id %>" class="btn btn-dark btn-sm">View Details</a>
+									  <% } %>
+						  
+									  <a href="/productDetails/<%= product._id %>" class="btn btn-dark btn-sm">View Details</a>
 									</div>
+								  </div>
 								</div>
-							</div>
-							<% }); %>
+							  <% }); %>
 							<% } else { %>
-							<div class="col-12 text-center">
+							  <div class="col-12 text-center">
 								<p class="text-muted">No products available for <%= selectedName %>.</p>
-							</div>
+							  </div>
 							<% } %>
-						</div>
+						  </div>
+						  
 					</div>
 				</div>
 				</div>

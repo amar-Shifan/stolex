@@ -5,6 +5,8 @@ const userController = require('../controller/adminControllers/userManagementCon
 const categoryController = require('../controller/adminControllers/categoryController');
 const productController = require('../controller/adminControllers/productController');
 const ordersController = require('../controller/adminControllers/orderController')
+const offerController = require('../controller/adminControllers/offerController')
+const couponController = require('../controller/adminControllers/couponController')
 const env = require('../utils/env_var')
 const upload = require('../middlewares/upload')
 const { handleProductImages } = require('../middlewares/delete');
@@ -42,6 +44,21 @@ router.post('/verifyLogin', controller.adminLogin);
 // Route to fetch details of a specific category
 router.get('/categories/:id', productController.brandFetch);
   
+
+router.get('/offers' , offerController.getOffers)
+router.post('/offers/create' , offerController.createOffer)
+router.get('/offers/categories' , offerController.getCategory)
+router.get('/offers/products' , offerController.getProducts)
+
+
+router.get('/coupons' , couponController.getCoupon);
+router.post('/coupons/create' , couponController.createCoupon)
+
+router.post('/orders/:orderId/approve-return', ordersController.approveReturn);
+router.post('/orders/:orderId/items/:itemId/approve-return', ordersController.approveReturn);
+
+router.post('/orders/:orderId/reject-return', ordersController.rejectReturn);
+router.post('/orders/:orderId/items/:itemId/reject-return', ordersController.rejectReturn);
 
 
 module.exports = router

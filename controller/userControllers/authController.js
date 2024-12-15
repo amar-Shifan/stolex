@@ -41,11 +41,16 @@ const userLogin = async (req, res) => {
         req.session.userId = user._id;
 
         const redirectUrl = req.query.redirect || '/';
-        return res.status(200).json({
-            success: true,
-            message: 'User logged in successfully.',
-            redirectUrl,
+        console.log(req.session)
+        // Save the session
+        req.session.save((err) => {
+            if (err) {
+                console.error('Session save error:', err);
+                return res.status(500).json({ success: false, message: 'Failed to save session' });
+            }
+            res.status(200).json({ success: true, message: 'Logged in successfully' ,redirectUrl});
         });
+        console.log(req.session)
 
     } catch (error) {
         console.error('Login Error:', error);
@@ -233,7 +238,14 @@ const otpVerification = async (req, res) => {
         delete req.session.tempUserData;
         req.session.userId = newUser._id;
 
-        return res.status(200).json({ success: true, message: 'Signed in Successfully' });
+        // Save the session
+        req.session.save((err) => {
+            if (err) {
+                console.error('Session save error:', err);
+                return res.status(500).json({ success: false, message: 'Failed to save session' });
+            }
+            res.status(200).json({ success: true, message: 'Signed in Successfully' });
+        });
 
     } catch (error) {
         console.error('Error in OTP verification:', error);

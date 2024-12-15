@@ -1,0 +1,283 @@
+<%- include('../partials/admin_header.ejs', { title: "Offer Management" }) %>
+
+<section class="content-main">
+  <div class="content-header d-flex flex-column flex-md-row justify-content-between align-items-center">
+    <div class="mb-3 mb-md-0">
+      <h2 class="content-title">Manage Offers</h2>
+      <p>View and create offers for products and categories.</p>
+    </div>
+    <div>
+      <button class="btn btn-primary" id="addCategoryOfferBtn">Add Category Offer</button>
+      <button class="btn btn-secondary" id="addProductOfferBtn">Add Product Offer</button>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Offers List</h5>
+      <div>
+        <!-- Buttons for toggling -->
+        <button id="categoryButton" class="btn btn-primary me-2">Category Offers</button>
+        <button id="productButton" class="btn btn-secondary">Product Offers</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <!-- Category Offers Table -->
+      <div id="categoryOffers" class="offer-list">
+        <h5 class="mb-3">Category Offers</h5>
+        <% if (categoryOffers && categoryOffers.length > 0) { %>
+          <table class="table table-bordered table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>#</th>
+                <th>Title</th>
+                <th>Discount (%)</th>
+                <th>Start Date</th>
+                <th>Expiry Date</th>
+                <th>Apply To</th>
+                <th>Category Name</th>
+                <th>Created At</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% categoryOffers.forEach((offer, index) => { %>
+                <tr>
+                  <td><%= index + 1 %></td>
+                  <td><%= offer.title %></td>
+                  <td><%= offer.discount %></td>
+                  <td><%= new Date(offer.startDate).toLocaleDateString() %></td>
+                  <td><%= new Date(offer.expiryDate).toLocaleDateString() %></td>
+                  <td><%= offer.applyTo %></td>
+                  <td><%= offer.categoryIds[0].name || 'None' %></td>
+                  <td><%= new Date(offer.createdAt).toLocaleDateString() %></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        <% } else { %>
+          <p>No category offers available.</p>
+        <% } %>
+      </div>
+  
+      <!-- Product Offers Table -->
+      <div id="productOffers" class="offer-list" style="display: none;">
+        <h5 class="mb-3">Product Offers</h5>
+        <% if (productOffers && productOffers.length > 0) { %>
+          <table class="table table-bordered table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>#</th>
+                <th>Title</th>
+                <th>Discount (%)</th>
+                <th>Start Date</th>
+                <th>Expiry Date</th>
+                <th>Apply To</th>
+                <th>Product Name</th>
+                <th>Created At</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% productOffers.forEach((offer, index) => { %>
+                <tr>
+                  <td><%= index + 1 %></td>
+                  <td><%= offer.title %></td>
+                  <td><%= offer.discount %></td>
+                  <td><%= new Date(offer.startDate).toLocaleDateString() %></td>
+                  <td><%= new Date(offer.expiryDate).toLocaleDateString() %></td>
+                  <td><%= offer.applyTo %></td>
+                  <td><%= offer.productIds[0].name || 'None' %></td>
+                  <td><%= new Date(offer.createdAt).toLocaleDateString() %></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        <% } else { %>
+          <p>No product offers available.</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+  
+</section>
+
+<!-- Modal Template -->
+<div class="modal fade" id="offerModal" tabindex="-1" aria-labelledby="offerModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="offerModalLabel">Add Offer</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="offerForm">
+            <input type="hidden" id="applyToType" name="type" value="">
+        
+            <div class="mb-4">
+                <label for="offerTitle" class="form-label">Offer Title</label>
+                <input type="text" class="form-control" id="offerTitle" name="title" placeholder="Enter offer title" required>
+            </div>
+        
+            <div class="mb-4">
+                <label for="offerDiscount" class="form-label">Discount (%)</label>
+                <input type="number" class="form-control" id="offerDiscount" name="discount" placeholder="Enter discount percentage" min="0" max="100" required>
+            </div>
+        
+            <div class="mb-4">
+                <label for="startDate" class="form-label">Start Date</label>
+                <input type="date" id="startDate" name="startDate" class="form-control" required>
+            </div>
+        
+            <div class="mb-4">
+                <label for="offerExpiry" class="form-label">Expiry Date</label>
+                <input type="date" class="form-control" id="offerExpiry" name="expiryDate" required>
+            </div>
+        
+            <div id="dynamicFields" class="mb-4"></div>
+        
+            <button type="submit" class="btn btn-primary">Save Offer</button>
+        </form>
+        
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+    const categoryButton = document.getElementById('categoryButton');
+    const productButton = document.getElementById('productButton');
+    const categoryOffers = document.getElementById('categoryOffers');
+    const productOffers = document.getElementById('productOffers');
+  
+    categoryButton.addEventListener('click', () => {
+      categoryOffers.style.display = 'block';
+      productOffers.style.display = 'none';
+      categoryButton.classList.add('btn-primary');
+      categoryButton.classList.remove('btn-secondary');
+      productButton.classList.add('btn-secondary');
+      productButton.classList.remove('btn-primary');
+    });
+  
+    productButton.addEventListener('click', () => {
+      categoryOffers.style.display = 'none';
+      productOffers.style.display = 'block';
+      productButton.classList.add('btn-primary');
+      productButton.classList.remove('btn-secondary');
+      categoryButton.classList.add('btn-secondary');
+      categoryButton.classList.remove('btn-primary');
+    });
+  </script>
+  
+    
+
+<script>
+
+///
+document.getElementById('addCategoryOfferBtn').addEventListener('click', () => {
+    showOfferModal('categories');
+});
+
+document.getElementById('addProductOfferBtn').addEventListener('click', () => {
+    showOfferModal('products');
+});
+function showOfferModal(type) {
+    document.getElementById('applyToType').value = type; // Dynamically set the type
+    console.log('applyToType value:', document.getElementById('applyToType').value); // Debugging
+
+    // Update modal title
+    document.getElementById('offerModalLabel').innerText = `Add ${type === 'categories' ? 'Category' : 'Product'} Offer`;
+
+    const dynamicFields = document.getElementById('dynamicFields');
+    dynamicFields.innerHTML = '';
+
+    // Fetch categories or products dynamically
+    fetch(`/admin/offers/${type}`)
+        .then(response => response.json())
+        .then(items => {
+            const selectElement = document.createElement('select');
+            selectElement.classList.add('form-control');
+            selectElement.id = type === 'categories' ? 'categoryList' : 'productList';
+            selectElement.name = type === 'categories' ? 'categoryId' : 'productId';
+
+            const placeholderOption = document.createElement('option');
+            placeholderOption.value = '';
+            placeholderOption.textContent = `Select ${type === 'categories' ? 'Category' : 'Product'}`;
+            placeholderOption.disabled = true;
+            placeholderOption.selected = true;
+            selectElement.appendChild(placeholderOption);
+
+            items.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item._id;  // Ensure that _id is correct
+            option.textContent = item.name;
+            selectElement.appendChild(option);
+        });
+
+            const label = document.createElement('label');
+            label.textContent = `Select ${type === 'categories' ? 'Category' : 'Product'}`;
+            label.classList.add('form-label'); // Add styling class if needed
+            label.setAttribute('for', selectElement.id);
+
+            dynamicFields.appendChild(label);
+            dynamicFields.appendChild(selectElement);
+        })
+        .catch(error => {
+            console.error('Error fetching items:', error);
+            dynamicFields.innerHTML = `<p class="text-danger">Unable to load ${type}</p>`;
+        });
+
+    const modal = new bootstrap.Modal(document.getElementById('offerModal'));
+    modal.show();
+}
+
+
+
+document.getElementById('offerForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const formData = new FormData(event.target);
+    const formObject = Object.fromEntries(formData.entries());
+
+    // Check if the productId or categoryId exists in the formObject
+    console.log(formObject);  // Debugging log
+
+    try {
+        const response = await fetch('/admin/offers/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formObject)  // Send as JSON
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            alert('Offer saved successfully!');
+            
+            // Optionally refresh the offers list
+            // You might want to implement this function to update the UI
+            refreshOffersList();
+        } else {
+            const errorData = await response.json();
+            showNotification({success:false ,message : 'Error in creating'} );
+        }
+
+        // Close and reset modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('offerModal'));
+        modal.hide();
+        event.target.reset();
+    } catch (error) {
+        console.error('Error saving offer:', error);
+        alert('Failed to save offer. Please try again.');
+    }
+});
+
+
+
+  // Function to refresh offers list (to be implemented)
+  function refreshOffersList() {
+    // Fetch and update offers in the respective tabs
+    // This is a placeholder and should be implemented based on your specific requirements
+    console.log('Refreshing offers list');
+  }
+</script>
+
+<%- include('../partials/admin_footer.ejs') %>

@@ -1,0 +1,189 @@
+<%- include('../partials/admin_header.ejs', { title: "Coupon Management" }) %>
+
+<section class="content-main">
+  <div class="content-header d-flex flex-column flex-md-row justify-content-between align-items-center">
+    <div class="mb-3 mb-md-0">
+      <h2 class="content-title">Manage Coupons</h2>
+      <p>Create, view, and manage discount coupons effectively.</p>
+    </div>
+    <div>
+      <button class="btn btn-primary" id="addCouponBtn">Add Coupon</button>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Coupons List</h5>
+    </div>
+    <div class="card-body">
+      <% if (coupons && coupons.length > 0) { %>
+        <table class="table table-bordered table-hover">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>Code</th>
+              <th>Discount (%)</th>
+              <th>Usage Limit</th>
+              <th>Start Date</th>
+              <th>Expiry Date</th>
+              <th>Created At</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% coupons.forEach((coupon, index) => { %>
+              <tr>
+                <td><%= index + 1 %></td>
+                <td><%= coupon.code %></td>
+                <td><%= coupon.discountValue %></td>
+                <td><%= coupon.usageLimit %></td>
+                <td><%= new Date(coupon.startDate).toLocaleDateString() %></td>
+                <td><%= new Date(coupon.expiryDate).toLocaleDateString() %></td>
+                <td><%= new Date(coupon.createdAt).toLocaleDateString() %></td>
+                <td>
+                  <button class="btn btn-sm btn-warning edit-coupon-btn" data-id="<%= coupon._id %>">Edit</button>
+                  <button class="btn btn-sm btn-danger delete-coupon-btn" data-id="<%= coupon._id %>">Delete</button>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      <% } else { %>
+        <p>No coupons available. Start by adding a new coupon.</p>
+      <% } %>
+    </div>
+  </div>
+</section>
+
+<!-- Modal for Adding/Editing Coupon -->
+<div class="modal fade" id="couponModal" tabindex="-1" aria-labelledby="couponModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="couponModalLabel">Add Coupon</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="couponForm">
+            <div class="mb-3">
+              <label for="couponCode" class="form-label">Coupon Code</label>
+              <input type="text" class="form-control" id="couponCode" name="code" placeholder="Enter coupon code" required>
+            </div>
+          
+            <div class="mb-3">
+              <label for="discountType" class="form-label">Discount Type</label>
+              <select class="form-control" id="discountType" name="discountType" required>
+                <option value="percentage">Percentage</option>
+                <option value="fixed">Fixed Amount</option>
+              </select>
+            </div>
+          
+            <div class="mb-3">
+              <label for="couponDiscount" class="form-label">Discount</label>
+              <input type="number" class="form-control" id="couponDiscount" name="discountValue" placeholder="Enter discount value" required>
+            </div>
+          
+            <div class="mb-3" id="minPurchaseContainer" style="display:none;">
+              <label for="minPurchaseAmount" class="form-label">Minimum Purchase Amount</label>
+              <input type="number" class="form-control" id="minPurchaseAmount" name="minPurchaseAmount" placeholder="Enter minimum purchase amount">
+            </div>
+          
+            <div class="mb-3" id="maxDiscountContainer" style="display:none;">
+              <label for="maxDiscountAmount" class="form-label">Maximum Discount Amount</label>
+              <input type="number" class="form-control" id="maxDiscountAmount" name="maxDiscountAmount" placeholder="Enter maximum discount amount">
+            </div>
+          
+            <div class="mb-3">
+              <label for="usageLimit" class="form-label">Usage Limit</label>
+              <input type="number" class="form-control" id="usageLimit" name="usageLimit" placeholder="Enter usage limit" required>
+            </div>
+          
+            <div class="mb-3">
+              <label for="startDate" class="form-label">Start Date</label>
+              <input type="date" class="form-control" id="startDate" name="startDate" required>
+            </div>
+          
+            <div class="mb-3">
+              <label for="expiryDate" class="form-label">Expiry Date</label>
+              <input type="date" class="form-control" id="expiryDate" name="expiryDate" required>
+            </div>
+          
+            <button type="submit" class="btn btn-primary">Save Coupon</button>
+          </form>
+          
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Listen for the change event on the discount type select field
+document.getElementById('discountType').addEventListener('change', function() {
+    const discountType = this.value; // Get the selected discount type
+    const minPurchaseContainer = document.getElementById('minPurchaseContainer');
+    const maxDiscountContainer = document.getElementById('maxDiscountContainer');
+    
+    // Toggle visibility based on the selected discount type
+    if (discountType === 'percentage') {
+      minPurchaseContainer.style.display = 'none'; // Hide the minimum purchase field for percentage discount
+      maxDiscountContainer.style.display = 'block'; // Show the maximum discount field for percentage discount
+    } else if (discountType === 'fixed') {
+      minPurchaseContainer.style.display = 'block'; // Show the minimum purchase field for fixed discount
+      maxDiscountContainer.style.display = 'none'; // Hide the maximum discount field for fixed discount
+    }
+  });
+
+  // Initialize visibility of fields when the page loads
+  document.addEventListener('DOMContentLoaded', function() {
+    const discountType = document.getElementById('discountType').value;
+    const minPurchaseContainer = document.getElementById('minPurchaseContainer');
+    const maxDiscountContainer = document.getElementById('maxDiscountContainer');
+    
+    if (discountType === 'percentage') {
+      minPurchaseContainer.style.display = 'none';
+      maxDiscountContainer.style.display = 'block';
+    } else if (discountType === 'fixed') {
+      minPurchaseContainer.style.display = 'block';
+      maxDiscountContainer.style.display = 'none';
+    }
+  });
+
+
+
+  document.getElementById('addCouponBtn').addEventListener('click', () => {
+    document.getElementById('couponModalLabel').innerText = 'Add Coupon';
+    document.getElementById('couponForm').reset();
+    const modal = new bootstrap.Modal(document.getElementById('couponModal'));
+    modal.show();
+  });
+
+  document.getElementById('couponForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const formData = new FormData(event.target);
+    const formObject = Object.fromEntries(formData.entries());
+
+    try {
+      const response = await fetch('/admin/coupons/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formObject),
+      });
+
+      if (response.ok) {
+        alert('Coupon saved successfully!');
+        location.reload();
+      } else {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.message}`);
+      }
+    } catch (error) {
+      console.error('Error saving coupon:', error);
+      alert('Failed to save coupon. Please try again.');
+    }
+  });
+</script>
+
+<%- include('../partials/admin_footer.ejs') %>

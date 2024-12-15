@@ -303,11 +303,9 @@ const getProducts = async (req, res) => {
 
   const addStock = async (req, res) => {
     try {
-
       const { productId, size, quantity } = req.body;
-      console.log(productId,'productId' , size ,'size ', quantity , 'quantity');
-      
   
+      // Validate the input
       if (!productId || !size || !quantity || quantity <= 0) {
         return res.status(400).json({
           success: false,
@@ -315,8 +313,8 @@ const getProducts = async (req, res) => {
         });
       }
   
+      // Find the product by ID
       const product = await Product.findById(productId);
-  
       if (!product) {
         return res.status(404).json({
           success: false,
@@ -324,30 +322,48 @@ const getProducts = async (req, res) => {
         });
       }
   
-      const stockEntry = product.stock.find((stock) => stock.size === size);
+      // Check if the size exists in the stock array
+      const stockEntryIndex = product.stock.findIndex((stock) => stock.size === size);
   
-      if (!stockEntry) {
-        return res.status(404).json({
-          success: false,
-          message: `No stock entry found for size ${size}.`,
+      if (stockEntryIndex === -1) {
+        // If stock entry for the size doesn't exist, push a new stock entry
+        await Product.updateOne(
+          { _id: productId },
+          {
+            $push: {
+              stock: { size, quantity },
+            },
+          }
+        );
+        return res.status(200).json({
+          success: true,
+          message: 'New stock entry added successfully.',
+        });
+      } else {
+        // If stock entry exists, update the quantity
+        await Product.updateOne(
+          { _id: productId, 'stock.size': size },
+          {
+            $inc: { 'stock.$.quantity': quantity }, // Increment the quantity by the specified amount
+          }
+        );
+        return res.status(200).json({
+          success: true,
+          message: 'Stock quantity updated successfully.',
         });
       }
-  
-      stockEntry.quantity += parseInt(quantity, 10);
-  
-      await product.save();
-  
-      res.status(200).json({
-        success: true,
-        message: 'Stock updated successfully.',
-      });
     } catch (error) {
-      console.error(error);
+      console.error('Error adding stock:', error);
       res.status(500).json({
         success: false,
         message: 'Server error. Please try again later.',
       });
     }
   };
+  
+  
+  
+  
+  
   
 module.exports = {addProduct , getAddProduct ,getProducts ,updateProduct , getUpdate , getStocks ,addStock ,brandFetch} 

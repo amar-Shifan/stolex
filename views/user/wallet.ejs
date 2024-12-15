@@ -1,163 +1,174 @@
-<%- include('../partials/header.ejs') %>
-
+<%-include('../partials/header.ejs',{title:"userProfile",style:'/css/userProfile.css' })%>
+<style>
+    body {
+        background-color: #f4f6f9;
+    }
+    .sidebar {
+        background-color: white;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+    }
+    .wallet-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    .wallet-card {
+        border: none;
+        border-radius: 16px;
+        background-color: white;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        margin-bottom: 24px;
+        transition: all 0.3s ease;
+    }
+    .wallet-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    }
+    .wallet-balance {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+        text-align: center;
+        padding: 30px;
+    }
+    .wallet-balance h1 {
+        color: #2c3e50;
+        letter-spacing: -1px;
+    }
+    .transaction-card {
+        border-bottom: 1px solid #f1f3f5;
+        padding: 15px 0;
+        transition: background-color 0.2s ease;
+    }
+    .transaction-card:hover {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+    }
+    .transaction-card:last-child {
+        border-bottom: none;
+    }
+    .transaction-icon {
+        font-size: 1.8rem;
+        margin-right: 20px;
+        opacity: 0.7;
+    }
+    .transaction-details {
+        flex-grow: 1;
+    }
+    .transaction-details div {
+        font-weight: 500;
+        color: #2c3e50;
+    }
+    .transaction-amount {
+        font-weight: 600;
+    }
+    .transaction-positive {
+        color: #27ae60;
+    }
+    .transaction-negative {
+        color: #e74c3c;
+    }
+    .list-group-item.active {
+        background-color: #f8f9fa;
+        color: #2c3e50;
+        border-color: #dee2e6;
+    }
+    .list-group-item.active i {
+        color: #2c3e50;
+    }
+    .pagination .page-item.active .page-link {
+        background-color: #2c3e50;
+        border-color: #2c3e50;
+    }
+</style>
+</head>
+<body>
 <div class="container-fluid">
-    <div class="row">
-        <!-- Sidebar -->
-        <div class="col-md-3 col-lg-2 d-md-block bg-white shadow-sm p-3 min-vh-100">
-            <div class="list-group">
-                <a href="#" class="list-group-item list-group-item-action">
-                    <i class="bi bi-person"></i> Profile
-                </a>
-                <a href="#" class="list-group-item list-group-item-action">
-                    <i class="bi bi-cart"></i> Orders
-                </a>
-                <a href="#" class="list-group-item list-group-item-action">
-                    <i class="bi bi-heart"></i> Wishlist
-                </a>
-                <a href="#" class="list-group-item list-group-item-action active">
-                    <i class="bi bi-wallet"></i> Wallet
-                </a>
-            </div>
-            <div class="mt-auto pt-3">
-                <button class="btn btn-outline-danger w-100">
-                    Sign out
-                </button>
-            </div>
+<div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-3 col-lg-2 d-md-block bg-white shadow-sm p-3 min-vh-100 sidebar">
+        <div class="list-group">
+            <a href="#" class="list-group-item list-group-item-action"><i class="bi bi-person me-2"></i> Profile</a>
+            <a href="#" class="list-group-item list-group-item-action"><i class="bi bi-cart me-2"></i> Orders</a>
+            <a href="#" class="list-group-item list-group-item-action"><i class="bi bi-heart me-2"></i> Wishlist</a>
+            <a href="#" class="list-group-item list-group-item-action active"><i class="bi bi-wallet me-2"></i> Wallet</a>
         </div>
-
-        <!-- Main Content -->
-        <div class="col-md-9 col-lg-10 p-4">
-            <!-- Balance Card -->
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <div class="card bg-primary text-white">
-                        <div class="card-body">
-                            <h5 class="card-title">Available Balance</h5>
-                            <h2 class="display-4 mb-4">$1,234.56</h2>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-light">Add Money</button>
-                                <button class="btn btn-outline-light">Withdraw</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Quick Actions</h5>
-                            <div class="d-grid gap-2">
-                                <button class="btn btn-outline-primary">Send Money</button>
-                                <button class="btn btn-outline-primary">Request Money</button>
-                                <button class="btn btn-outline-primary">Pay Bills</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Recent Transactions -->
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Recent Transactions</h5>
-                    <button class="btn btn-link">View All</button>
-                </div>
-                <div class="card-body">
-                    <div class="transaction-item border-bottom pb-3 mb-3">
-                        <div class="row align-items-center">
-                            <div class="col-md-1">
-                                <div class="bg-success-subtle p-2 rounded-circle text-center">
-                                    <i class="bi bi-arrow-down"></i>
-                                </div>
-                            </div>
-                            <div class="col-md-7">
-                                <h6 class="mb-1">Money Received</h6>
-                                <p class="text-muted mb-0">From: John Doe</p>
-                            </div>
-                            <div class="col-md-2">
-                                <span class="text-success">+$50.00</span>
-                            </div>
-                            <div class="col-md-2">
-                                <small class="text-muted">Today</small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="transaction-item border-bottom pb-3 mb-3">
-                        <div class="row align-items-center">
-                            <div class="col-md-1">
-                                <div class="bg-danger-subtle p-2 rounded-circle text-center">
-                                    <i class="bi bi-arrow-up"></i>
-                                </div>
-                            </div>
-                            <div class="col-md-7">
-                                <h6 class="mb-1">Bill Payment</h6>
-                                <p class="text-muted mb-0">Electricity Bill</p>
-                            </div>
-                            <div class="col-md-2">
-                                <span class="text-danger">-$75.50</span>
-                            </div>
-                            <div class="col-md-2">
-                                <small class="text-muted">Yesterday</small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="transaction-item">
-                        <div class="row align-items-center">
-                            <div class="col-md-1">
-                                <div class="bg-primary-subtle p-2 rounded-circle text-center">
-                                    <i class="bi bi-plus"></i>
-                                </div>
-                            </div>
-                            <div class="col-md-7">
-                                <h6 class="mb-1">Added Money</h6>
-                                <p class="text-muted mb-0">Via Bank Transfer</p>
-                            </div>
-                            <div class="col-md-2">
-                                <span class="text-success">+$200.00</span>
-                            </div>
-                            <div class="col-md-2">
-                                <small class="text-muted">Oct 24</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Payment Methods -->
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Payment Methods</h5>
-                    <button class="btn btn-primary btn-sm">Add New</button>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <h6 class="card-subtitle text-muted">Credit Card</h6>
-                                        <img src="/api/placeholder/40/25" alt="Visa" class="img-fluid">
-                                    </div>
-                                    <p class="card-text">**** **** **** 4242</p>
-                                    <small class="text-muted">Expires: 12/25</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <h6 class="card-subtitle text-muted">Bank Account</h6>
-                                        <img src="/api/placeholder/40/25" alt="Bank" class="img-fluid">
-                                    </div>
-                                    <p class="card-text">**** 5678</p>
-                                    <small class="text-muted">Savings Account</small>
-                                </div>
-                            </div>
-                        </div>
-            </div>
+        <div class="mt-auto pt-3">
+            <button class="btn btn-outline-danger w-100">Sign out</button>
+        </div>
     </div>
-</div>
 
+    <!-- Main Content -->
+    <div class="col-md-9 col-lg-10 py-4">
+        <div class="wallet-container">
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <h2 class="mb-4">My Wallet</h2>
+                </div>
+            </div>
+    
+            <% if (error) { %>
+                <!-- Error Message -->
+                <div class="alert alert-danger" role="alert">
+                    <%= error %>
+                </div>
+            <% } else if (!wallet) { %>
+                <!-- No Wallet Found -->
+                <div class="alert alert-warning" role="alert">
+                    No wallet data available.
+                </div>
+            <% } else { %>
+                <!-- Wallet Balance -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="wallet-card wallet-balance">
+                            <h4 class="text-muted mb-3">Total Balance</h4>
+                            <h1 class="display-4 fw-bold"><%=wallet.amount.toFixed(2) %></h1>
+                            <p class="text-muted mb-0">Available to spend</p>
+                        </div>
+                    </div>
+                </div>
+    
+                <!-- Transaction History -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="wallet-card p-4">
+                            <h4 class="mb-4">Transaction History</h4>
+    
+                            <% if (wallet.transactionHistory.length > 0) { %>
+                                <% wallet.transactionHistory.forEach(transaction => { %>
+                                    <div class="transaction-card d-flex align-items-center">
+                                        <i class="bi <%= transaction.type === 'credit' ? 'bi-arrow-down-left text-success' : 'bi-cart text-danger' %> transaction-icon"></i>
+                                        <div class="transaction-details">
+                                            <div><%= transaction.description %></div>
+                                            <small class="text-muted"><%= new Date(transaction.date).toLocaleDateString() %></small>
+                                        </div>
+                                        <div class="transaction-amount <%= transaction.type === 'credit' ? 'transaction-positive' : 'transaction-negative' %>">
+                                            <%= transaction.type === 'credit' ? '+' : '-' %>$<%= transaction.amount.toFixed(2) %>
+                                        </div>
+                                    </div>
+                                <% }); %>
+                            <% } else { %>
+                                <p class="text-muted">No transactions found.</p>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+    
+                <!-- Pagination -->
+                <nav aria-label="Transaction pages" class="p-3">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+                        </li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            <% } %>
+        </div>
+    </div>
+    
+    
+</div>
+</div>
 <%- include('../partials/footer.ejs') %>

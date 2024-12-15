@@ -8,21 +8,25 @@ const session = require('express-session');
 const nocache = require('nocache');
 const passport = require('./service/googleAuth.js')
 const methodOverride = require('method-override')
-const flash = require('connect-flash')
 const globalVarsMiddleware = require('./middlewares/user-middleware.js');
-
-
-app.use(nocache());
+const offerCleanupJob = require('./utils/offerCleanup.js');
+const MongoStore = require('connect-mongo');
 
 // Session Middleware
-app.use(
-    session({
-        secret: env.SECRET,
-        resave: false,
-        saveUninitialized: true,
-        cookie: { secure: false } // Secure true if HTTPS
-    })
-);
+app.use(session({
+  secret: 'your-secret-key',
+  resave: false,
+  saveUninitialized: true,
+  store: MongoStore.create({
+    mongoUrl: 'mongodb://127.0.0.1:27017/stolexEcom',
+  }),
+  cookie: {
+    httpOnly: true,
+    secure: false, // Set to true if using HTTPS
+    maxAge: 86400000, // 1 day
+  },
+}));
+app.use(nocache());
 
 // Middleware
 app.use(express.urlencoded({ extended: true }));
@@ -30,6 +34,8 @@ app.set('view engine', 'ejs');
 app.use(express.json())
 
 connectDB();
+
+offerCleanupJob();
 
 app.use('/public', express.static(path.join(__dirname, 'public')));
 app.set('views', path.join(__dirname, 'views'));
@@ -39,7 +45,6 @@ app.use(passport.initialize())
 app.use(passport.session())
 
 app.use(methodOverride('_method')) // to get put and patch
-app.use(flash());
 app.use(globalVarsMiddleware.globalVarsMiddleware);
 
 const userRoutes = require('./router/user.js')

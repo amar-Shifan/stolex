@@ -5,6 +5,7 @@ const productController = require('../controller/userControllers/productControll
 const userController = require('../controller/userControllers/userController');
 const cartController = require('../controller/userControllers/cartController');
 const orderController = require('../controller/userControllers/orderController')
+const couponController = require('../controller/userControllers/couponController')
 const middleware = require('../middlewares/user-middleware');
 const passport = require('passport');
 const upload = require('../middlewares/profile');
@@ -25,12 +26,13 @@ router.get('/user-login',middleware.preventAccessIfAuthenticated, (req, res) => 
 router.get('/register', middleware.preventAccessIfAuthenticated, controller.getSignup);
 
 router.get('/products', productController.getProducts);
-router.get('/product',(req,res)=>res.render('user/topwear'))
+router.get('/shop', productController.getShop)
 // OTP Verification Page
 router.get('/verify',middleware.preventAccessIfAuthenticated ,controller.getOtp)
 
 router.get('/auth/google',passport.authenticate('google',{scope:['profile','email']}))
 router.get('/google/callback',passport.authenticate('google',{failureRedirect:'/register'}),(req,res)=>{
+    req.session.userId = req.user._id
     res.redirect('/')
 })
 
@@ -80,13 +82,21 @@ router.patch('/cart/update-quantity/:id' , cartController.updateQuantity)
 
 
 router.get('/checkout', orderController.getCheckout )
-router.post('/checkout/process' , orderController.checkoutProcess)
+router.post('/checkout/process' , orderController.checkoutProcess);
+router.post('/payment/verify' , orderController.verifyPayment);
 
-router.get('/cart/success' , orderController.getSuccess)
+router.get('/cart/success' , orderController.getSuccess);
 router.get('/orders' , orderController.getOrders)
 router.get('/order/:orderId' , orderController.details);
 router.get('/order' , (req,res)=>res.render('user/order-view-details'))
 router.patch('/orders/cancel' , orderController.cancelOrder);
+router.patch('/orders/return' , orderController.returnOrder);
+
+router.post('/apply-coupon', couponController.applyCoupon);
+router.post('/remove-coupon', couponController.removeCoupon);
+
+router.get('/wallet' , orderController.getWallet);
+
 
 
 module.exports = router;

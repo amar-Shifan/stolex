@@ -21,6 +21,24 @@
     margin: 0 10px;
     text-align: center;
 }
+
+.text-danger {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.text-muted {
+    color: #6c757d;
+}
+
+.badge.bg-success {
+    background-color: #28a745;
+    color: white;
+    font-size: 0.85rem;
+    padding: 0.2em 0.4em;
+    border-radius: 0.25rem;
+}
+
 </style>
 <div class="breadcrumbs">
     <div class="container">
@@ -75,87 +93,114 @@
                     <div class="one-eight text-center px-4">
                         <span>Remove</span>
                     </div>
-                </div>
-
-                <% cart.items.forEach(item => { %>
-                <div class="product-cart d-flex">
-                    <div class="one-forth">
-                        <div class="product-img" style="background-image: url(<%= item.productId.images[0] || '/images/default-product.jpg' %>);">
-                        </div>
-                        <div class="display-tc">
-                            <h3><%= item.productId.name %></h3>
-                        </div>
-                    </div>
-                    <div class="one-eight text-center">
-                        <div class="display-tc">
-                            <span class="price">$<%= item.price %></span>
-                        </div>
-                    </div>
-                    <div class="one-eight text-center">
-                        <div class="display-tc">
-                            <span><%= item.size %></span>
-                        </div>
-                    </div>
-                    <div class="one-eight text-center">
-                        <div class="display-tc quantity-control d-flex">
-                            <button class="btn btn-sm btn-outline-secondary decrement-btn" data-id="<%= item._id %>">-</button>
-                            <input type="number" name="quantity" 
-                                   class="form-control input-number text-center quantity-input" 
-                                   value="<%= item.quantity %>" 
-                                   min="1" 
-                                   max="<%= item.productId.stock.find(stock => stock.size === item.size)?.quantity || 0 %>" 
-                                   readonly>
-                            <button class="btn btn-sm btn-outline-secondary increment-btn" data-id="<%= item._id %>">+</button>
-                        </div>
                     </div>
                     
-                    <div class="one-eight text-center">
-                        <div class="display-tc">
-                            <span class="price">₹<%= item.total %></span>
+                    <% cart.items.forEach(item => { %>
+                    <div class="product-cart d-flex">
+                        <div class="one-forth">
+                            <div class="product-img" style="background-image: url(<%= item.productId.images[0] || '/images/default-product.jpg' %>);">
+                            </div>
+                            <div class="display-tc">
+                                <h3><%= item.productId.name %></h3>
+                            </div>
+                        </div>
+                        <div class="one-eight text-center">
+                            <div class="display-tc">
+                                <!-- Show discountedPrice with a label if it exists, else show regular price -->
+                                <% if (item.productId.discountedPrice) { %>
+                                    <span class="price text-danger">
+                                        ₹<%= item.productId.discountedPrice %> <!-- Highlighted offer price -->
+                                    </span>
+                                    <br>
+                                    <span class="price text-muted" style="text-decoration: line-through;">
+                                        ₹<%= item.price %> <!-- Original price with strikethrough -->
+                                    </span>
+                                    <br>
+                                    <span class="badge bg-success">On Offer</span> <!-- Badge to indicate offer -->
+                                <% } else { %>
+                                    <span class="price">₹<%= item.price %></span> <!-- Regular price -->
+                                <% } %>
+                            </div>
+                        </div>
+                        
+                        <div class="one-eight text-center">
+                            <div class="display-tc">
+                                <span><%= item.size %></span>
+                            </div>
+                        </div>
+                        <div class="one-eight text-center">
+                            <div class="display-tc quantity-control d-flex">
+                                <button class="btn btn-sm btn-outline-secondary decrement-btn" data-id="<%= item._id %>">-</button>
+                                <input type="number" name="quantity" 
+                                       class="form-control input-number text-center quantity-input" 
+                                       value="<%= item.quantity %>" 
+                                       min="1" 
+                                       max="<%= item.productId.stock.find(stock => stock.size === item.size)?.quantity || 0 %>" 
+                                       readonly>
+                                <button class="btn btn-sm btn-outline-secondary increment-btn" data-id="<%= item._id %>">+</button>
+                            </div>
+                        </div>
+                        <div class="one-eight text-center">
+                            <div class="display-tc">
+                                <!-- Calculate total based on discountedPrice if it exists -->
+                                <span class="price">
+                                    ₹<%= (item.productId.discountedPrice || item.price) * item.quantity %>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="one-eight text-center">
+                            <div class="display-tc">
+                                <a data-id="<%= item._id %>" class="closed removeItem"></a>
+                            </div>
                         </div>
                     </div>
-                    <div class="one-eight text-center">
-                        <div class="display-tc">
-                            <a  data-id="<%=item._id  %>" class="closed removeItem"></a>
+                    <% }); %>
+                    </div>
+                    </div>
+                    
+                    <div class="row row-pb-lg">
+                        <div class="col-md-12">
+                            <div class="total-wrap">
+                                <div class="row">
+                                    <div class="col-sm-4 text-center">
+                                        <div class="total">
+                                            <div class="sub">
+                                                <!-- Calculate subtotal based on discountedPrice if it exists -->
+                                                <p><span>Subtotal:</span> 
+                                                    <span>₹<%= cart.items.reduce((total, item) => {
+                                                        return total + ((item.productId.discountedPrice || item.price) * item.quantity);
+                                                    }, 0) %>
+                                                    </span>
+                                                </p>
+                                            </div>
+                                            <div class="grand-total">
+                                                <p><span><strong>Total:</strong></span> 
+                                                    <span>₹<%= cart.items.reduce((total, item) => {
+                                                        return total + ((item.productId.discountedPrice || item.price) * item.quantity);
+                                                    }, 0) %>
+                                                    </span>
+                                                </p>
+                                            </div>
+                                            <!-- Proceed to Checkout Button -->
+                                            <div class="checkout-btn mt-4">
+                                                <a href="/checkout" class="btn btn-dark btn-lg">
+                                                    Proceed to Checkout
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <% }); %>
-            </div>
-        </div>
-
-        <div class="row row-pb-lg">
-            <div class="col-md-12">
-                <div class="total-wrap">
+                    <% } else { %>
                     <div class="row">
-                        <div class="col-sm-4 text-center">
-							<div class="total">
-								<div class="sub">
-									<p><span>Subtotal:</span> <span>$<%= cart.subtotal %></span></p>
-								</div>
-								<div class="grand-total">
-									<p><span><strong>Total:</strong></span> <span>₹<%= cart.subtotal %></span></p>
-								</div>
-								<!-- Proceed to Checkout Button -->
-								<div class="checkout-btn mt-4">
-									<a href="/checkout" class="btn btn-dark btn-lg">
-										Proceed to Checkout
-									</a>
-								</div>
-							</div>
-						</div>
-						
+                        <div class="col-md-12 text-center">
+                            <p>Your cart is empty. <a href="/products?parentCategoryName=all">Continue Shopping</a></p>
+                        </div>
                     </div>
-                </div>
-            </div>
-        </div>
-        <% } else { %>
-        <div class="row">
-            <div class="col-md-12 text-center">
-                <p>Your cart is empty. <a href="/products?parentCategoryName=all">Continue Shopping</a></p>
-            </div>
-        </div>
-        <% } %>
+                    <% } %>
+                    
     </div>
 </div>
 

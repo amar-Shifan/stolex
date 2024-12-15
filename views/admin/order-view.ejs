@@ -1,6 +1,7 @@
 <%- include('../partials/admin_header.ejs', { title: "Admin Order Details", style: null }) %>
 
 <div class="col-md-9 col-lg-10 p-4">
+    
     <!-- Header Section -->
     <div class="bg-white rounded-3 p-4 shadow-sm mb-4">
         <div class="d-flex justify-content-between align-items-center">
@@ -19,6 +20,64 @@
             </div>
         </div>
     </div>
+
+    <!-- Return Request Section -->
+    <% if (order.orderStatus === 'return-request' && order.returnReason) { %>
+        <!-- Order-level return request -->
+        <div class="bg-white rounded-3 shadow-sm p-4 mb-4">
+            <h4 class="mb-4">Return Request</h4>
+            <div class="card bg-light border-0">
+                <div class="card-body">
+                    <p><strong>Reason for Return:</strong></p>
+                    <p class="text-muted"><%= order.returnReason %></p>
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                    <button class="btn btn-success approve-item-return" 
+                        data-order-id="<%= order._id %>" >
+                        Approve
+                    </button>
+                    <button class="btn btn-danger reject-item-return" 
+                        data-order-id="<%= order._id %>" >
+                        Reject
+                    </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <% } %>
+    
+    <!-- Item-level return requests -->
+    <% order.items.forEach((item, index) => { %>
+        <% if (item.status === 'return-request' && item.returnReason) { %>
+            <div class="bg-white rounded-3 shadow-sm p-4 mb-4">
+                <h4 class="mb-4">Return Request for Item <%= index + 1 %></h4>
+                <div class="card bg-light border-0">
+                    <div class="card-body">
+                        <p><strong>Product ID:</strong> <%= item.productId._id %></p>
+                        <p><strong>Product Name:</strong> <%= item.productId.name %></p><br>
+                        <p><strong>Reason for Return:</strong></p>
+                        <p class="text-muted"><%= item.returnReason %></p>
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <button 
+                                class="btn btn-success approve-item-return" 
+                                data-order-id="<%= order._id %>" 
+                                data-item-id="<%= item._id %>">
+                                Approve
+                            </button>
+                            <button 
+                                class="btn btn-danger reject-item-return" 
+                                data-order-id="<%= order._id %>" 
+                                data-item-id="<%= item._id %>">
+                                Reject
+                            </button>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+    <% }); %>
+    
+    
 
     <!-- Order Items -->
     <div class="bg-white rounded-3 shadow-sm p-4 mb-4">
@@ -88,14 +147,27 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form  id="statusForm">
+                <form id="statusForm">
                     <div class="mb-3">
                         <label for="orderStatus" class="form-label">Order Status</label>
                         <select class="form-select" id="orderStatus" name="orderStatus" required>
-                            <option value="pending" <%= order.orderStatus === 'pending' ? 'selected' : '' %>>Pending</option>
-                            <option value="shipped" <%= order.orderStatus === 'shipped' ? 'selected' : '' %>>Shipped</option>
-                            <option value="delivered" <%= order.orderStatus === 'delivered' ? 'selected' : '' %>>Delivered</option>
-                            <option value="cancelled" <%= order.orderStatus === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+                            <% if (order.orderStatus === 'pending') { %>
+                                <option value="pending" selected>Pending</option>
+                                <option value="shipped">Shipped</option>
+                                <option value="delivered">Delivered</option>
+                                <option value="cancelled">Cancelled</option>
+                            <% } else if (order.orderStatus === 'shipped') { %>
+                                <option value="shipped" selected>Shipped</option>
+                                <option value="delivered">Delivered</option>
+                                <option value="cancelled">Cancelled</option>
+                            <% } else if (order.orderStatus === 'delivered') { %>
+                                <option value="delivered" selected>Delivered</option>
+                                <option value="returned">Returned</option>
+                            <% } else if (order.orderStatus === 'cancelled') { %>
+                                <option value="cancelled" selected>Cancelled</option>
+                            <% } else if (order.orderStatus === 'returned') { %>
+                                <option value="returned" selected>Returned</option>
+                            <% } %>
                         </select>
                     </div>
                     <div class="modal-footer">
@@ -104,9 +176,76 @@
                     </div>
                 </form>
             </div>
+            
         </div>
     </div>
 </div>
+
+<script>
+    // Approve return
+    const handleApprove = (orderId, itemId = null) => {
+        const url = itemId 
+            ? `/admin/orders/${orderId}/items/${itemId}/approve-return` 
+            : `/admin/orders/${orderId}/approve-return`;
+
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert('Return approved successfully.');
+                location.reload();
+            } else {
+                alert('Failed to approve the return.');
+            }
+        })
+        .catch(err => alert('An error occurred. Please try again.'));
+    };
+
+    // Reject return
+    const handleReject = (orderId, itemId = null) => {
+        const url = itemId 
+            ? `/admin/orders/${orderId}/items/${itemId}/reject-return` 
+            : `/admin/orders/${orderId}/reject-return`;
+
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert('Return rejected successfully.');
+                location.reload();
+            } else {
+                alert('Failed to reject the return.');
+            }
+        })
+        .catch(err => alert('An error occurred. Please try again.'));
+    };
+
+    // Approve button click
+    document.querySelectorAll('.approve-item-return').forEach(button => {
+        button.addEventListener('click', () => {
+            const orderId = button.dataset.orderId;
+            const itemId = button.dataset.itemId; // Optional for item-specific
+            handleApprove(orderId, itemId);
+        });
+    });
+
+    // Reject button click
+    document.querySelectorAll('.reject-item-return').forEach(button => {
+        button.addEventListener('click', () => {
+            const orderId = button.dataset.orderId;
+            const itemId = button.dataset.itemId; // Optional for item-specific
+            handleReject(orderId, itemId);
+        });
+    });
+</script>
+
+
 
 <script>
     document.getElementById('statusForm').addEventListener('submit', async (e) => {

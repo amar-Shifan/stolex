@@ -1,7 +1,7 @@
 // isAuthenticated function
 async function isAuth(route, message, currentRoute) {
     try {
-        const res = await fetch('/isAuth');
+        const res = await fetch('/isAuth' ,{credentials: 'include'});
         const data = await res.json();
 
         if (data.success) {
@@ -12,7 +12,6 @@ async function isAuth(route, message, currentRoute) {
             }
             return true; 
         }
-
         
         showNotification('error', message);
         setTimeout(() => {

@@ -1,6 +1,6 @@
 const confirmationUtil = {
     // Initialize the modal if it doesn't exist
-    init: function() {
+    init: function () {
         if (!document.getElementById('confirmationModal')) {
             const modalHTML = `
                 <div class="modal fade" id="confirmationModal" tabindex="-1" aria-hidden="true">
@@ -25,7 +25,7 @@ const confirmationUtil = {
     },
 
     // Main confirmation function
-    confirm: function({
+    confirm: function ({
         title = 'Confirm Action',
         message = 'Are you sure you want to proceed?',
         confirmText = 'Confirm',
@@ -36,37 +36,52 @@ const confirmationUtil = {
     } = {}) {
         this.init();
 
-        const modal = document.getElementById('confirmationModal');
-        const confirmationModal = new bootstrap.Modal(modal);
-        
+        const modalElement = document.getElementById('confirmationModal');
+        const confirmationModal = new bootstrap.Modal(modalElement); // Initialize modal instance
+
         // Set modal content
         document.getElementById('confirmationTitle').textContent = title;
-        document.getElementById('confirmationMessage').innerHTML = icon ? 
-            `<i class="bi ${icon}"></i> ${message}` : message;
-        document.getElementById('confirmButton').textContent = confirmText;
-        document.getElementById('cancelButton').textContent = cancelText;
-        
-        // Update confirm button class
+        document.getElementById('confirmationMessage').innerHTML = icon
+            ? `<i class="bi ${icon}"></i> ${message}`
+            : message;
+
         const confirmButton = document.getElementById('confirmButton');
+        const cancelButton = document.getElementById('cancelButton');
+
+        // Set button text
+        confirmButton.textContent = confirmText;
+        cancelButton.textContent = cancelText;
+
+        // Update confirm button class
         confirmButton.className = `btn ${confirmButtonClass}`;
 
-        // Remove existing event listeners
+        // Remove existing event listeners using cloneNode
         const newConfirmButton = confirmButton.cloneNode(true);
         confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
 
-        // Add new click handler
+        const newCancelButton = cancelButton.cloneNode(true);
+        cancelButton.parentNode.replaceChild(newCancelButton, cancelButton);
+
+        // Add confirm button handler
         newConfirmButton.addEventListener('click', () => {
-            confirmationModal.hide();
+            confirmationModal.hide(); // Properly hide modal
             if (callback && typeof callback === 'function') {
                 callback(true);
             }
         });
 
-        // Add cancel handler
-        const cancelButton = document.getElementById('cancelButton');
-        const newCancelButton = cancelButton.cloneNode(true);
-        cancelButton.parentNode.replaceChild(newCancelButton, cancelButton);
+        // Add cancel button handler (invokes callback with false)
         newCancelButton.addEventListener('click', () => {
+            confirmationModal.hide(); // Properly hide modal
+            if (callback && typeof callback === 'function') {
+                callback(false);
+            }
+        });
+
+        // Ensure close button in header works properly
+        const closeButton = modalElement.querySelector('.btn-close');
+        closeButton.addEventListener('click', () => {
+            confirmationModal.hide(); // Properly hide modal
             if (callback && typeof callback === 'function') {
                 callback(false);
             }

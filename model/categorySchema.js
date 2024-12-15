@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-
 const categorySchema = new mongoose.Schema({
     name: {
         type: String,
@@ -34,10 +33,18 @@ const categorySchema = new mongoose.Schema({
             ref: 'Brand'
         }
     ],
-    isListed: {type : Boolean , default : true}
+    isListed: {
+        type: Boolean,
+        default: true
+    },
+    offerId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Offer', // Reference to the Offer schema
+      },
 }, {
     timestamps: true
 });
+
 
 categorySchema.pre('save', async function (next) {
     this.slug = this.name.toLowerCase().replace(/[^a-zA-Z0-9]/g, '-');
