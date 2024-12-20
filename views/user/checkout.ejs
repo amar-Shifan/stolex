@@ -46,10 +46,20 @@
                     <div class="payment-method">
                         <input type="radio" name="paymentMethod" id="razorpay" value="razorpay" required>
                         <label for="razorpay">
-                            <img src="/images/razorpay.webp" alt="Razorpay">
+                            <img src="/images/razorpay.webp" alt="Razorpay"><span>Razorpay Online Payment</span>
                             <div>
-                                <h5>Razorpay Online Payment</h5>
                                 <p class="text-muted">Pay securely using credit/debit cards, net banking, UPI, and wallets</p>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Wallet Payment Option -->
+                    <div class="payment-method">
+                        <input type="radio" name="paymentMethod" id="wallet" value="wallet" required>
+                        <label for="wallet">
+                            <img src="/images/wallet.jpg" alt="wallet"><span>Wallet Online Wallet</span>
+                            <div>
+                                <p class="text-muted">Pay securely using Wallet</p>
                             </div>
                         </label>
                     </div>
@@ -58,9 +68,8 @@
                     <div class="payment-method">
                         <input type="radio" name="paymentMethod" id="cod" value="cod">
                         <label for="cod">
-                            <img src="/images/cashondelivery.jpg" alt="Cash on Delivery">
+                            <img src="/images/cashondelivery.jpg" alt="Cash on Delivery"><span>Cash on Delivery (COD)</span>
                             <div>
-                                <h5>Cash on Delivery (COD)</h5>
                                 <p class="text-muted">Pay in cash when your order is delivered</p>
                             </div>
                         </label>
@@ -358,9 +367,9 @@ $('#removeCouponBtn').on('click', function () {
                             const verifyData = await verifyResponse.json();
 
                             if (verifyResponse.ok && verifyData.success) {
-                                showNotification('success', 'Payment successful!');
+                                showNotification('success','Order placed successfully!')
                                 setTimeout(() => {
-                                    window.location.href = '/cart/success'
+                                    location.href = '/cart/success'
                                 }, 2000);
                             } else {
                                 showNotification('error', 'Payment verification failed.');
@@ -380,7 +389,12 @@ $('#removeCouponBtn').on('click', function () {
                 setTimeout(() => {
                     window.location.href = '/cart/success'
                 }, 2000);
-            } else {
+            } else if (formObject.paymentMethod === 'wallet'){
+                showNotification('success','Order placed successfully!')
+                setTimeout(() => {
+                    window.location.replace('/cart/success'); 
+                }, 2000);
+            }else {
                 showNotification('error', 'Invalid payment method selected.');
                     }
                 } else {

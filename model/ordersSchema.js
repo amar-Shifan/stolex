@@ -19,7 +19,7 @@ const orderSchema = new mongoose.Schema(
     ],
     totalAmount: { type: Number, required: true },
     shippingAddress: { type: mongoose.Schema.Types.ObjectId, ref: 'Address', required: true },
-    paymentMethod: { type: String, enum: ['razorpay', 'cod'], required: true },
+    paymentMethod: { type: String, enum: ['razorpay', 'cod' , 'wallet'], required: true },
     paymentStatus: { type: String, enum: ['pending', 'success', 'failed'], default: 'pending' },
     orderStatus: {
       type: String,

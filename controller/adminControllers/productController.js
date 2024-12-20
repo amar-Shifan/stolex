@@ -1,9 +1,11 @@
+// Product Controllers 
 const Product = require('../../model/productSchema');
 const Category = require('../../model/categorySchema');
 const { uploadToCloudinary, deleteFromCloudinary } = require('../../middlewares/delete');
 const mongoose = require('mongoose')
 const fs = require('fs');
 
+// Brand Fetching Controller
 const brandFetch = async(req,res)=>{
   try {
    
@@ -58,8 +60,49 @@ const addProduct = async (req, res) => {
   }
 };
 
+// Get Brands Controller
+const getBrands = async (req, res) => {
+  try {
+    console.log('working')
+    const { parentCategory } = req.body;
 
+    if (!parentCategory) {
+      return res.status(400).json({
+        success: false,
+        message: 'Parent category not provided',
+      });
+    }
 
+    const category = await Category.findOne({ name: parentCategory })
+      .populate({
+        path: 'brands',
+        select: 'name -_id', 
+      });
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: 'Category not found!',
+      });
+    }
+
+    const brandNames = category.brands.map((brand) => brand.name);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Brands fetched successfully',
+      brands: brandNames,
+    });
+  } catch (error) {
+    console.error('Error fetching brands:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error in fetching brands',
+    });
+  }
+};
+
+// Render Add Product page Controller
 const getAddProduct = async (req, res) => {
     try {
         const categories = await Category.find({}).populate('brands', 'name'); 
@@ -70,6 +113,7 @@ const getAddProduct = async (req, res) => {
     }
 };
 
+// Render Product listed page Controller
 const getProducts = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -79,10 +123,8 @@ const getProducts = async (req, res) => {
     const categoryFilter = req.query.category || '';
     const sortOption = req.query.sort || '';
 
-    // Build the filter object
     let filter = {};
 
-    // Add search filter if search query exists
     if (searchQuery) {
         filter.$or = [
             { name: { $regex: searchQuery, $options: 'i' } },
@@ -91,7 +133,6 @@ const getProducts = async (req, res) => {
         ];
     }
 
-    // Add category filter if category is selected
     if (categoryFilter && mongoose.Types.ObjectId.isValid(categoryFilter)) {
 
         const selectedCategory = await Category.findById(categoryFilter);
@@ -120,7 +161,6 @@ const getProducts = async (req, res) => {
             sort = { createdAt: -1 };
     }
 
-    // Aggregate pipeline for products
     const productsQuery = Product.aggregate([
         { $match: filter },
         {
@@ -152,7 +192,6 @@ const getProducts = async (req, res) => {
     const totalProducts = await Product.countDocuments(filter);
     const totalPages = Math.ceil(totalProducts / limit);
 
-    // Fetch only level 1 categories for the filter dropdown
     const categories = await Category.find({ level: 1 }).sort({ name: 1 });
 
     if (req.headers['x-requested-with'] === 'XMLHttpRequest') {
@@ -180,28 +219,48 @@ const getProducts = async (req, res) => {
 
 };
 
-    const getUpdate = async (req,res)=>{
-        
-        try {
+// Render Product Update page Controller
+const getUpdate = async (req, res) => {
+  try {
+    const productId = req.params.id;
 
-            const productId = req.params.id;
+    const product = await Product.findById(productId).populate('category');
 
-            const product = await Product.findById(productId);
-            const categories = await Category.find({level:1})
-
-            if(!product){
-                return res.status(404).send("Product not found")
-            }
-            res.render('admin/update-product',{product,categories})
-
-            
-        } catch (error) {
-            console.log("error in gettting ",error.message)
-        } 
-        
+    if (!product) {
+      return res.status(404).send("Product not found");
     }
 
-  // Update product
+    if (!product.category) {
+      return res.status(404).send("Category not associated with the product");
+    }
+
+    const parentCategoryName = product.category.parentCategory;
+
+    const categories = await Category.find({ level: 1, parentCategory: parentCategoryName });
+
+    const category = await Category.findOne({ name: parentCategoryName }).populate({
+      path: 'brands',
+      select: 'name -_id', 
+    });
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: 'Category not found!',
+      });
+    }
+
+    const brands = (category.brands || []).map((brand) => brand.name);
+
+    res.render('admin/update-product', { product, categories, brands });
+
+  } catch (error) {
+    console.log("Error in getting product update page:", error.message);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+  // Update product Controller
   const updateProduct = async (req, res) => {
     try {
       const productId = req.params.id;
@@ -276,6 +335,7 @@ const getProducts = async (req, res) => {
     });
   };
   
+  // Get Stock Controller
   const getStocks = async (req, res) => {
     try {
       const { search } = req.query;
@@ -300,12 +360,11 @@ const getProducts = async (req, res) => {
     }
   };
   
-
+// Add Stock Controller
   const addStock = async (req, res) => {
     try {
       const { productId, size, quantity } = req.body;
   
-      // Validate the input
       if (!productId || !size || !quantity || quantity <= 0) {
         return res.status(400).json({
           success: false,
@@ -313,7 +372,6 @@ const getProducts = async (req, res) => {
         });
       }
   
-      // Find the product by ID
       const product = await Product.findById(productId);
       if (!product) {
         return res.status(404).json({
@@ -322,11 +380,9 @@ const getProducts = async (req, res) => {
         });
       }
   
-      // Check if the size exists in the stock array
       const stockEntryIndex = product.stock.findIndex((stock) => stock.size === size);
   
       if (stockEntryIndex === -1) {
-        // If stock entry for the size doesn't exist, push a new stock entry
         await Product.updateOne(
           { _id: productId },
           {
@@ -340,11 +396,10 @@ const getProducts = async (req, res) => {
           message: 'New stock entry added successfully.',
         });
       } else {
-        // If stock entry exists, update the quantity
         await Product.updateOne(
           { _id: productId, 'stock.size': size },
           {
-            $inc: { 'stock.$.quantity': quantity }, // Increment the quantity by the specified amount
+            $inc: { 'stock.$.quantity': quantity }, 
           }
         );
         return res.status(200).json({
@@ -362,8 +417,4 @@ const getProducts = async (req, res) => {
   };
   
   
-  
-  
-  
-  
-module.exports = {addProduct , getAddProduct ,getProducts ,updateProduct , getUpdate , getStocks ,addStock ,brandFetch} 
+module.exports = {addProduct , getAddProduct ,getProducts ,updateProduct , getUpdate , getStocks ,addStock ,brandFetch ,getBrands} 

@@ -7,6 +7,7 @@ const productController = require('../controller/adminControllers/productControl
 const ordersController = require('../controller/adminControllers/orderController')
 const offerController = require('../controller/adminControllers/offerController')
 const couponController = require('../controller/adminControllers/couponController')
+const graphController = require('../controller/adminControllers/graphController')
 const env = require('../utils/env_var')
 const upload = require('../middlewares/upload')
 const { handleProductImages } = require('../middlewares/delete');
@@ -26,10 +27,13 @@ router.post('/createCategory', isAuthenticated, categoryController.createCategor
 router.post('/addBrand',isAuthenticated , categoryController.addBrand)
 router.get('/categories', isAuthenticated, categoryController.getMainCategories);
 router.patch('/:id' , isAuthenticated , categoryController.updateCategory);
+
 router.get('/add-products', isAuthenticated, productController.getAddProduct);
 router.get('/update-product/:id', isAuthenticated, productController.getUpdate);
 router.post('/add-products', isAuthenticated, upload.array('images', 5), productController.addProduct);
 router.post('/updateProduct/:id', isAuthenticated, upload.array('images'), handleProductImages, productController.updateProduct);
+router.post('/getBrands' , productController.getBrands);
+
 router.get('/stock' , productController.getStocks)
 router.post('/add-stock' , productController.addStock)
 
@@ -49,16 +53,26 @@ router.get('/offers' , offerController.getOffers)
 router.post('/offers/create' , offerController.createOffer)
 router.get('/offers/categories' , offerController.getCategory)
 router.get('/offers/products' , offerController.getProducts)
-
+router.delete('/offers/category/:id/delete', offerController.deleteCategoryOffer);
+router.delete('/offers/product/:id/delete', offerController.deleteProductOffer);
 
 router.get('/coupons' , couponController.getCoupon);
 router.post('/coupons/create' , couponController.createCoupon)
+router.delete('/coupons/:id' , couponController.deleteCoupon)
 
 router.post('/orders/:orderId/approve-return', ordersController.approveReturn);
 router.post('/orders/:orderId/items/:itemId/approve-return', ordersController.approveReturn);
 
 router.post('/orders/:orderId/reject-return', ordersController.rejectReturn);
 router.post('/orders/:orderId/items/:itemId/reject-return', ordersController.rejectReturn);
+
+router.get('/salesReport' , ordersController.getSalesReport)
+router.get('/salesReport/pdf', ordersController.generateSalesReportPDF);
+router.get('/salesReport/excel', ordersController.generateSalesReportExcel);        
+
+router.get('/chart-data' , graphController.getChartData)
+
+
 
 
 module.exports = router

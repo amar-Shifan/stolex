@@ -1,7 +1,9 @@
+// Product Controllers
 const Product = require('../../model/productSchema')
 const Category = require('../../model/categorySchema')
 const Brand = require('../../model/brandSchema');
 
+// Render Product Details Page
 const getProductDetail = async (req, res) => {
     try {
       const productId = req.params.id;
@@ -25,187 +27,67 @@ const getProductDetail = async (req, res) => {
     }
   };
 
-  const getProducts = async (req, res) => {
-    try {
-    const { category, brand, parentCategoryName, size, subCategory, search, sort } = req.query;
-  
-      let products = [];
-      let selectedName = '';
-      let sizes = [];
-      let styles = [];
-      let filters = {};
-  
-      if (brand) filters.brand = Array.isArray(brand) ? { $in: brand } : brand;
-      if (size) filters["stock.size"] = Array.isArray(size) ? { $in: size } : size;
-  
-      if (subCategory) {
-          const styleCategories = await Category.find({
-              name: { $in: Array.isArray(subCategory) ? subCategory : [subCategory] },
-          });
-          const styleCategoryIds = styleCategories.map((cat) => cat._id);
-          filters.category = { $in: styleCategoryIds };
-      }
-  
-      if (search) {
-          filters.$or = [
-              { brand: { $regex: search, $options: 'i' } },
-              { "category.name": { $regex: search, $options: 'i' } },
-              { name: { $regex: search, $options: 'i' } },
-              { description: { $regex: search, $options: 'i' } },
-          ];
-      }
-  
-      if (parentCategoryName) {
-          if (parentCategoryName === 'all') {
-              products = await Product.find({ ...filters, status: 'Active' }).populate('category').populate('offer');
-          } else {
-              products = await Product.find({ ...filters, status: 'Active' })
-                  .populate({
-                      path: 'category',
-                      match: { parentCategory: parentCategoryName },
-                  })
-                  .exec();
-              products = products.filter((product) => product.category);
-          }
-          selectedName = parentCategoryName;
-      } else if (category) {
-          const categoryData = await Category.findOne({ name: category });
-          if (!categoryData) return res.status(404).send('Category not found');
-  
-          products = await Product.find({ ...filters, category: categoryData._id, status: 'Active' })
-              .populate('category')
-              .populate('offer')
-              .exec();
-          selectedName = categoryData.name;
-      } else {
-          products = await Product.find({ ...filters, status: 'Active' }).populate('category').populate('offer').exec();
-          selectedName = 'All Products';
-      }
-  
-      if (sort) {
-          const sortOptions = {
-              price_asc: { price: 1 },
-              price_desc: { price: -1 },
-              rating_desc: { averageRating: -1 },
-              name_asc: { name: 1 },
-              name_desc: { name: -1 },
-              new_arrivals: { createdAt: -1 },
-          };
-          const sortQuery = sortOptions[sort] || {};
-          products = await Product.find({ ...filters, status: 'Active' }).populate('category' ).populate('offer').sort(sortQuery).exec();
-      }
-  
-      sizes = [...new Set(products.flatMap((product) => product.stock.map((stockItem) => stockItem.size)))];
-      styles = await Category.find({
-          level: 1,
-          ...(parentCategoryName !== 'all' && { parentCategory: parentCategoryName || category || null }),
-      });
-  
-      const brands = await Brand.find();
-      
-      console.log(products.length , 'product length ');
-      
-      console.log('console.log', products,
-        selectedName,
-        brands,
-        sizes,
-        styles,
-        selectedFilters ={
-            brand: Array.isArray(brand) ? brand : brand ? [brand] : [],
-            size: Array.isArray(size) ? size : size ? [size] : [],
-            style: Array.isArray(subCategory) ? subCategory : subCategory ? [subCategory] : [],
-        },
-        sort,)
-        
-      res.render('user/topwear', {
-          products,
-          selectedName,
-          brands,
-          sizes,
-          styles,
-          selectedFilters: {
-              brand: Array.isArray(brand) ? brand : brand ? [brand] : [],
-              size: Array.isArray(size) ? size : size ? [size] : [],
-              style: Array.isArray(subCategory) ? subCategory : subCategory ? [subCategory] : [],
-          },
-          sort,
-      });
-  } catch (error) {
-      console.error('Error fetching products:', error.message, error.stack);
-      res.status(500).send('Server Error');
-  }
-  }
-
-
+  // Render Shopping Page Controller
   const getShop = async (req, res) => {
     try {
-        const { brand, size, category, search, sort, page = 1, limit = 12 } = req.query;
+        const { brand, size, category, search, sort, page = 1, limit = 8 } = req.query;
 
-        // Pagination
         const skip = (page - 1) * limit;
 
-        // Building the Query
         const filter = {};
 
-        // Filtering by Brand
-        if (brand) filter.brand = { $in: Array.isArray(brand) ? brand : [brand] };
+        if (brand) {
+            filter.brand = { $in: Array.isArray(brand) ? brand : [brand] };
+        }
 
-        // Filtering by Size
         if (size) {
             filter["stock.size"] = { $in: Array.isArray(size) ? size : [size] };
         }
 
-        // Filtering by Category
-        if (category) filter.category = category;
+        if (category) {
+            const categoryDocs = Array.isArray(category)
+                ? await Category.find({ name: { $in: category } })
+                : await Category.findOne({ name: category });
 
-        // Searching by Product Name or Description
+            if (categoryDocs) {
+                filter.category = Array.isArray(categoryDocs)
+                    ? { $in: categoryDocs.map(doc => doc._id) }
+                    : categoryDocs._id;
+            }
+        }
+
         if (search) {
+            const matchingCategories = await Category.find({ name: { $regex: search, $options: "i" } });
+            const matchingCategoryIds = matchingCategories.map(category => category._id);
+
             filter.$or = [
                 { name: { $regex: search, $options: "i" } },
                 { description: { $regex: search, $options: "i" } },
+                { category: { $in: matchingCategoryIds } },
             ];
         }
 
-        // Sorting
-        let sortOption = {};
-        switch (sort) {
-            case "price_asc":
-                sortOption.price = 1;
-                break;
-            case "price_desc":
-                sortOption.price = -1;
-                break;
-            case "rating_desc":
-                sortOption.rating = -1;
-                break;
-            case "new_arrivals":
-                sortOption.createdAt = -1;
-                break;
-            case "name_asc":
-                sortOption.name = 1;
-                break;
-            case "name_desc":
-                sortOption.name = -1;
-                break;
-            default:
-                sortOption = {}; // No sorting by default
-        }
+        const sortOption = {
+            price_asc: { price: 1 },
+            price_desc: { price: -1 },
+            rating_desc: { rating: -1 },
+            new_arrivals: { createdAt: -1 },
+            name_asc: { name: 1 },
+            name_desc: { name: -1 },
+        }[sort] || {};
 
-        // Fetch filtered and sorted products
-        const totalProducts = await Product.countDocuments(filter); // Total products matching the filters
+        const totalProducts = await Product.countDocuments(filter);
         const products = await Product.find(filter)
             .sort(sortOption)
             .skip(skip)
-            .limit(limit);
+            .limit(parseInt(limit));
 
-        // Fetch additional data
         const styles = await Category.find({ status: "Active", level: 1 });
         const brands = await Brand.find({});
-        const sizes = await Product.distinct("stock.size"); // Get unique sizes
+        const sizes = await Product.distinct("stock.size");
 
-        const selectedName = req.query.category || "All Products";
+        const selectedName = category || "All Products";
 
-        // Render the page
         res.render("user/footwear", {
             products,
             brands,
@@ -214,17 +96,15 @@ const getProductDetail = async (req, res) => {
             selectedName,
             currentPage: parseInt(page),
             totalPages: Math.ceil(totalProducts / limit),
-            locals: {
-                searchQuery: search || "",
-                sort: sort || "",
-            },
+            limit: parseInt(limit),
+            searchQuery: search || "",
+            sort: sort || "",
         });
     } catch (error) {
-        console.error(error);
+        console.error("Error in getShop controller:", error);
         res.render("error", { message: "Something went wrong!" });
     }
 };
 
 
-
-module.exports = {getProductDetail , getProducts ,getShop}
+module.exports = {getProductDetail ,getShop}

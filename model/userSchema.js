@@ -11,7 +11,13 @@ const userSchema = new mongoose.Schema(
         block: { type: Boolean, required: true, default: false },
         address:[{type : mongoose.Schema.Types.ObjectId , ref:'Address'}],  
         verified : {type : Boolean},
-        googleId: {type : String , default:null}
+        googleId: {type : String , default:null},
+        usedCoupons: [
+            {
+                couponId: { type: mongoose.Schema.Types.ObjectId, ref: 'Coupon' }, 
+                usedAt: { type: Date, default: Date.now }, 
+            },
+        ],
     },
     {
         timestamps: true

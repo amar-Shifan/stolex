@@ -1,11 +1,13 @@
+//Offer Controller
 const Product = require('../../model/productSchema');
 const Category = require('../../model/categorySchema');
 const Offer = require('../../model/offerSchema')
 
+// Render the Offer page 
 const getOffers = async (req, res) => {
     try {
         const offers = await Offer.find({})
-            .populate('categoryIds') // Populate related fields
+            .populate('categoryIds') 
             .populate('productIds');
 
         const categoryOffers = offers.filter(offer => offer.applyTo === 'categories');
@@ -14,14 +16,11 @@ const getOffers = async (req, res) => {
         res.render('admin/offer', { categoryOffers, productOffers });
     } catch (error) {
         console.error('Error fetching offers:', error);
-        res.status(500).json({ message: 'Server Error' });
+        res.render('user/error',{message:'Something went wrong!'})
     }
 };
 
-
-
-
-
+// Create Offer Controller
 const createOffer = async (req, res) => {
     try {
         console.log(req.body);
@@ -29,12 +28,10 @@ const createOffer = async (req, res) => {
 
         console.log(title, discount, startDate, expiryDate, type, categoryId, productId);
 
-        // Validate required fields
         if (!title || discount === undefined || !startDate || !expiryDate || !type) {
             return res.status(400).json({ success: false, message: 'All required fields must be provided.' });
         }
 
-        // Validate date range
         const start = new Date(startDate);
         const expiry = new Date(expiryDate);
 
@@ -45,7 +42,6 @@ const createOffer = async (req, res) => {
             });
         }
 
-        // Create the offer
         const offerData = {
             title,
             discount,
@@ -74,11 +70,9 @@ const createOffer = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid offer type.' });
         }
         console.log('saving ')
-        // Save offer to the database
         const offer = new Offer(offerData);
         await offer.save();
 
-        // Update products or categories with the offer
         if (type === 'products') {
             const products = await Product.find({ _id: { $in: productId } });
             for (const product of products) {
@@ -88,13 +82,12 @@ const createOffer = async (req, res) => {
                     {
                         $set: {
                             offer: offer._id,
-                            discountedPrice: discountedPrice.toFixed(2), // Save the calculated discounted price
+                            discountedPrice: discountedPrice.toFixed(2), 
                         },
                     }
                 );
             }
         } else if (type === 'categories') {
-            // Update the offer for the selected categories
             await Category.updateMany(
                 { _id: { $in: categoryId } },
                 {
@@ -104,10 +97,8 @@ const createOffer = async (req, res) => {
                 }
             );
         
-            // Fetch all products in the affected categories
             const productsInCategories = await Product.find({ category: { $in: categoryId } });
         
-            // Apply the offer discount to the products in those categories
             const bulkOperations = productsInCategories.map(product => {
                 const discountedPrice = Number((product.price * (1 - discount / 100)).toFixed(2));
                 return {
@@ -123,7 +114,6 @@ const createOffer = async (req, res) => {
                 };
             });
         
-            // Perform a bulkWrite operation for efficiency
             if (bulkOperations.length > 0) {
                 await Product.bulkWrite(bulkOperations);
             }
@@ -140,7 +130,7 @@ const createOffer = async (req, res) => {
     }
 };
 
-  
+// Get Category Controller
 const getCategory = async(req,res)=>{
     try {
         const categories = await Category.find({status : 'Active' , level: 1 });
@@ -151,6 +141,7 @@ const getCategory = async(req,res)=>{
     }
 }
 
+// Get Products Controller
 const getProducts = async(req,res)=>{
     try {
         const products = await Product.find({status : 'Active'});
@@ -161,4 +152,68 @@ const getProducts = async(req,res)=>{
       }
 }
 
-module.exports = {getOffers , getCategory , getProducts ,createOffer}
+// Delete Category Offer Controller
+const deleteCategoryOffer = async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log('working ');
+
+        const offerToDelete = await Offer.findById(id);
+        if (!offerToDelete) {
+            return res.status(404).json({ success: false, message: 'Offer not found' });
+        }
+
+        const product = await Product.updateMany(
+            { offer: id }, 
+            { $unset: { offer: 1, discountedPrice: 1 } } 
+        );
+
+        const category = await Category.updateMany(
+            { offerId: id }, 
+            { $unset: { offerId: 1 } } 
+        );
+
+        if (!product || !category) {
+            return res.status(400).json({ success: false, message: 'Category or product is not found!' });
+        }
+
+        await Offer.findByIdAndDelete(id);
+
+        res.status(200).json({ success: true, message: 'Successfully deleted' });
+    } catch (error) {
+        console.error('Error deleting category offer:', error);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
+
+// Delete Product Offer Controller
+const deleteProductOffer = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const offerToDelete = await Offer.findById(id);
+        if (!offerToDelete) {
+            return res.status(404).json({ success: false, message: 'Offer not found' });
+        }
+
+        await Product.updateMany(
+            { offer: id }, 
+            { $unset: { offer: 1, discountedPrice: 1 } } 
+        );
+
+        await Category.updateMany(
+            { offerId: id }, 
+            { $unset: { offerId: 1 } } 
+        );
+
+        await Offer.findByIdAndDelete(id);
+
+        res.status(200).json({ success: true, message: 'Successfully deleted' });
+    } catch (error) {
+        console.error('Error deleting product offer:', error);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
+
+
+module.exports = {getOffers , getCategory , getProducts ,createOffer ,deleteCategoryOffer , deleteProductOffer}

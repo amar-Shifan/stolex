@@ -4,45 +4,45 @@ const transactionSchema = new mongoose.Schema(
   {
     type: {
       type: String,
-      enum: ['credit', 'debit'], // Specify transaction types
+      enum: ['credit', 'debit'], 
       required: true,
     },
     amount: {
       type: Number,
       required: true,
-      min: 0, // Ensure no negative transaction amounts
+      min: 0, 
     },
     description: {
       type: String,
-      required: true, // Description of the transaction (e.g., "Order #1234 Refund")
+      required: true, 
     },
     date: {
       type: Date,
-      default: Date.now, // Timestamp of the transaction
+      default: Date.now, 
     },
   },
-  { _id: false } // Avoid creating an extra _id for each transaction
+  { _id: false } 
 );
 
 const walletSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User', // Reference to the User model
+      ref: 'User', 
       required: true,
     },
     amount: {
       type: Number,
       required: true,
-      default: 0, // Default wallet balance
-      min: 0, // Prevent negative wallet balance
+      default: 0, 
+      min: 0, 
     },
     transactionHistory: {
       type: [transactionSchema],
-      default: [], // Start with an empty transaction history
+      default: [], 
     },
   },
-  { timestamps: true } // Add createdAt and updatedAt timestamps
+  { timestamps: true } 
 );
 
 const Wallet = mongoose.model('Wallet', walletSchema);

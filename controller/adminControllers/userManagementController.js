@@ -1,6 +1,8 @@
+//User Management Controller
 const User = require("../../model/userSchema");
 const bcrypt = require('bcrypt')
 
+// Render User Listing Page Controller
 const listUsers = async (req, res) => {
     try {
         const { page = 1, limit = 10 } = req.query; 
@@ -17,10 +19,11 @@ const listUsers = async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching users:', error);
-        res.status(500).send('Server error');
+        res.render('user/error',{message:'Something went wrong!'})
     }
 };
 
+// Toggle Status Controller
 const toggleStatus = async (req, res) => {
     try {
 
@@ -52,10 +55,9 @@ const toggleStatus = async (req, res) => {
     }
 };
 
+//Add User Controller
 const addUser = async (req, res) => {
     try {
-        console.log("working");
-        console.log(req.body);
         const { username, email, block, password, phoneNumber } = req.body;
 
         if (!username || !email || !password || !phoneNumber) {
@@ -87,7 +89,6 @@ const addUser = async (req, res) => {
         return res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 };
-
 
 const searchUsers = async (req, res) => {
     try {

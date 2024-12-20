@@ -1,4 +1,4 @@
-<%- include('../partials/admin_header.ejs', {title: "Add Product"}) %>
+<%- include('../partials/admin_header.ejs', { title: "Add Product" }) %>
 <style>
   .img-container {
   max-width: 100%;
@@ -197,6 +197,9 @@
         form.reset(); 
         document.getElementById('dynamic-fields').innerHTML = ''; 
         document.getElementById('dynamic-brand').innerHTML = ''; 
+        setTimeout(()=>{
+          location.href = '/admin/products'
+        },1000)
       }
     } catch (error) {
       showNotification('error', 'Network error, please try again later');
@@ -284,25 +287,42 @@
 
 
   //sizes handler and brand 
-  function handleCategoryChange(selectElement) {
+  async function handleCategoryChange(selectElement) {
   const selectedOption = selectElement.options[selectElement.selectedIndex];
   const parentCategory = selectedOption.getAttribute('data-parent');
 
   const sizeStockContainer = document.getElementById('dynamic-fields');
   const brandContainer = document.getElementById('dynamic-brand');
 
-  sizeStockContainer.innerHTML = '';  // Clear previous size fields
-  brandContainer.innerHTML = '';      // Clear previous brand fields
+  sizeStockContainer.innerHTML = ''; // Clear previous size fields
+  brandContainer.innerHTML = '';     // Clear previous brand fields
 
   let sizes = [];
   let brands = [];
 
+  try {
+    // Fetch brands dynamically from the backend
+    const res = await fetch('/admin/getBrands', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ parentCategory }),
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      brands = data.brands; // Set fetched brands
+    } else {
+      console.error('Error:', data.message);
+    }
+  } catch (error) {
+    console.error('Error fetching brands:', error);
+  }
+
+  // Set sizes based on parentCategory
   if (parentCategory === 'topwear') {
     sizes = ['S', 'M', 'L', 'XL', 'XXL'];
-    brands = ['Nike', 'Adidas', 'Puma', 'Reebok'];
   } else if (parentCategory === 'footwear') {
     sizes = ['6', '7', '8', '9', '10'];
-    brands = ['Converse', 'Vans', 'Skechers', 'Timberland'];
   }
 
   // Dynamically generate size and quantity fields
@@ -334,8 +354,11 @@
     });
     brandHTML += `</select>`;
     brandContainer.innerHTML = brandHTML;
+  } else {
+    brandContainer.innerHTML = `<p>No brands available for this category.</p>`;
   }
 }
+
 
 
 

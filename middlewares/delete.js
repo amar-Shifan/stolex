@@ -71,7 +71,7 @@ const handleProductImages = async (req, res, next) => {
         message: 'Error processing images',
       });
     }
-  };
+};
   
 
 

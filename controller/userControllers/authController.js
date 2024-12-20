@@ -1,3 +1,4 @@
+// Authentication Controllers
 const User = require('../../model/userSchema');
 const Product = require('../../model/productSchema')
 const Category = require('../../model/categorySchema')
@@ -7,7 +8,7 @@ const Otp = require('../../model/otpSchema');
 const sendOtpToMail = require('../../service/mailService');
 const env = require('../../utils/env_var');
 
-
+// Logout Controller
 const logout = async (req,res)=>{
     try {
         req.session.destroy(()=>{
@@ -18,6 +19,14 @@ const logout = async (req,res)=>{
     }
 }
 
+// Render Login page Controller
+const getLogin = async(req, res) => {
+    const message = req.session.msg;
+    req.session.msg = null; 
+    res.render('user/login', { message });
+}
+
+// User Login Controller
 const userLogin = async (req, res) => {
 
     try {
@@ -62,15 +71,17 @@ const userLogin = async (req, res) => {
     
 };
 
+// Render SignUp page Controller
 const getSignup = async(req,res)=>{
     try {
-            res.render('user/signup');
+        res.render('user/signup');
     } catch (error) {
         console.log('error',error);
         res.render('user/error' , {message:'Something went wrong'})
     }
 }
 
+// Render Home Page Controller
 const getHomePage = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1; 
@@ -94,7 +105,6 @@ const getHomePage = async (req, res) => {
                 })
         );
         
-
         const brands = await Product.distinct('brand');
 
         const brandProducts = await Promise.all(
@@ -127,7 +137,7 @@ const getHomePage = async (req, res) => {
     }
 };
 
-
+// Signup Controller
 const insertUser = async(req,res)=>{
     
     const { username, email, password, dob, phoneNumber } = req.body;
@@ -158,20 +168,18 @@ const insertUser = async(req,res)=>{
             `
         );
         
-        console.log("sended otp ");
-        
         if(!otpMail){
             res.status(403).json({success:false,message:"something went wrong"})
         }
-        console.log('ok send')
+
         const expiresAt = new Date(Date.now() + 60 * 1000);
         const otpEntry = Otp({
             email,
             otp,
             expiresAt
         });
+
         await otpEntry.save();
-        console.log('saved');
 
         req.session.tempUserData = { username, email, password, dob, phoneNumber };
         console.log("req.session.temp",req.session.tempUserData);
@@ -185,6 +193,7 @@ const insertUser = async(req,res)=>{
         }
 }
 
+// Get OTP Controller
 const getOtp = async (req, res) => {
     const email = req.session.tempUserData.email;
     const otpDoc = await Otp.findOne({ email });
@@ -198,7 +207,7 @@ const getOtp = async (req, res) => {
     res.render('user/otp-verification', { remainingTime });
 };
 
-
+// Otp Verification Controller
 const otpVerification = async (req, res) => {
     try {
         const { username, email, password, dob, phoneNumber } = req.session.tempUserData;
@@ -238,7 +247,6 @@ const otpVerification = async (req, res) => {
         delete req.session.tempUserData;
         req.session.userId = newUser._id;
 
-        // Save the session
         req.session.save((err) => {
             if (err) {
                 console.error('Session save error:', err);
@@ -253,6 +261,7 @@ const otpVerification = async (req, res) => {
     }
 };
 
+// ResendOtp Controller
 const resendOtp = async (req, res) => {
     try {
         const { tempUserData } = req.session;
@@ -264,7 +273,7 @@ const resendOtp = async (req, res) => {
         const { email } = tempUserData;
 
         const otp = generateOtp(); 
-        const expiresAt = Date.now() + 1 * 60 * 1000; // 1 minutes 
+        const expiresAt = Date.now() + 1 * 60 * 1000; 
 
         const updatedOtp = await Otp.findOneAndUpdate(
             { email },
@@ -292,8 +301,6 @@ const resendOtp = async (req, res) => {
             `
         );
 
-        console.log('OTP email sent:', otpMail);
-
         res.status(200).json({
             success:true,
             message: 'OTP has been resent successfully.',
@@ -314,5 +321,6 @@ module.exports = {
     resendOtp,
     getHomePage,
     getOtp,
-    getSignup
+    getSignup,
+    getLogin
 }

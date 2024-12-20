@@ -1,18 +1,14 @@
+//Category Controllers
 const Category = require('../../model/categorySchema');
 const Brand = require('../../model/brandSchema');
 
-    const categoryController = {
+const categoryController = {
+        // Create Category Controller
         createCategory: async (req, res) => {
             try {
-                console.log("entered in controller .......")
-
                 const { name, description, parentCategory, status, type } = req.body;
-                console.log('name',name,'des',description,'parent',parentCategory,'stat',status,type)
-                console.log('working');
                 
-                // Check if category with same name exists
                 const existingCategory = await Category.findOne({name});
-                console.log("existingCategory",existingCategory)
                 if (existingCategory) {
                     return res.status(400).json({
                         success: false,
@@ -26,10 +22,7 @@ const Brand = require('../../model/brandSchema');
                     status: status || 'Active',
                     level: type === 'subcategory' ? 1 : 0
                 };
-                console.log('categorydata',categoryData);
                 
-
-                // If it's a subcategory, validate and add parent category
                 if (type === 'subcategory') {
                     console.log("entered sub");
                     
@@ -41,8 +34,6 @@ const Brand = require('../../model/brandSchema');
                     }
                     console.log('working');
                     
-
-                    // Verify parent category exists
                     const parentCategoryDoc = await Category.findOne({_id:parentCategory})
                     console.log('verify parent',parentCategoryDoc);
                     
@@ -53,7 +44,6 @@ const Brand = require('../../model/brandSchema');
                         });
                     }
 
-                    console.log('still working ');
                     
                     if (parentCategoryDoc.level !== 0) {
                         return res.status(400).json({
@@ -63,25 +53,18 @@ const Brand = require('../../model/brandSchema');
                     }
 
                     categoryData.parentCategory = parentCategoryDoc.name;
-                    console.log('saved' ,categoryData);
                 }
 
-                console.log('working',categoryData);
                 
                 const newCategory = new Category(categoryData);
             
-                console.log('saved' ,newCategory);
                 await newCategory.save();
-                console.log('saved');
-                
-                
 
                 res.status(201).json({
                     success: true,
                     message: `${type === 'subcategory' ? 'Subcategory' : 'Category'} created successfully`,
                     category: newCategory
                 });
-                console.log('working');
                 
 
             } catch (error) {
@@ -127,13 +110,11 @@ const Brand = require('../../model/brandSchema');
         }
         ,
 
-         
+        // Update Category Controller
         updateCategory: async (req, res) => {
             try {
-                console.log("Working ......");
                 const { categoryId, name, description, status, isListed } = req.body;
         
-                // Check if category exists
                 const category = await Category.findById(categoryId);
                 if (!category) {
                     return res.status(404).json({
@@ -142,7 +123,6 @@ const Brand = require('../../model/brandSchema');
                     });
                 }
         
-                // If name is being updated, check for duplicates
                 if (name && name !== category.name) {
                     const existingCategory = await Category.findOne({ name });
                     if (existingCategory) {
@@ -153,10 +133,9 @@ const Brand = require('../../model/brandSchema');
                     }
                 }
         
-                // Update the category fields
                 const updates = { name, description, status };
                 if (typeof isListed !== 'undefined') {
-                    updates.isListed = isListed; // Update isListed if provided
+                    updates.isListed = isListed; 
                 }
         
                 const updatedCategory = await Category.findByIdAndUpdate(
@@ -179,6 +158,7 @@ const Brand = require('../../model/brandSchema');
             }
         },
         
+        //Add Brand Controller 
         addBrand: async (req,res)=>{
             try {
                 const { name, description, category } = req.body;
@@ -193,10 +173,9 @@ const Brand = require('../../model/brandSchema');
                 const existingBrand = await Brand.findOne({ name });
 
                 if (existingBrand) {
-                    // Check if this brand is already associated with the given category
                     const existBrandInCategory = await Category.findOne({
                         _id: category,
-                        brands: existingBrand._id, // Check if the brand ID exists in the category
+                        brands: existingBrand._id, 
                     });
 
                     if (existBrandInCategory) {
@@ -206,7 +185,6 @@ const Brand = require('../../model/brandSchema');
                         });
                     }
 
-                    // If the brand exists but is not associated with the category, add it
                     await Category.findByIdAndUpdate(
                         category,
                         { $push: { brands: existingBrand._id } },
@@ -216,11 +194,9 @@ const Brand = require('../../model/brandSchema');
                     return res.status(200).json({ success: true, message: "Brand added to the category successfully." });
                 }
 
-                // If the brand does not exist, create it
                 const brand = new Brand({ name, description });
                 await brand.save();
 
-                // Add the new brand to the category
                 await Category.findByIdAndUpdate(
                     category,
                     { $push: { brands: brand._id } },

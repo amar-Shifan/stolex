@@ -15,7 +15,7 @@
                                        <h2 class="head-2" style="color: black;">Shoes</h2>
                                        <h2 class="head-3" style="color: black;">Collection</h2>
                                        <p class="category" ><span style="color: black;">New trending shoes</span></p>
-                                       <p><a href="/products?parentCategoryName=footwear" class="btn btn-primary">Shop Collection</a></p>
+                                       <p><a href="/shop?search=shoe" class="btn btn-primary">Shop Collection</a></p>
                                    </div>
                                </div>
                            </div>
@@ -51,7 +51,7 @@
                                        <h2 class="head-2" style="color: black;">Topwears</h2>
                                        <h2 class="head-3" style="color: black;">Collection<strong class="font-weight-bold">30%</strong> off</h2>
                                        <p class="category" ><span style="color: black;">New stylish topwear for men</span></p>
-                                       <p><a href="/products?parentCategoryName=footwear" class="btn btn-primary">Shop Collection</a></p>
+                                       <p><a href="/shop?search=shirt" class="btn btn-primary">Shop Collection</a></p>
                                    </div>
                                </div>
                            </div>
@@ -68,7 +68,7 @@
         <div class="row g-4 justify-content-center align-items-stretch">
             <% categoryProducts.forEach(item => { %>
                 <div class="col-6 col-sm-4 col-lg-2">
-                    <a href="/products?category=<%= item.category %>&parentCategoryName=<%= encodeURIComponent(item.product.category.parentCategory) %>" class="text-decoration-none text-dark">
+                    <a href="/shop?category=<%= item.category %>" class="text-decoration-none text-dark">
                         <div class="category-item border rounded shadow-sm p-3 text-center">
                             <div class="category-image mb-3">
                                 <% if (item.product) { %>
@@ -89,22 +89,31 @@
           <div class="row">
             <% spotlightProducts.forEach((item) => { %>
                 <div class="col-md-4">
-                  <div class="brand-card border rounded shadow-sm p-3 text-center">
-                    <div class="brand-img-container mb-3">
-                      <img src="<%= item.product.images[0] || '/api/placeholder/400/400' %>" alt="<%= item.brand %>" class="img-fluid rounded">
+                    <div class="brand-card border rounded shadow-sm p-3 text-center">
+                        <div class="brand-img-container mb-3">
+                            <img src="<%= item.product.images[0] || '/api/placeholder/400/400' %>" alt="<%= item.brand %>" class="img-fluid rounded">
+                        </div>
+                        <h5 class="brand-title">
+                            <a href="/shop?brand=<%= encodeURIComponent(item.brand) %>" class="text-decoration-none text-dark">
+                                <%= item.brand %>
+                            </a>
+                        </h5>
+                        <div class="product-name text-muted small"><%= item.product.name %></div>
+                        <% if (item.product.discountedPrice) { %>
+                            <div class="product-price">
+                                <span class="text-danger fw-bold">₹<%= item.product.discountedPrice %></span>
+                                <small class="text-muted text-decoration-line-through">₹<%= item.product.price %></small>
+                                <span class="badge bg-success ms-2">
+                                    -<%= Math.round((1 - item.product.discountedPrice / item.product.price) * 100) %>% OFF
+                                </span>
+                            </div>
+                        <% } else { %>
+                            <div class="product-price text-dark">₹<%= item.product.price %></div>
+                        <% } %>
                     </div>
-                    <!-- Add brand link -->
-                    <h5 class="brand-title">
-                      <a href="/products?brand=<%= encodeURIComponent(item.brand) %>&parentCategoryName=<%= encodeURIComponent(item.product.category.parentCategory) %>" class="text-decoration-none text-dark">
-                        <%= item.brand %>
-                      </a>
-                    </h5>
-                    <div class="product-name text-muted small"><%= item.product.name %></div>
-                    <div class="product-price text-success">₹<%= item.product.price %></div>
-                  </div>
                 </div>
-              <% }); %>
-          </div>
+            <% }); %>
+        </div>
         
           <!-- Pagination Section -->
           <div class="pagination-container mt-4 text-center">
@@ -132,25 +141,35 @@
     </div>
     <div class="row row-pb-md">
       <% products.map((product, index) => { %>
-        <div class="col-lg-3 mb-4 text-center">
-          <div class="product-entry border">
-            <a href="/productDetails/<%=product._id %>" class="prod-img">
-              <img src="<%= product.images[0] %>" class="img-fluid" alt="<%= product.name %>">
-            </a>
-            <div class="desc">
-              <h2><a href="/productDetails/<%=product._id %>" ><%= product.name %></a></h2>
-              <span class="price">₹<%= product.price %></span>
-            </div>
+          <div class="col-lg-3 mb-4 text-center">
+              <div class="product-entry border">
+                  <a href="/productDetails/<%= product._id %>" class="prod-img">
+                      <img src="<%= product.images[0] %>" class="img-fluid" alt="<%= product.name %>">
+                  </a>
+                  <div class="desc">
+                      <h2>
+                          <a href="/productDetails/<%= product._id %>"><%= product.name %></a>
+                      </h2>
+                      <% if (product.discountedPrice) { %>
+                          <span class="text-danger fw-bold">₹<%= product.discountedPrice %></span>
+                          <small class="text-muted text-decoration-line-through">₹<%= product.price %></small>
+                          <span class="badge bg-success ms-2">
+                              -<%= Math.round((1 - product.discountedPrice / product.price) * 100) %>% OFF
+                          </span>
+                      <% } else { %>
+                          <span class="price">₹<%= product.price %></span>
+                      <% } %>
+                  </div>
+              </div>
           </div>
-        </div>
-        <% if ((index + 1) % 4 === 0) { %>
-          <div class="w-100"></div>
-        <% } %>
+          <% if ((index + 1) % 4 === 0) { %>
+              <div class="w-100"></div>
+          <% } %>
       <% }); %>
-    </div>
+  </div>
     <div class="row">
       <div class="col-md-12 text-center">
-        <p><a href="/products?parentCategoryName=all" class="btn btn-primary btn-lg">Shop All Products</a></p>
+        <p><a href="/shop" class="btn btn-primary btn-lg">Shop All Products</a></p>
       </div>
     </div>
   </div>

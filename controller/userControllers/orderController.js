@@ -1,3 +1,4 @@
+// Order Controllers 
 const User = require('../../model/userSchema');
 const Cart = require('../../model/cartSchema');
 const Order = require('../../model/ordersSchema');
@@ -8,7 +9,7 @@ const Offer = require("../../model/offerSchema");
 const Wallet = require('../../model/walletSchema');
 const env = require('../../utils/env_var')
 
-
+// Render CheckOut page Controller
 const getCheckout = async (req, res) => {
     try {
         const userId = req.session.userId;
@@ -40,33 +41,27 @@ const getCheckout = async (req, res) => {
                 continue; 
             }
 
-            // Check if the product has an offer and fetch the offer if it exists
             let itemTotal = item.total;
             if (product.offer) {
-                // Fetch the offer details
                 const offer = await Offer.findById(product.offer);
 
                 if (offer && product.discountedPrice) {
-                    // Apply discounted price if offer exists and has discountedPrice
                     itemTotal = product.discountedPrice * item.quantity;
                 } else {
-                    // No offer or no discounted price, use the regular price
                     itemTotal = product.price * item.quantity;
                 }
             } else {
-                // No offer, use the regular price
                 itemTotal = product.price * item.quantity;
             }
 
             updatedItems.push({
-                ...item.toObject(), // Convert the item to an object
-                total: itemTotal, // Update the total based on offer/discount
+                ...item.toObject(), 
+                total: itemTotal, 
             });
         }
 
-        // Update the cart with the updated items
         cart.items = updatedItems;
-        cart.subtotal = updatedItems.reduce((sum, item) => sum + item.total, 0); // Recalculate subtotal based on updated totals
+        cart.subtotal = updatedItems.reduce((sum, item) => sum + item.total, 0); 
 
         await cart.save();
 
@@ -88,6 +83,7 @@ const razorpayInstance = new Razorpay({
     key_secret: env.RAZORPAY_SECRET_ID,
 });
 
+// CheckOut Process Controller
 const checkoutProcess = async (req, res) => {
     try {
         const { shippingAddress, paymentMethod, couponCode } = req.body;
@@ -112,35 +108,62 @@ const checkoutProcess = async (req, res) => {
         }));
 
         let couponDiscount = 0;
-        let totalAmount = cart.subtotal + 50;  // Adding shipping charge
+        let totalAmount = cart.subtotal + 50;  
 
-        // Check if coupon code exists and is valid
         if (couponCode) {
             const coupon = await Coupon.findOne({ code: couponCode, isActive: true });
             if (!coupon) return res.status(400).json({ success: false, message: 'Invalid or expired coupon' });
-
-            // Validate coupon expiry and minimum purchase amount
+        
             if (new Date() < coupon.startDate || new Date() > coupon.expiryDate) {
                 return res.status(400).json({ success: false, message: 'Coupon has expired' });
             }
-
+        
             if (totalAmount < coupon.minPurchaseAmount) {
-                return res.status(400).json({ success: false, message: `Minimum purchase of ${coupon.minPurchaseAmount} required` });
+                return res.status(400).json({
+                    success: false,
+                    message: `Minimum purchase of ${coupon.minPurchaseAmount} required`,
+                });
             }
-
-            // Calculate the discount
+        
+            const user = await User.findById(userId); 
+            const hasUsedCoupon = user.usedCoupons.some(
+                (used) => used.couponId.toString() === coupon._id.toString()
+            );
+        
+            if (hasUsedCoupon) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'You have already used this coupon',
+                });
+            }
+        
+            if (coupon.usageLimit !== null && coupon.usedCount >= coupon.usageLimit) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Coupon usage limit has been reached',
+                });
+            }
+        
             if (coupon.discountType === 'fixed') {
                 couponDiscount = coupon.discountValue;
             } else if (coupon.discountType === 'percentage') {
                 couponDiscount = (totalAmount * coupon.discountValue) / 100;
             }
-            // If max discount is set, ensure we don't exceed it
+        
             if (coupon.maxDiscountAmount && couponDiscount > coupon.maxDiscountAmount) {
                 couponDiscount = coupon.maxDiscountAmount;
             }
+        
+            coupon.usedCount += 1; 
+            await coupon.save();
+        
+            user.usedCoupons.push({ couponId: coupon._id });
+            await user.save();
         }
+        
 
-        // Apply the discount to each item proportionally
+
+
         let totalDiscountApplied = 0;
         const updatedItems = items.map(item => {
             const itemDiscount = (item.total / totalAmount) * couponDiscount;
@@ -149,8 +172,8 @@ const checkoutProcess = async (req, res) => {
             return {
                 ...item,
                 discountApplied: itemDiscount,
-                refundAmount: item.total - itemDiscount,  // Refund amount is calculated after discount
-                total: item.total - itemDiscount,  // Updated total after applying the discount
+                refundAmount: item.total - itemDiscount,  
+                total: item.total - itemDiscount,  
             };
         });
 
@@ -159,24 +182,33 @@ const checkoutProcess = async (req, res) => {
             const lastItem = updatedItems[updatedItems.length - 1];
             const remainingDiscount = couponDiscount - totalDiscountApplied;
             lastItem.discountApplied += remainingDiscount;
-            lastItem.refundAmount = lastItem.total - remainingDiscount;  // Adjust the refund amount
-            lastItem.total -= remainingDiscount;  // Adjust the total after remaining discount
+            lastItem.refundAmount = lastItem.total - remainingDiscount;  
+            lastItem.total -= remainingDiscount;  
         }
 
-        // Create the order
+        let wallet = null;
+        if (paymentMethod === 'wallet') {
+            wallet = await Wallet.findOne({ userId });
+            if (!wallet) return res.status(400).json({ success: false, message: 'Wallet not found' });
+
+            if (wallet.amount < totalAmount) {
+                return res.status(400).json({ success: false, message: 'Insufficient wallet balance' });
+            }
+        }
+
         const order = new Order({
             userId,
             items: updatedItems,
-            totalAmount: totalAmount - couponDiscount,  // Final amount after applying coupon discount
+            totalAmount: totalAmount - couponDiscount,  
             shippingAddress,
             paymentMethod,
-            paymentStatus: paymentMethod === 'cod' ? 'pending' : 'pending',
+            paymentStatus: paymentMethod === 'cod' ? 'pending' : 'success',
             orderStatus: 'pending',
         });
 
         if (paymentMethod === 'razorpay') {
             const razorpayOrder = await razorpayInstance.orders.create({
-                amount: (totalAmount - couponDiscount) * 100,  // Convert to paise
+                amount: (totalAmount - couponDiscount) * 100,  
                 currency: 'INR',
                 receipt: order._id.toString(),
             });
@@ -185,6 +217,33 @@ const checkoutProcess = async (req, res) => {
         }
 
         await order.save();
+
+        // Reduce the Stock
+        for (const item of updatedItems) {
+            const product = await Product.findById(item.productId);
+            if (!product || !product.stock) continue; 
+
+            const stockIndex = product.stock.findIndex((s) => s.size === item.size);
+
+            if (stockIndex !== -1) {
+                if (product.stock[stockIndex].quantity < item.quantity) {
+                    return res.status(400).json({
+                        success: false,
+                        message: `Insufficient stock for ${product.name} (size: ${item.size})`,
+                    });
+                }
+
+                product.stock[stockIndex].quantity -= item.quantity;
+
+                await product.save();
+            } else {
+                return res.status(400).json({
+                    success: false,
+                    message: `Size ${item.size} not found for ${product.name}`,
+                });
+            }
+        }
+
 
         if (paymentMethod === 'razorpay') {
             return res.status(200).json({
@@ -195,9 +254,20 @@ const checkoutProcess = async (req, res) => {
             });
         }
 
+         if (paymentMethod === 'wallet') {
+            wallet.amount -= totalAmount;
+            wallet.transactionHistory.push({
+                type: 'debit',
+                amount: totalAmount,
+                description: `Order #${order._id} payment`,
+            });
+
+            await wallet.save();
+        }
+
         await Cart.findOneAndUpdate(
             { userId },
-            { items: [], subtotal: 0 } // Clear the cart after order placement
+            { items: [], subtotal: 0 } 
         );
 
         res.status(200).json({ success: true, message: 'Order placed successfully' });
@@ -208,22 +278,19 @@ const checkoutProcess = async (req, res) => {
     }
 };
 
-
+// Verification Payment Controller
 const verifyPayment = async (req, res) => {
     try {
         const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
-        // Ensure required fields are present
         if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
             return res.status(400).json({ success: false, message: 'Missing payment details' });
         }
 
-        // Generate the signature to verify
         const hmac = crypto.createHmac('sha256', env.RAZORPAY_SECRET_ID);
         hmac.update(`${razorpay_order_id}|${razorpay_payment_id}`);
         const generatedSignature = hmac.digest('hex');
 
-        // Compare signatures
         if (generatedSignature === razorpay_signature) {
             res.json({ success: true, message: 'Payment verified successfully' });
         } else {
@@ -253,19 +320,19 @@ const verifyPayment = async (req, res) => {
     }
 };
 
-
+// Render Success Page Controller
 const getSuccess = async(req,res)=>{
     try {
         res.render('user/order-complete')
         
     } catch (error) {
-        console.log(error)
+        res.render('user/error',{message:'Something went wrong'})
     }
 }
 
+// Rendre Orders Page
 const getOrders = async (req,res)=>{
     try {
-
         const orders = await Order.find({})
             .populate('items.productId' , 'name images')
             .populate('shippingAddress')
@@ -279,6 +346,7 @@ const getOrders = async (req,res)=>{
     }
 }
 
+// Render Order Details page Controller
 const details = async(req,res)=>{
     try {
         const {orderId} = req.params;
@@ -300,10 +368,11 @@ const details = async(req,res)=>{
 
     } catch (error) {
         console.log(error);
-        res.status(500).json({success:false , message:'Something went wrong!'})
+        res.render('user/error',{message:'Something went wrong!'})
     }
 }    
 
+// Cancel Order Controller
 const cancelOrder = async (req, res) => {
     try {
         const { orderId, itemId } = req.body;
@@ -351,7 +420,6 @@ const cancelOrder = async (req, res) => {
                 if (stockEntry) {
                     stockEntry.quantity += item.quantity;
     
-                    // Update the stock directly using Mongoose
                     await Product.updateOne(
                         { _id: item.productId._id, 'stock.size': item.size },
                         { $inc: { 'stock.$.quantity': item.quantity } }
@@ -365,10 +433,9 @@ const cancelOrder = async (req, res) => {
             }
 
             item.status = 'Cancelled';
-            refundAmount = item.refundAmount; // Use the already calculated refundAmount
+            refundAmount = item.refundAmount; 
             description = `Refund for item in Order #${orderId}`;
 
-            // Check if all items are canceled
             const allItemsCancelled = order.items.every(item => item.status === 'Cancelled');
             if (allItemsCancelled) {
                 order.orderStatus = 'cancelled';
@@ -376,7 +443,6 @@ const cancelOrder = async (req, res) => {
 
             await order.save();
         } else {
-            // Cancel the entire order
             for (const item of order.items) {
                 if (item.status === 'Cancelled' || item.status === 'Returned') {
                     continue;
@@ -388,7 +454,6 @@ const cancelOrder = async (req, res) => {
                     if (stockEntry) {
                         stockEntry.quantity += item.quantity;
         
-                        // Update the stock directly using Mongoose
                         await Product.updateOne(
                             { _id: item.productId._id, 'stock.size': item.size },
                             { $inc: { 'stock.$.quantity': item.quantity } }
@@ -400,19 +465,16 @@ const cancelOrder = async (req, res) => {
                     }
                 }
                 item.status = 'Cancelled';
-                refundAmount += item.refundAmount; // Add only eligible refund amounts
+                refundAmount += item.refundAmount; 
             }
-            console.log('working')
 
             description = `Refund for Order #${orderId}`;
             order.orderStatus = 'cancelled';
             await order.save();
         }
 
-        // Handle wallet refund
         let wallet = await Wallet.findOne({ userId });
         if (!wallet) {
-            // Create a new wallet if it doesn't exist
             wallet = new Wallet({
                 userId,
                 amount: 0,
@@ -420,7 +482,6 @@ const cancelOrder = async (req, res) => {
             });
         }
 
-        // Update wallet balance and transaction history
         wallet.amount += refundAmount;
         wallet.transactionHistory.push({
             type: 'credit',
@@ -444,12 +505,11 @@ const cancelOrder = async (req, res) => {
     }
 };
 
-//Return Order Controller
+//Return Order Controller 
 const returnOrder = async (req, res) => {
     try {
 
       const { orderId, itemId, reason } = req.body;
-      console.log(itemId , orderId , reason);
       const userId = req.session.userId;
   
       if (!userId) {
@@ -466,7 +526,6 @@ const returnOrder = async (req, res) => {
       }
   
       if (itemId) {
-        // Handle item-level return
         const item = order.items.find((item) => item._id.toString() === itemId);
         if (!item) {
           return res.status(404).json({ success: false, message: 'Item not found in order' });
@@ -476,27 +535,25 @@ const returnOrder = async (req, res) => {
           return res.status(400).json({ success: false, message: 'Item is already returned' });
         }
   
-        item.status = 'return-request'; // Mark the item as 'return-request'
-        item.returnReason = reason; // Save the return reason for the specific item
+        item.status = 'return-request'; 
+        item.returnReason = reason; 
   
-        await order.save(); // Save changes to the database
+        await order.save(); 
   
         return res.status(200).json({
           success: true,
           message: 'Item return request successfully created',
-          item, // Send updated item details
+          item, 
         });
       }
   
-      // Handle order-level return
       if (order.orderStatus === 'returned') {
         return res.status(400).json({ success: false, message: 'Order is already returned' });
       }
   
-      order.orderStatus = 'return-request'; // Mark the entire order as 'return-request'
-      order.returnReason = reason; // Save the return reason for the order
+      order.orderStatus = 'return-request'; 
+      order.returnReason = reason; 
   
-      // Optionally, update all items to reflect the return request status if entire order is being returned
       order.items.forEach((item) => {
         if (item.status !== 'Returned') {
           item.status = 'return-request';
@@ -504,12 +561,12 @@ const returnOrder = async (req, res) => {
         }
       });
   
-      await order.save(); // Save changes to the database
+      await order.save(); 
   
       return res.status(200).json({
         success: true,
         message: 'Order return request successfully created',
-        order, // Send updated order details
+        order, 
       });
     } catch (error) {
       console.error(error);
@@ -517,11 +574,11 @@ const returnOrder = async (req, res) => {
     }
   };
   
-
+// Render Wallet Page Controller
 const getWallet = async (req, res) => {
     try {
         const userId = req.session.userId;
-        const wallet = await Wallet.findOne({ userId }); // Fetch wallet for the current user
+        const wallet = await Wallet.findOne({ userId }); 
 
         if (!wallet) {
             return res.render('user/wallet', { wallet: null, error: 'Wallet not found!' });

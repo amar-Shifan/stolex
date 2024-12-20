@@ -34,9 +34,18 @@
 					<div class="col-sm-4">
 						<div class="product-desc">
 							<h3><%= product.name %></h3>
-							<p class="price">
-								<span>$<%= product.price.toFixed(2) %></span>
-							</p>
+							<% if (product.discountedPrice) { %>
+								<div class="product-price">
+									<span class="text-danger fw-bold">₹<%= product.discountedPrice %></span>
+									<small class="text-muted text-decoration-line-through">₹<%= product.price %></small>
+									<span class="badge bg-success ms-2">
+										-<%= Math.round((1 - product.discountedPrice / product.price) * 100) %>% OFF
+									</span>
+								</div>
+							<% } else { %>
+								<div class="product-price text-dark">₹<%= product.price %></div>
+							<% } %>
+
 							<p><%= product.description %></p>
 							<p>Brand : <%= product.brand %></p>
 

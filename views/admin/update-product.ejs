@@ -85,8 +85,21 @@
 
       <div class="col-md-6 mb-3">
         <label for="brand" class="form-label">Brand</label>
-        <input type="text" class="form-control" id="brand" name="brand" value="<%= product.brand %>" required>
+        <select class="form-select" id="brand" name="brand" required>
+          <option value="" disabled selected>Select a Brand</option>
+          <% if (brands && brands.length > 0) { %>
+            <% brands.forEach(brand => { %>
+              <option value="<%= brand %>" <%= product.brand === brand ? 'selected' : '' %>>
+                <%= brand %>
+              </option>
+            <% }); %>
+          <% } else { %>
+            <option value="" disabled>No Brands Available</option>
+          <% } %> 
+        </select>
       </div>
+      
+      
     </div>
 
     <div class="row mb-4">

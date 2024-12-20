@@ -1,13 +1,26 @@
+// Authentication Controllers
 const bcrypt = require('bcrypt')
 const Admin = require('../../model/adminSchema');
 
+// Render Home page Controller 
 const renderHome = async (req,res)=>{
-    res.render('admin/admin');
+    try {
+        res.render('admin/admin');
+    } catch (error) {
+        res.render('user/error',{message:'Page not Rendering'})
+    }
 }
 
+// Render Login page Controller
 const renderLogin = async(req,res)=>{
-    res.render('admin/adminLogin');
+    try {
+        res.render('admin/adminLogin');
+    } catch (error) {
+        res.render('user/error',{message:'Page not Rendering!'})
+    }
 }
+
+// Login Controller
 const adminLogin = async (req, res) => {
     try {
         const { email, password } = req.body; 
@@ -44,6 +57,7 @@ const adminLogin = async (req, res) => {
     }
 };
 
+// Logout Controller
 const logout = async(req,res)=>{
     try {
         console.log("session destroying")
@@ -55,6 +69,6 @@ const logout = async(req,res)=>{
         console.log(error.message)
     }
 }
-    
 
-module.exports = { adminLogin , logout ,renderHome ,renderLogin};
+
+module.exports = { adminLogin , logout ,renderHome ,renderLogin };

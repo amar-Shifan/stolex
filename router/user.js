@@ -12,53 +12,28 @@ const upload = require('../middlewares/profile');
 const multer = require('multer');
 const { MulterError } = require('multer');
 
-// Routes
+// Authentication routes
 router.get('/', controller.getHomePage);
 router.get('/logout' , controller.logout);
-
-// Login Page
-router.get('/user-login',middleware.preventAccessIfAuthenticated, (req, res) => {
-    const message = req.session.msg;
-    req.session.msg = null; 
-    res.render('user/login', { message });
-});
-
+router.get('/user-login',middleware.preventAccessIfAuthenticated, controller.getLogin);
 router.get('/register', middleware.preventAccessIfAuthenticated, controller.getSignup);
-
-router.get('/products', productController.getProducts);
-router.get('/shop', productController.getShop)
-// OTP Verification Page
 router.get('/verify',middleware.preventAccessIfAuthenticated ,controller.getOtp)
-
 router.get('/auth/google',passport.authenticate('google',{scope:['profile','email']}))
 router.get('/google/callback',passport.authenticate('google',{failureRedirect:'/register'}),(req,res)=>{
     req.session.userId = req.user._id
     res.redirect('/')
 })
 
-router.get('/user_profile', userController.getProfile);
-
-router.get('/productDetails/:id',productController.getProductDetail);
-
-// POST Routes
 router.post('/otp-verification', controller.otpVerification);
 router.post('/user-login', controller.userLogin);
 router.post('/register', controller.insertUser);
 router.post('/resend-otp', controller.resendOtp);
 
+//User routes
+router.get('/user_profile', middleware.isAuthen , userController.getProfile);
+router.get('/productDetails/:id', middleware.isAuthen , productController.getProductDetail);
 
-router.get('/isAuth' , middleware.isAuthenticated);
-router.post('/addProfile', upload.single('profile'), userController.addProfile);
-
-//handling multer error
-router.use((err, req, res ,next)=>{
-    if(err instanceof multer.MulterError){
-        return res.status(400).json({success : false  , message : err.message})
-    }else if (err){
-        return res.status(500).json({success:false , message :'Something went wrong!'})
-    }
-    next();
-})
+router.get('/shop', productController.getShop)
 
 router.patch('/updateDetails' , userController.updateUser);
 router.post('/addAddress' , userController.addAddress);
@@ -76,26 +51,40 @@ router.delete('/wishlist/remove/:productId' ,userController.remove );
 
 
 router.get('/cart' ,middleware.isAuthen, cartController.getCart )
-router.post('/cart/add', cartController.addToCart);
-router.delete('/cart/remove/:id' , cartController.remove);
-router.patch('/cart/update-quantity/:id' , cartController.updateQuantity)
+router.post('/cart/add',middleware.isAuthen, cartController.addToCart);
+router.delete('/cart/remove/:id' ,middleware.isAuthen, cartController.remove);
+router.patch('/cart/update-quantity/:id' ,middleware.isAuthen, cartController.updateQuantity)
 
 
-router.get('/checkout', orderController.getCheckout )
-router.post('/checkout/process' , orderController.checkoutProcess);
-router.post('/payment/verify' , orderController.verifyPayment);
+router.get('/checkout',middleware.isAuthen, orderController.getCheckout )
+router.post('/checkout/process' ,middleware.isAuthen, orderController.checkoutProcess);
+router.post('/payment/verify' ,middleware.isAuthen, orderController.verifyPayment);
 
-router.get('/cart/success' , orderController.getSuccess);
-router.get('/orders' , orderController.getOrders)
-router.get('/order/:orderId' , orderController.details);
+router.get('/cart/success' , middleware.isAuthen , orderController.getSuccess);
+router.get('/orders' , middleware.isAuthen ,orderController.getOrders)
+router.get('/order/:orderId' , middleware.isAuthen , orderController.details);
 router.get('/order' , (req,res)=>res.render('user/order-view-details'))
-router.patch('/orders/cancel' , orderController.cancelOrder);
-router.patch('/orders/return' , orderController.returnOrder);
+router.patch('/orders/cancel' ,middleware.isAuthen, orderController.cancelOrder);
+router.patch('/orders/return' , middleware.isAuthen, orderController.returnOrder);
 
 router.post('/apply-coupon', couponController.applyCoupon);
 router.post('/remove-coupon', couponController.removeCoupon);
 
-router.get('/wallet' , orderController.getWallet);
+router.get('/wallet' , middleware.isAuthen ,orderController.getWallet);
+
+router.get('/isAuth' , middleware.isAuthenticated);
+router.post('/addProfile', upload.single('profile'), userController.addProfile);
+
+//handling multer error
+router.use((err, req, res ,next)=>{
+    if(err instanceof multer.MulterError){
+        return res.status(400).json({success : false  , message : err.message})
+    }else if (err){
+        return res.status(500).json({success:false , message :'Something went wrong!'})
+    }
+    next();
+})
+
 
 
 

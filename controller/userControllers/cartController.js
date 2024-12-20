@@ -1,8 +1,9 @@
+// Cart Controllers
 const User = require('../../model/userSchema');
 const Product = require('../../model/productSchema');
 const Cart = require('../../model/cartSchema')
 
-
+//Render Cart Controller
 const getCart = async(req,res)=>{
     try {
         const userId = req.session.userId
@@ -10,10 +11,11 @@ const getCart = async(req,res)=>{
         res.render('user/cart' ,{cart});
     } catch (error) {
         console.log(error);
-        res.render('error',{message:"Something went wrong cant load"})
+        res.render('user/error',{message:"Something went wrong cant load"})
     }   
 }
 
+// Add to Cart Cotroller
 const addToCart = async (req, res) => {
     try {
         const { size, productId, quantity } = req.body;
@@ -80,7 +82,7 @@ const addToCart = async (req, res) => {
     }
 };
 
-
+// Remove From Cart Controller
 const remove = async (req, res) => {
     try {
         
@@ -130,6 +132,14 @@ const remove = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid quantity' });
         }
 
+        const MAX_QUANTITY = 10;
+        if (quantity > MAX_QUANTITY) {
+            return res.status(400).json({ 
+                success: false, 
+                message: `Quantity cannot exceed the maximum limit of ${MAX_QUANTITY}` 
+            });
+        }
+
         const cart = await Cart.findOne({ userId });
 
         if (!cart) {
@@ -151,7 +161,6 @@ const remove = async (req, res) => {
 
         item.quantity = quantity;
 
-        // Calculate total based on offerPrice if available, else use item.price
         const totalPrice = item.quantity * (product.discountedPrice || item.price);
         item.total = totalPrice;
 
@@ -163,8 +172,6 @@ const remove = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
-
-
 
   
 module.exports = {getCart , addToCart , remove ,updateQuantity}

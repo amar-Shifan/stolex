@@ -37,6 +37,7 @@
                 <th>Apply To</th>
                 <th>Category Name</th>
                 <th>Created At</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -50,6 +51,9 @@
                   <td><%= offer.applyTo %></td>
                   <td><%= offer.categoryIds[0].name || 'None' %></td>
                   <td><%= new Date(offer.createdAt).toLocaleDateString() %></td>
+                  <td>
+                    <button type="button" class="btn btn-danger btn-sm deleteCategoryBtn " data-offer-id="<%= offer._id %>">Delete</button>
+                  </td>
                 </tr>
               <% }); %>
             </tbody>
@@ -74,6 +78,7 @@
                 <th>Apply To</th>
                 <th>Product Name</th>
                 <th>Created At</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -87,6 +92,9 @@
                   <td><%= offer.applyTo %></td>
                   <td><%= offer.productIds[0].name || 'None' %></td>
                   <td><%= new Date(offer.createdAt).toLocaleDateString() %></td>
+                  <td>
+                    <button type="button" class="btn btn-danger btn-sm deleteProductBtn " data-offer-id="<%= offer._id %>">Delete</button>
+                  </td>
                 </tr>
               <% }); %>
             </tbody>
@@ -229,15 +237,13 @@ function showOfferModal(type) {
 }
 
 
-
 document.getElementById('offerForm').addEventListener('submit', async (event) => {
     event.preventDefault();
 
     const formData = new FormData(event.target);
     const formObject = Object.fromEntries(formData.entries());
 
-    // Check if the productId or categoryId exists in the formObject
-    console.log(formObject);  // Debugging log
+    console.log(formObject);  
 
     try {
         const response = await fetch('/admin/offers/create', {
@@ -247,28 +253,30 @@ document.getElementById('offerForm').addEventListener('submit', async (event) =>
             },
             body: JSON.stringify(formObject)  // Send as JSON
         });
-
+        
+        // Check if the response is okay
         if (response.ok) {
-            const result = await response.json();
-            alert('Offer saved successfully!');
-            
-            // Optionally refresh the offers list
-            // You might want to implement this function to update the UI
-            refreshOffersList();
+            const data = await response.json();
+            showNotification('success', data.message);
+            setTimeout(()=>{
+              location.reload();
+            },1000) // Reload the page to show the updated data
         } else {
             const errorData = await response.json();
-            showNotification({success:false ,message : 'Error in creating'} );
+            showNotification('error', errorData.message || 'Error in creating offer.');
         }
 
         // Close and reset modal
         const modal = bootstrap.Modal.getInstance(document.getElementById('offerModal'));
         modal.hide();
         event.target.reset();
+
     } catch (error) {
         console.error('Error saving offer:', error);
         alert('Failed to save offer. Please try again.');
     }
 });
+
 
 
 
@@ -278,6 +286,79 @@ document.getElementById('offerForm').addEventListener('submit', async (event) =>
     // This is a placeholder and should be implemented based on your specific requirements
     console.log('Refreshing offers list');
   }
+
+
+
+// deleting the offer
+let debounceTimeout;
+document.querySelectorAll('.deleteProductBtn').forEach(button => {
+    button.addEventListener('click', async (event) => {
+        const offerId = event.target.getAttribute('data-offer-id'); 
+
+        clearTimeout(debounceTimeout);
+
+        debounceTimeout = setTimeout(async () => {
+            try {
+                const response = await fetch(`/admin/offers/product/${offerId}/delete`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const data = await response.json(); // Parse the response as JSON
+
+                if (response.ok) {
+                    showNotification('success', data.message); // Display success message
+                    setTimeout(() => {
+                        location.reload(); // Reload the page after 2 seconds
+                    }, 2000);
+                } else {
+                    showNotification('error', data.message || 'Error deleting the offer');
+                }
+            } catch (error) {
+                console.error('Error deleting the offer:', error);
+                alert('Failed to delete offer. Please try again.');
+            }
+        }, 500); // Delay the actual request by 500ms (debounce time)
+    });
+});
+
+document.querySelectorAll('.deleteCategoryBtn').forEach(button => {
+    button.addEventListener('click', async (event) => {
+        const offerId = event.target.getAttribute('data-offer-id'); 
+
+        // Clear the previous debounce timeout (if any) to ensure only one request is processed
+        clearTimeout(debounceTimeout);
+
+        // Set a debounce timeout of 500ms (adjustable as needed)
+        debounceTimeout = setTimeout(async () => {
+            try {
+                const response = await fetch(`/admin/offers/category/${offerId}/delete`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const data = await response.json(); // Parse the response as JSON
+
+                if (response.ok) {
+                    showNotification('success', data.message); // Display success message
+                    setTimeout(() => {
+                        location.reload(); // Reload the page after 2 seconds
+                    }, 2000);
+                } else {
+                    showNotification('error', data.message || 'Error deleting the offer');
+                }
+            } catch (error) {
+                console.error('Error deleting the offer:', error);
+                alert('Failed to delete offer. Please try again.');
+            }
+        }, 500); // Delay the actual request by 500ms (debounce time)
+    });
+});
+
 </script>
 
 <%- include('../partials/admin_footer.ejs') %>
