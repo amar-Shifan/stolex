@@ -8,7 +8,7 @@ function isAuthenticated(req, res, next) {
 
 function preventAccessIfAuthenticated(req, res, next) {
     if (req.session.admin) {
-        return res.redirect('/admin'); // Redirect to admin dashboard or home page
+        return res.redirect('/admin'); 
     }
     next();
 }

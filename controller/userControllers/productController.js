@@ -77,7 +77,7 @@ const getProductDetail = async (req, res) => {
         }[sort] || {};
 
         const totalProducts = await Product.countDocuments(filter);
-        const products = await Product.find(filter)
+        const products = await Product.find({...filter , status:'Active'})
             .sort(sortOption)
             .skip(skip)
             .limit(parseInt(limit));

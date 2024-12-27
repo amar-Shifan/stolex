@@ -1,5 +1,73 @@
 <%-include('../partials/header.ejs',{title:"admin page",style:'/css/productDetails.css' })%>
 
+<style>
+	.size-wrap {
+    margin: 20px 0;
+}
+
+.size-list {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    gap: 10px;
+}
+
+.size-option {
+    border-radius: 20px;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+}
+
+.size-option.selected {
+    background-color: #007bff;
+    color: #fff;
+    border-color: #007bff;
+}
+
+.size-option:hover {
+    background-color: #e6e6e6;
+    color: #333;
+}
+
+.stock-info {
+    margin-top: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.stock-info h5 {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.stock-status {
+    font-weight: bold;
+    padding: 5px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.stock-status.no-stock {
+    color: #fff;
+    background-color: #dc3545; /* Red for no stock */
+}
+
+.stock-status.low-stock {
+    color: #856404;
+    background-color: #fff3cd; /* Yellow for low stock */
+}
+
+.stock-status.limited-stock {
+    color: #0c5460;
+    background-color: #d1ecf1; /* Light blue for limited stock */
+}
+
+.stock-status.in-stock {
+    color: #155724;
+    background-color: #d4edda; /* Green for in stock */
+}
+
+
+</style>
 		<div class="breadcrumbs">
 			<div class="container">
 				<div class="row">
@@ -67,15 +135,14 @@
 													class="size-option btn btn-outline-dark" 
 													data-size="<%= stock.size %>" 
 													data-quantity="<%= stock.quantity %>">
-													<%= stock.size %>
+													
+													<%= stock.size %> 
 												</button>
 											</li>
 										<% }) %>
 									</ul>
 								</div>
 							</div>
-							
-
 							
 							<div class="stock-info">
 								<h5>Total Stock: <span id="total-stock"><%= product.stock.reduce((total, stock) => total + stock.quantity, 0) %></span></h5>
@@ -347,24 +414,57 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedStock = null; // To track the selected stock
     let selectedSize = null;  // To track the selected size
 
+	// Function to determine stock status
+	function getStockStatus(quantity) {
+		if (quantity === 0) {
+			return 'No Stock';
+		} else if (quantity <= 5) {
+			return 'Low Stock';
+		} else if (quantity <= 10) {
+			return 'Limited Stock';
+		} else {
+			return 'In Stock';
+		}
+	}
+
     // Add event listeners to size options
     sizeOptions.forEach(option => {
-        option.addEventListener('click', (event) => {
-            event.preventDefault(); // Prevent default link behavior
+		option.addEventListener('click', (event) => {
+			event.preventDefault(); // Prevent default link behavior
 
 			sizeInput.value = option.dataset.size;
-            // Highlight the selected size
-            sizeOptions.forEach(opt => opt.classList.remove('selected'));
-            option.classList.add('selected');
+			// Highlight the selected size
+			sizeOptions.forEach(opt => opt.classList.remove('selected'));
+			option.classList.add('selected');
 
-            // Update stock display for the selected size
-            selectedStock = parseInt(option.dataset.quantity, 10); // Get stock from data attribute
-            selectedSize = option.dataset.size; // Track the selected size
-            selectedStockElement.textContent = selectedStock;
-            quantityInput.value = 1; // Reset quantity to 1
-            quantityInput.max = selectedStock; // Update max value for the input field
-        });
-    });
+			// Update stock display for the selected size
+			selectedStock = parseInt(option.dataset.quantity, 10); // Get stock from data attribute
+			selectedSize = option.dataset.size; // Track the selected size
+
+			// Display stock status instead of quantity
+			// Clear previous stock status classes
+			selectedStockElement.className = 'stock-status';
+
+			// Update stock status and apply corresponding class
+			if (selectedStock === 0) {
+				selectedStockElement.textContent = "No Stock";
+				selectedStockElement.classList.add('no-stock');
+			} else if (selectedStock <= 5) {
+				selectedStockElement.textContent = "Low Stock";
+				selectedStockElement.classList.add('low-stock');
+			} else if (selectedStock <= 10) {
+				selectedStockElement.textContent = "Limited Stock";
+				selectedStockElement.classList.add('limited-stock');
+			} else {
+				selectedStockElement.textContent = "In Stock";
+				selectedStockElement.classList.add('in-stock');
+			}
+
+			// Reset and update quantity input
+			quantityInput.value = 1; // Reset quantity to 1
+			quantityInput.max = selectedStock; // Update max value for the input field
+		});
+	});
 
     // Increment and decrement quantity
     if (minusButton && plusButton && quantityInput) {

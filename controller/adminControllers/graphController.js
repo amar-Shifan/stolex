@@ -45,7 +45,6 @@ const getChartData = async(req,res)=>{
             { $project: { name: '$_id', quantitySold: 1, _id: 0 } }
         ]);
         
-        
         const brands = await Order.aggregate([
             { $match: { createdAt: { $gte: startDate } } },
             { $unwind: '$items' },
@@ -56,7 +55,7 @@ const getChartData = async(req,res)=>{
             { $sort: { quantitySold: -1 } },
             { $project: { name: '$_id', quantitySold: 1 } }
         ])
-        
+
         res.json({
             products,
             brands,

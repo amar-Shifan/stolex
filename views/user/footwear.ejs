@@ -167,6 +167,77 @@
 			border-radius: 0;
 		}
 	}
+
+	.product-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 15px;
+  }
+
+  .product-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+  }
+
+  .product-card img {
+    transition: transform 0.4s ease;
+    border-radius: 15px 15px 0 0;
+  }
+
+  .product-card img:hover {
+    transform: scale(1.1);
+  }
+
+  .product-badge {
+    font-size: 0.9rem;
+    font-weight: bold;
+    border-radius: 0.5rem;
+    opacity: 0.9;
+  }
+
+  .wishlist-icon {
+    font-size: 1.5rem;
+    color: #ff6b6b;
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    cursor: pointer;
+    z-index: 10;
+    transition: transform 0.3s ease, color 0.3s ease;
+  }
+
+  .wishlist-icon:hover {
+    color: #ff3b3b;
+    transform: scale(1.2);
+  }
+
+  .price {
+    font-size: 1.25rem;
+  }
+
+  .price-discount {
+    font-size: 0.95rem;
+  }
+
+  .btn-view-details {
+    transition: background-color 0.3s ease, transform 0.3s ease;
+  }
+
+  .btn-view-details:hover {
+    background-color: #000;
+    color: #fff;
+    transform: scale(1.05);
+  }
+
+  .product-card .card-title {
+    font-size: 1.2rem;
+    color: #333;
+  }
+
+  .product-card .card-text {
+    font-size: 0.9rem;
+    color: #666;
+  }
+
   </style>
 		<div class="breadcrumbs">
 			<div class="container">
@@ -179,10 +250,10 @@
 		</div>
 
 		<div class="colorlib-product">
-			<div class="container-fluid py-5">
-				<div class="row">
+			<div class="container-fluid gx-0 py-5 ">
+				<div class="row gx-0">
 					<!-- Sidebar -->
-					<div class="col-lg-3 col-xl-3 border-end pe-4 filter-sidebar">
+					<div class="col-lg-3 col-xl-3 border-end  gx-0	 pe-4 filter-sidebar">
 						<form id="filteringForm" method="GET" action="/shop">
 							<!-- Brands Section -->
 							<div class="mb-4">
@@ -206,12 +277,12 @@
 							</div>
 						
 							<!-- Sizes Section -->
-							<div class="mb-4">
+							<div class="mb-4 gx-0">
 								<h4 class="fw-bold">Size</h4>
 								<ul class="list-unstyled">
 									<% if (sizes && sizes.length > 0) { %>
 										<% sizes.forEach(size => { %>
-											<li class="mb-2">
+											<li class="mb-2 gx-0">
 												<input type="checkbox" id="size_<%= size || 'unknown' %>" name="size" 
 													value="<%= size || '' %>" 
 													>
@@ -228,12 +299,12 @@
 							
 						
 							<!-- Styles Section -->
-							<div class="mb-4">
+							<div class="mb-4 gx-0">
 								<h4 class="fw-bold">Style</h4>
 								<ul class="list-unstyled">
 									<% if (styles && styles.length > 0) { %>
 										<% styles.forEach(category => { %>
-											<li class="mb-2">
+											<li class="mb-2 gx-0">
 												<input type="checkbox" id="category_<%= category.name || 'unknown' %>" name="category" 
 													value="<%= category.name || '' %>" 
 													>
@@ -299,49 +370,66 @@
 							</div>
 						</div>
 		
-						<div class="row g-4">
+						<div class="row g-4 gx-3">
 							<% if (products.length > 0) { %>
-								<% products.forEach(product => { 
-									const discountPercentage = product.discountedPrice ? Math.round(((product.price - product.discountedPrice) / product.price) * 100) : 0;
-								%>
-								<div class="col-6 col-md-4 col-lg-3">
-									<div class="card h-100 shadow-sm border-0 product-card">
-										<!-- Product Image -->
-										<div class="position-relative">
-											<img src="<%= product.images[0] || '/api/placeholder/400/400' %>" alt="<%= product.name %>" class="card-img-top img-fluid" style="height: 200px; object-fit: cover;">
-											<% if (product.discountedPrice) { %>
-												<span class="badge bg-danger position-absolute top-0 start-0 m-2">Save <%= discountPercentage %>%</span>
-											<% } %>
-										</div>
-					
-										<!-- Product Details -->
-										<div class="card-body text-center">
-											<h5 class="card-title text-truncate"><%= product.name %></h5>
-											<p class="card-text text-muted small text-truncate"><%= product.description ? product.description.substring(0, 50) + '...' : 'No description available' %></p>
-					
-											<!-- Price Section -->
-											<% if (product.discountedPrice) { %>
-												<p class="price text-dark fw-bold fs-5 mb-0">
-													₹<%= product.discountedPrice.toFixed(2) %>
-												</p>
-												<p class="text-muted text-decoration-line-through small">
-													₹<%= product.price.toFixed(2) %>
-												</p>
-											<% } else { %>
-												<p class="price text-dark fw-bold fs-5">₹<%= product.price.toFixed(2) %></p>
-											<% } %>
-					
-											<a href="/productDetails/<%= product._id %>" class="btn btn-dark btn-sm">View Details</a>
-										</div>
+							  <% products.forEach(product => { 
+								const discountPercentage = product.discountedPrice ? Math.round(((product.price - product.discountedPrice) / product.price) * 100) : 0;
+							  %>
+							  <div class="col-12 col-md-6 col-lg-4">
+								<div class="card h-100 border-0 product-card">
+								  <!-- Product Image Container -->
+								  <div class="position-relative overflow-hidden">
+									<!-- Wishlist Icon -->
+									<span class="wishlist-icon" title="Add to Wishlist">❤️</span>
+						  
+									<img src="<%= product.images[0] || '/api/placeholder/400/400' %>" 
+										 alt="<%= product.name %>" 
+										 class="card-img-top img-fluid">
+									<% if (product.discountedPrice) { %>
+									  <span class="badge bg-danger text-white product-badge position-absolute top-0 start-0 m-3 py-2 px-3 shadow">
+										-<%= discountPercentage %>% Off
+									  </span>
+									<% } %>
+								  </div>
+						  
+								  <!-- Product Details -->
+								  <div class="card-body d-flex flex-column justify-content-between p-4">
+									<div>
+									  <h5 class="card-title text-truncate mb-2 fw-bold">
+										<%= product.name %>
+									  </h5>
+									  <p class="card-text text-truncate mb-3">
+										<%= product.description ? product.description.substring(0, 60) + '...' : 'No description available' %>
+									  </p>
 									</div>
+						  
+									<!-- Price Section -->
+									<div class="mt-auto">
+									  <% if (product.discountedPrice) { %>
+										<div class="d-flex align-items-center justify-content-start gap-2 mb-3">
+										  <span class="price fw-bold text-success">₹<%= product.discountedPrice.toFixed(2) %></span>
+										  <span class="text-muted text-decoration-line-through price-discount">₹<%= product.price.toFixed(2) %></span>
+										</div>
+									  <% } else { %>
+										<p class="price fw-bold mb-3">₹<%= product.price.toFixed(2) %></p>
+									  <% } %>
+						  
+									  <a href="/productDetails/<%= product._id %>" 
+										 class="btn btn-dark btn-view-details w-100 rounded-pill py-2 text-uppercase fw-bold">
+										View Details
+									  </a>
+									</div>
+								  </div>
 								</div>
-								<% }); %>
+							  </div>
+							  <% }); %>
 							<% } else { %>
-								<div class="col-12 text-center">
-									<p class="text-muted">No products available for <%= selectedName %>.</p>
-								</div>
+							  <div class="col-12 text-center py-5">
+								<p class="text-muted fs-5">No products available for <%= selectedName %>.</p>
+							  </div>
 							<% } %>
 						</div>
+						  
 					</div>
 				</div>
 				</div>
@@ -395,7 +483,7 @@
 
 		<div class="colorlib-partner">
 			<div class="container">
-				<div class="row">
+				<div class="row gx-0">
 					<div class="col-sm-8 offset-sm-2 text-center colorlib-heading colorlib-heading-sm">
 						<h2>Trusted Partners</h2>
 					</div>

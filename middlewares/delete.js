@@ -33,8 +33,7 @@ const uploadToCloudinary = async (file) => {
       console.error('Cloudinary delete error:', error);
       return false;
     }
-  };
-
+};
   
 // Middleware to handle product image updates
 const handleProductImages = async (req, res, next) => {
@@ -72,7 +71,6 @@ const handleProductImages = async (req, res, next) => {
       });
     }
 };
-  
 
 
 module.exports = {

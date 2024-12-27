@@ -279,10 +279,10 @@ async function toggleUserStatus(userId, block) {
             setTimeout(() => {
                 let label = document.querySelector(`label[for="user${userId}"]`);
                 label.textContent = block ? "Blocked" : "Active";
-                alert(data.message);
+                showNotification('success',data.message)
             }, 100); 
         } else {
-            alert(data.message);
+            showNotification('error',data.message);
         }
 
     } catch (error) {

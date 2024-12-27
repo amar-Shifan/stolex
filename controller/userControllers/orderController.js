@@ -8,6 +8,7 @@ const Coupon = require('../../model/couponSchema');
 const Offer = require("../../model/offerSchema");
 const Wallet = require('../../model/walletSchema');
 const env = require('../../utils/env_var')
+const generateInvoice = require('../../utils/generateInvoice');
 
 // Render CheckOut page Controller
 const getCheckout = async (req, res) => {
@@ -91,6 +92,8 @@ const checkoutProcess = async (req, res) => {
 
         if (!userId) return res.status(400).json({ success: false, message: 'User not logged in' });
 
+        if(!paymentMethod) return res.status(400).json({success:false , message:'Payment Method is required'});
+
         if (!shippingAddress || !paymentMethod) return res.status(400).json({ success: false, message: 'Shipping address and payment method are required' });
 
         const address = await Address.findOne({ _id: shippingAddress });
@@ -109,7 +112,14 @@ const checkoutProcess = async (req, res) => {
 
         let couponDiscount = 0;
         let totalAmount = cart.subtotal + 50;  
+        if(paymentMethod === 'cod'){
 
+            if (totalAmount > 1000) {
+                return res.status(400).json({ success: false, message: 'Cannot use COD for amounts above 1000 rupees' });
+            }
+
+        }
+        
         if (couponCode) {
             const coupon = await Coupon.findOne({ code: couponCode, isActive: true });
             if (!coupon) return res.status(400).json({ success: false, message: 'Invalid or expired coupon' });
@@ -219,30 +229,41 @@ const checkoutProcess = async (req, res) => {
         await order.save();
 
         // Reduce the Stock
-        for (const item of updatedItems) {
-            const product = await Product.findById(item.productId);
-            if (!product || !product.stock) continue; 
+        try {
+            const bulkOperations = updatedItems.map((item) => {
+                return {
+                    updateOne: {
+                        filter: {
+                            _id: item.productId,
+                            "stock.size": item.size,
+                            "stock.quantity": { $gte: item.quantity }, // Ensure sufficient stock
+                        },
+                        update: {
+                            $inc: { "stock.$.quantity": -item.quantity }, // Decrease stock
+                        },
+                    },
+                };
+            });
 
-            const stockIndex = product.stock.findIndex((s) => s.size === item.size);
+            // Perform bulk write
+            const result = await Product.bulkWrite(bulkOperations);
 
-            if (stockIndex !== -1) {
-                if (product.stock[stockIndex].quantity < item.quantity) {
-                    return res.status(400).json({
-                        success: false,
-                        message: `Insufficient stock for ${product.name} (size: ${item.size})`,
-                    });
-                }
-
-                product.stock[stockIndex].quantity -= item.quantity;
-
-                await product.save();
-            } else {
+            // Check if any updates failed
+            if (result.modifiedCount < updatedItems.length) {
                 return res.status(400).json({
                     success: false,
-                    message: `Size ${item.size} not found for ${product.name}`,
+                    message: "One or more items failed due to insufficient stock or invalid size.",
                 });
             }
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({
+                success: false,
+                message: "An error occurred during the stock update process.",
+            });
         }
+
+        
 
 
         if (paymentMethod === 'razorpay') {
@@ -250,6 +271,7 @@ const checkoutProcess = async (req, res) => {
                 success: true,
                 message: 'Order created successfully',
                 razorpayOrderId: order.razorpayDetails.orderId,
+                orderId: order._id,
                 totalAmount: totalAmount - couponDiscount,
             });
         }
@@ -270,7 +292,7 @@ const checkoutProcess = async (req, res) => {
             { items: [], subtotal: 0 } 
         );
 
-        res.status(200).json({ success: true, message: 'Order placed successfully' });
+        res.status(200).json({ success: true, message: 'Order placed successfully' , orderId: order._id});
 
     } catch (error) {
         console.error(error);
@@ -278,7 +300,6 @@ const checkoutProcess = async (req, res) => {
     }
 };
 
-// Verification Payment Controller
 const verifyPayment = async (req, res) => {
     try {
         const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
@@ -287,46 +308,147 @@ const verifyPayment = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Missing payment details' });
         }
 
+        // Find the order in the database
+        const order = await Order.findOne({ 'razorpayDetails.orderId': razorpay_order_id });
+        if (!order) {
+            return res.status(400).json({ success: false, message: 'Order not found' });
+        }
+
+        // Verify the signature
         const hmac = crypto.createHmac('sha256', env.RAZORPAY_SECRET_ID);
         hmac.update(`${razorpay_order_id}|${razorpay_payment_id}`);
         const generatedSignature = hmac.digest('hex');
 
         if (generatedSignature === razorpay_signature) {
-            res.json({ success: true, message: 'Payment verified successfully' });
+            // Payment is successful
+            order.paymentStatus = 'success';
+            order.razorpayDetails.paymentId = razorpay_payment_id;
+            order.razorpayDetails.signature = razorpay_signature;
+
+            // Save the order and clear the cart
+            await order.save();
+            await Cart.findOneAndUpdate(
+                { userId: order.userId },
+                { items: [], subtotal: 0 }
+            );
+
+            return res.status(200).json({ success: true, message: 'Payment verified and order completed'});
         } else {
-            res.status(400).json({ success: false, message: 'Invalid payment signature' });
+            // Payment verification failed
+            order.paymentStatus = 'failed';
+            order.razorpayDetails.signature = null;
+
+            await order.save();
+            return res.status(400).json({ success: false, message: 'Invalid payment signature' });
+        }
+    } catch (error) {
+        console.error('Error in verifyPayment:', error);
+        return res.status(500).json({ success: false, message: 'Server error!' });
+    }
+};
+
+// Payment Failure Controller
+const paymentFailure = async (req, res) => {
+    console.log('eorking')
+    try {
+        const { razorpay_order_id } = req.body;
+
+        if (!razorpay_order_id) {
+            return res.status(400).json({ success: false, message: 'Order ID is required' });
         }
 
-
         const order = await Order.findOne({ 'razorpayDetails.orderId': razorpay_order_id });
-        if (!order) return res.status(400).json({ success: false, message: 'Order not found' });
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
 
-        order.paymentStatus = 'success';
-        order.razorpayDetails.paymentId = razorpay_payment_id;
-        order.razorpayDetails.signature = razorpay_signature;
+        order.paymentStatus = 'failed'; 
 
+        // Save the order and clear the cart
         await order.save();
-
         await Cart.findOneAndUpdate(
             { userId: order.userId },
             { items: [], subtotal: 0 }
         );
 
-        res.status(200).json({ success: true, message: 'Payment verified and order completed' });
-
+        res.status(200).json({ success: true, message: 'Payment status updated to pending' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: 'Server error!' });
     }
 };
 
+// Repay Controller
+const repayOrder = async (req, res) => {
+    try {
+        console.log('working..........');
+        const { orderId } = req.body;
+        console.log(orderId)
+        if (!orderId) {
+            return res.status(400).json({ success: false, message: 'Order ID is required' });
+        }
+
+        // Find the order
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+        console.log(order)
+
+        if (order.paymentStatus === 'success') {
+            return res.status(400).json({ success: false, message: 'Payment already completed for this order' });
+        }
+        // Generate a new Razorpay order
+        const razorpayOrder = await razorpayInstance.orders.create({
+            amount: order.totalAmount * 100, // Amount in paise
+            currency: 'INR',
+            receipt: order._id.toString(),
+        });
+        console.log('working')
+
+        // Update order with new Razorpay details
+        order.razorpayDetails.orderId = razorpayOrder.id;
+        order.paymentStatus = 'pending';
+        await order.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Repay order created successfully',
+            razorpayOrderId: razorpayOrder.id,
+            totalAmount: order.totalAmount,
+        });
+    } catch (error) {
+        console.error('Error in repayOrder:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
 // Render Success Page Controller
 const getSuccess = async(req,res)=>{
     try {
-        res.render('user/order-complete')
+        const orderId = req.query.orderId;
+        res.render('user/order-complete', { orderId });
+
         
     } catch (error) {
         res.render('user/error',{message:'Something went wrong'})
+    }
+}
+
+//Invoice download
+const invoiceDownload = async (req, res) => {
+    try {
+        const orderId = req.params.id;
+        const order = await Order.findById(orderId).populate('items.productId').populate('shippingAddress');
+
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+
+        generateInvoice(order, res); // Call the utility function
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Error generating invoice' });
     }
 }
 
@@ -375,8 +497,10 @@ const details = async(req,res)=>{
 // Cancel Order Controller
 const cancelOrder = async (req, res) => {
     try {
-        const { orderId, itemId } = req.body;
+        const { orderId, itemId, reason } = req.body;
         const userId = req.session.userId;
+        console.log('userid' , userId);
+        console.log('orderId ',orderId);
 
         if (!userId) {
             return res.status(400).json({ success: false, message: 'User not logged in' });
@@ -391,11 +515,11 @@ const cancelOrder = async (req, res) => {
             return res.status(403).json({ success: false, message: 'Unauthorized access to this order' });
         }
 
+        // Check if the order is already cancelled
         if (order.orderStatus === 'cancelled') {
             return res.status(400).json({ success: false, message: 'Order is already canceled' });
         }
 
-        let refundAmount = 0;
         let description = '';
 
         if (itemId) {
@@ -409,94 +533,34 @@ const cancelOrder = async (req, res) => {
                 return res.status(400).json({ success: false, message: 'Item is already canceled or returned' });
             }
 
-            console.log('working reached the product ')
-            const product = await Product.findById(item.productId._id);
-            console.log('got the product ', product);
-            
-            if (product) {
-                console.log('enter in product')
-                const stockEntry = product.stock.find(stock => stock.size === item.size);
-                
-                if (stockEntry) {
-                    stockEntry.quantity += item.quantity;
-    
-                    await Product.updateOne(
-                        { _id: item.productId._id, 'stock.size': item.size },
-                        { $inc: { 'stock.$.quantity': item.quantity } }
-                    );
-    
-                    console.log('Stock updated successfully');
-                } else {
-                    console.log('Stock entry not found');
-                }
-                
-            }
+            item.status = 'cancel-request';  // Mark as cancel request
+            item.cancelReason = reason;      // Save the cancel reason
 
-            item.status = 'Cancelled';
-            refundAmount = item.refundAmount; 
-            description = `Refund for item in Order #${orderId}`;
-
-            const allItemsCancelled = order.items.every(item => item.status === 'Cancelled');
-            if (allItemsCancelled) {
-                order.orderStatus = 'cancelled';
-            }
+            description = `Cancel request for item in Order #${orderId}`;
 
             await order.save();
         } else {
-            for (const item of order.items) {
-                if (item.status === 'Cancelled' || item.status === 'Returned') {
-                    continue;
-                }
+            // If no itemId is provided, cancel the whole order
+            order.orderStatus = 'cancel-request';  // Mark as cancel request
+            order.cancelReason = reason;           // Save the cancel reason
 
-                const product = await Product.findById(item.productId._id);
-                if (product) {
-                    const stockEntry = product.stock.find(stock => stock.size === item.size);
-                    if (stockEntry) {
-                        stockEntry.quantity += item.quantity;
-        
-                        await Product.updateOne(
-                            { _id: item.productId._id, 'stock.size': item.size },
-                            { $inc: { 'stock.$.quantity': item.quantity } }
-                        );
-        
-                        console.log('Stock updated successfully');
-                    } else {
-                        console.log('Stock entry not found');
-                    }
+            order.items.forEach((item) => {
+                if (item.status !== 'Cancelled' && item.status !== 'Returned') {
+                    item.status = 'cancel-request';  
+                    item.cancelReason = reason;
                 }
-                item.status = 'Cancelled';
-                refundAmount += item.refundAmount; 
-            }
+            });
 
-            description = `Refund for Order #${orderId}`;
-            order.orderStatus = 'cancelled';
+            description = `Cancel request for Order #${orderId}`;
+
             await order.save();
         }
 
-        let wallet = await Wallet.findOne({ userId });
-        if (!wallet) {
-            wallet = new Wallet({
-                userId,
-                amount: 0,
-                transactionHistory: []
-            });
-        }
-
-        wallet.amount += refundAmount;
-        wallet.transactionHistory.push({
-            type: 'credit',
-            amount: refundAmount,
-            description,
-            date: new Date()
-        });
-
-        await wallet.save();
-
+        // Return success response
         return res.status(200).json({
             success: true,
-            message: itemId ? 'Item successfully canceled' : 'Order successfully canceled',
-            refundAmount,
-            order
+            message: itemId ? 'Item cancel request successfully created' : 'Order cancel request successfully created',
+            order,
         });
 
     } catch (error) {
@@ -504,6 +568,8 @@ const cancelOrder = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+
+
 
 //Return Order Controller 
 const returnOrder = async (req, res) => {
@@ -592,4 +658,4 @@ const getWallet = async (req, res) => {
 };
 
 module.exports = {getCheckout , getSuccess ,checkoutProcess , getOrders , details ,cancelOrder ,verifyPayment 
-                 ,getWallet , returnOrder }
+                 ,getWallet , returnOrder , paymentFailure , repayOrder , invoiceDownload}

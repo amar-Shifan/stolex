@@ -13,7 +13,13 @@ const getProfile = async (req,res)=>{
         
         const userId = req.session.userId;
         const user = await User.findById(userId).populate('address')
-        res.render('user/user_profile',{user , addresses : user.address})
+        const dob = user.dob.toISOString().split('T')[0]; 
+        res.render('user/user_profile',{user: { 
+                username: user.username,
+                dob: dob, 
+                phoneNumber: user.phoneNumber
+            }, addresses : user.address 
+        })
         
     } catch (error) {
         console.log(error)

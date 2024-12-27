@@ -61,6 +61,7 @@ router.post('/checkout/process' ,middleware.isAuthen, orderController.checkoutPr
 router.post('/payment/verify' ,middleware.isAuthen, orderController.verifyPayment);
 
 router.get('/cart/success' , middleware.isAuthen , orderController.getSuccess);
+router.get('/order/:id/invoice',orderController.invoiceDownload);
 router.get('/orders' , middleware.isAuthen ,orderController.getOrders)
 router.get('/order/:orderId' , middleware.isAuthen , orderController.details);
 router.get('/order' , (req,res)=>res.render('user/order-view-details'))
@@ -74,6 +75,9 @@ router.get('/wallet' , middleware.isAuthen ,orderController.getWallet);
 
 router.get('/isAuth' , middleware.isAuthenticated);
 router.post('/addProfile', upload.single('profile'), userController.addProfile);
+
+router.post('/payment/failure', orderController.paymentFailure);
+router.post('/repay/order', orderController.repayOrder);
 
 //handling multer error
 router.use((err, req, res ,next)=>{

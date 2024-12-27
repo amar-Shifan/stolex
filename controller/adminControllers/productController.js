@@ -37,7 +37,7 @@ const addProduct = async (req, res) => {
     if (!req.files || req.files.length !== 3) {
       return res.status(400).json({ message: 'Exactly 3 images are required.' });
     }
-
+    
     const imageUrls = req.files.map(file => file.path);
 
     const newProduct = new Product({

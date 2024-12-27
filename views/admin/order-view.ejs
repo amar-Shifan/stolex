@@ -44,6 +44,31 @@
             </div>
         </div>
     <% } %>
+
+    <!-- Cancel Request Section -->
+    <% if (order.orderStatus === 'cancel-request' && order.cancelReason) { %>
+        <!-- Order-level cancel request -->
+        <div class="bg-white rounded-3 shadow-sm p-4 mb-4">
+            <h4 class="mb-4">Cancel Request</h4>
+            <div class="card bg-light border-0">
+                <div class="card-body">
+                    <p><strong>Reason for Cancellation:</strong></p>
+                    <p class="text-muted"><%= order.cancelReason %></p>
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button class="btn btn-success approve-order-cancel" 
+                            data-order-id="<%= order._id %>">
+                            Approve
+                        </button>
+                        <button class="btn btn-danger reject-order-cancel" 
+                            data-order-id="<%= order._id %>">
+                            Reject
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <% } %>
+
     
     <!-- Item-level return requests -->
     <% order.items.forEach((item, index) => { %>
@@ -180,6 +205,71 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Approve cancel request
+    const handleApproveCancel = (orderId, itemId = null) => {
+        const url = itemId 
+            ? `/admin/orders/${orderId}/items/${itemId}/approve-cancel` 
+            : `/admin/orders/${orderId}/approve-cancel`;
+
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert('Cancel request approved successfully.');
+                location.reload();
+            } else {
+                alert('Failed to approve the cancel request.');
+            }
+        })
+        .catch(err => alert('An error occurred. Please try again.'));
+    };
+
+    // Reject cancel request
+    const handleRejectCancel = (orderId, itemId = null) => {
+        const url = itemId 
+            ? `/admin/orders/${orderId}/items/${itemId}/reject-cancel` 
+            : `/admin/orders/${orderId}/reject-cancel`;
+
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert('Cancel request rejected successfully.');
+                location.reload();
+            } else {
+                alert('Failed to reject the cancel request.');
+            }
+        })
+        .catch(err => alert('An error occurred. Please try again.'));
+    };
+
+    // Approve cancel button click
+    document.querySelectorAll('.approve-order-cancel').forEach(button => {
+        button.addEventListener('click', () => {
+            const orderId = button.dataset.orderId;
+            const itemId = button.dataset.itemId; // Optional for item-specific
+            handleApproveCancel(orderId, itemId);
+        });
+    });
+
+    // Reject cancel button click
+    document.querySelectorAll('.reject-order-cancel').forEach(button => {
+        button.addEventListener('click', () => {
+            const orderId = button.dataset.orderId;
+            const itemId = button.dataset.itemId; // Optional for item-specific
+            handleRejectCancel(orderId, itemId);
+        });
+    });
+</script>
+
 
 <script>
     // Approve return

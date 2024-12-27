@@ -63,6 +63,11 @@ router.delete('/coupons/:id' , couponController.deleteCoupon)
 router.post('/orders/:orderId/approve-return', ordersController.approveReturn);
 router.post('/orders/:orderId/items/:itemId/approve-return', ordersController.approveReturn);
 
+// Cancel Request Routes
+router.post('/orders/:orderId/approve-cancel', ordersController.approveCancel);
+router.post('/orders/:orderId/items/:itemId/approve-cancel', ordersController.approveCancel);
+
+
 router.post('/orders/:orderId/reject-return', ordersController.rejectReturn);
 router.post('/orders/:orderId/items/:itemId/reject-return', ordersController.rejectReturn);
 

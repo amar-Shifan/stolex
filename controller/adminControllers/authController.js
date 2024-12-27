@@ -2,14 +2,37 @@
 const bcrypt = require('bcrypt')
 const Admin = require('../../model/adminSchema');
 
+const Order = require('../../model/ordersSchema'); // Adjust the path based on your project structure
+
 // Render Home page Controller 
-const renderHome = async (req,res)=>{
+const renderHome = async (req, res) => {
     try {
-        res.render('admin/admin');
+        // Fetch all orders
+        const orders = await Order.find().populate('userId').populate('items.productId').populate('shippingAddress');
+
+        // Calculate summary data
+        const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+        const totalOrders = orders.length;
+        const totalProducts = orders.reduce((sum, order) => sum + order.items.length, 0);
+
+        // Replace with your logic to calculate monthly earnings
+        const monthlyEarnings = orders
+            .filter(order => new Date(order.createdAt).getMonth() === new Date().getMonth())
+            .reduce((sum, order) => sum + order.totalAmount, 0);
+
+        res.render('admin/admin', {
+            orders,
+            totalRevenue,
+            totalOrders,
+            totalProducts,
+            monthlyEarnings
+        });
     } catch (error) {
-        res.render('user/error',{message:'Page not Rendering'})
+        console.error('Error rendering home page:', error);
+        res.render('user/error', { message: 'Page not Rendering' });
     }
-}
+};
+
 
 // Render Login page Controller
 const renderLogin = async(req,res)=>{

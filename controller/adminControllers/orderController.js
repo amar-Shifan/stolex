@@ -4,16 +4,33 @@ const Wallet = require('../../model/walletSchema');
 const PDFDocument = require('pdfkit');
 const ExcelJS = require('exceljs');
 
-// Render Order page Controller
-const getOrders = async(req,res)=>{
+
+const getOrders = async (req, res) => {
     try {
-        const orders = await Order.find({}).populate('items.productId').populate('userId')
-        res.render('admin/orders' , {orders});
+        const { page = 1, limit = 10 } = req.query; // Get page and limit from query params
+
+        const ordersCount = await Order.countDocuments(); // Get total number of orders
+        const orders = await Order.find({})
+            .populate('items.productId')
+            .populate('userId')
+            .sort({ createdAt: -1 }) // Sort by most recent
+            .skip((page - 1) * limit) // Skip documents for previous pages
+            .limit(Number(limit)); // Limit results for the current page
+
+        const totalPages = Math.ceil(ordersCount / limit);
+
+        res.render('admin/orders', {
+            orders,
+            currentPage: Number(page),
+            totalPages,
+            limit: Number(limit),
+        });
     } catch (error) {
         console.log(error);
-        res.status(500).json({success:false , message:'Something went wrong!'})
+        res.status(500).json({ success: false, message: 'Something went wrong!' });
     }
-}
+};
+
 
 // Render Order Details page Controller
 const getOrderDetails = async(req,res)=>{
@@ -188,14 +205,101 @@ const rejectReturn = async (req, res) => {
     }
 };
 
+const approveCancel = async (req, res) => {
+    try {
+        const { orderId, itemId } = req.params;
+
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+
+        if (itemId) {
+            // Approve cancel request for a specific item
+            const item = order.items.find(item => item._id.toString() === itemId);
+            if (!item) {
+                return res.status(404).json({ success: false, message: 'Item not found' });
+            }
+
+            if (item.status !== 'cancel-request') {
+                return res.status(400).json({ success: false, message: 'No cancel request for this item' });
+            }
+
+            item.status = 'Cancelled'; // Update item status
+        } else {
+            // Approve cancel request for the entire order
+            if (order.orderStatus !== 'cancel-request') {
+                return res.status(400).json({ success: false, message: 'No cancel request for this order' });
+            }
+
+            order.orderStatus = 'cancelled';
+            order.items.forEach(item => {
+                if (item.status === 'cancel-request') {
+                    item.status = 'Cancelled';
+                }
+            });
+        }
+
+        await order.save();
+        return res.status(200).json({ success: true, message: 'Cancel request approved successfully', order });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+const rejectCancel = async (req, res) => {
+    try {
+        const { orderId, itemId } = req.params;
+
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+
+        if (itemId) {
+            // Reject cancel request for a specific item
+            const item = order.items.find(item => item._id.toString() === itemId);
+            if (!item) {
+                return res.status(404).json({ success: false, message: 'Item not found' });
+            }
+
+            if (item.status !== 'cancel-request') {
+                return res.status(400).json({ success: false, message: 'No cancel request for this item' });
+            }
+
+            item.status = 'Processing'; // Reset status or leave it unchanged
+        } else {
+            // Reject cancel request for the entire order
+            if (order.orderStatus !== 'cancel-request') {
+                return res.status(400).json({ success: false, message: 'No cancel request for this order' });
+            }
+
+            order.orderStatus = 'Processing'; // Reset status or leave it unchanged
+            order.items.forEach(item => {
+                if (item.status === 'cancel-request') {
+                    item.status = 'Processing';
+                }
+            });
+        }
+
+        await order.save();
+        return res.status(200).json({ success: true, message: 'Cancel request rejected successfully', order });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
 // Render Sales Report page Controller
 const getSalesReport = async (req, res) => {
     try {
-      const { timeRange, startDate, endDate } = req.query;
+      const { timeRange, startDate, endDate, page = 1, limit = 10 } = req.query;
   
       let filter = {};
       const now = new Date();
   
+      // Filter logic
       if (timeRange === '1_day') {
         const oneDayAgo = new Date(now);
         oneDayAgo.setDate(now.getDate() - 1);
@@ -214,17 +318,38 @@ const getSalesReport = async (req, res) => {
         }
       }
   
-      const orders = await Order.find(filter).populate('userId').populate('items.productId');
+      const pageInt = parseInt(page, 10);
+      const limitInt = parseInt(limit, 10);
   
-      res.render('admin/sales-report', { orders, timeRange, startDate, endDate });
+      // Fetch paginated results
+      const orders = await Order.find(filter)
+        .populate('userId')
+        .populate('items.productId')
+        .skip((pageInt - 1) * limitInt)
+        .limit(limitInt);
+  
+      const totalOrders = await Order.countDocuments(filter);
+  
+      const totalPages = Math.ceil(totalOrders / limitInt);
+  
+      res.render('admin/sales-report', {
+        orders,
+        timeRange,
+        startDate,
+        endDate,
+        currentPage: pageInt,
+        totalPages,
+        limit: limitInt,
+      });
     } catch (error) {
       console.error('Error fetching sales report:', error);
       res.render('user/error', { message: 'Error fetching sales report!' });
     }
   };
+  
 
 // Generate SalesReport PDF Controller 
-  const generateSalesReportPDF = async (req, res) => {
+const generateSalesReportPDF = async (req, res) => {
     try {
         const { timeRange, startDate, endDate } = req.query;
 
@@ -248,10 +373,28 @@ const getSalesReport = async (req, res) => {
 
         doc.pipe(res);
 
+        // Title and Time Range Section
         doc.font('Helvetica-Bold').fontSize(18).text('Detailed Sales Report', { align: 'center' });
         doc.moveDown(1.5);
 
-        const tableTop = 120; 
+        const timeRangeText = timeRange === 'custom' ? `From ${startDate} to ${endDate}` : timeRange === '1_day' ? 'Last 24 hours' : 'All Time';
+        doc.font('Helvetica').fontSize(12).text(`Time Range: ${timeRangeText}`, { align: 'center' });
+        doc.moveDown(1.5);
+
+        // Summary of Sales Report
+        const totalOrders = orders.length;
+        const totalRevenue = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+        const totalDiscount = orders.reduce((sum, order) => {
+            return sum + order.items.reduce((itemSum, item) => itemSum + (item.discountApplied || 0), 0);
+        }, 0);
+
+        doc.font('Helvetica-Bold').fontSize(14).text('Sales Summary', { underline: true });
+        doc.font('Helvetica').fontSize(12).text(`Total Orders: ${totalOrders}`, { align: 'left' });
+        doc.font('Helvetica').fontSize(12).text(`Total Revenue: $${totalRevenue.toFixed(2)}`, { align: 'left' });
+        doc.font('Helvetica').fontSize(12).text(`Total Discount Given: $${totalDiscount.toFixed(2)}`, { align: 'left' });
+        doc.moveDown(2);
+
+        const tableTop = 220; 
         const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
         const columnCount = 8;
         const columnWidth = pageWidth / columnCount;
@@ -301,7 +444,7 @@ const getSalesReport = async (req, res) => {
         orders.forEach((order, index) => {
             x = doc.page.margins.left;
 
-            // Calculate total discount
+            // Calculate total discount for each order
             const totalDiscountApplied = order.items.reduce((sum, item) => {
                 return sum + (item.discountApplied || 0);
             }, 0);
@@ -341,12 +484,20 @@ const getSalesReport = async (req, res) => {
             }
         });
 
+        // Footer Section with Total Information
+        doc.moveDown(2);
+        doc.font('Helvetica-Bold').fontSize(14).text('Report Summary:', { underline: true });
+        doc.font('Helvetica').fontSize(12).text(`Total Orders: ${totalOrders}`, { align: 'left' });
+        doc.font('Helvetica').fontSize(12).text(`Total Revenue: $${totalRevenue.toFixed(2)}`, { align: 'left' });
+        doc.font('Helvetica').fontSize(12).text(`Total Discount Given: $${totalDiscount.toFixed(2)}`, { align: 'left' });
+
         doc.end();
     } catch (error) {
         console.error(error);
         res.status(500).send('Failed to generate report');
     }
 };
+
 
 // Generate SalesReport Excel Controller 
 const generateSalesReportExcel = async (req, res) => {
@@ -370,7 +521,29 @@ const generateSalesReportExcel = async (req, res) => {
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Sales Report');
 
-        // Add Headers
+        // Calculate Summary Data
+        let totalOrders = orders.length;
+        let totalRevenue = 0;
+        let totalDiscount = 0;
+
+        orders.forEach((order) => {
+            totalRevenue += order.totalAmount || 0;
+            const totalDiscountApplied = order.items.reduce((sum, item) => {
+                return sum + (item.discountApplied || 0);
+            }, 0);
+            totalDiscount += totalDiscountApplied;
+        });
+
+        // Add Summary First (Above the Table Header)
+        worksheet.addRow([]);
+        worksheet.addRow(['Total Orders', totalOrders, 'Total Revenue', `$${totalRevenue.toFixed(2)}`, 'Total Discount Given', `$${totalDiscount.toFixed(2)}`]);
+        worksheet.getRow(2).font = { bold: true };
+        worksheet.getRow(2).alignment = { horizontal: 'center' };
+
+        // Add a blank row after the summary
+        worksheet.addRow([]);
+
+        // Add Headers for the Detailed Report
         worksheet.columns = [
             { header: '#', key: 'index', width: 5 },
             { header: 'Order ID', key: 'orderId', width: 30 },
@@ -382,7 +555,7 @@ const generateSalesReportExcel = async (req, res) => {
             { header: 'Discount', key: 'discount', width: 15 },
         ];
 
-        // Add Rows
+        // Add Rows for Detailed Orders
         orders.forEach((order, index) => {
             const totalDiscountApplied = order.items.reduce((sum, item) => {
                 return sum + (item.discountApplied || 0);
@@ -403,7 +576,7 @@ const generateSalesReportExcel = async (req, res) => {
         // Style Headers
         worksheet.getRow(1).font = { bold: true };
 
-        // Set response headers
+        // Set response headers for Excel download
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', 'attachment; filename=sales_report.xlsx');
 
@@ -417,4 +590,5 @@ const generateSalesReportExcel = async (req, res) => {
 };
 
 module.exports ={ getOrders ,getOrderDetails ,changeStatus ,approveReturn ,rejectReturn ,getSalesReport 
-                ,generateSalesReportPDF ,generateSalesReportExcel };
+                ,generateSalesReportPDF ,generateSalesReportExcel , approveCancel,
+                rejectCancel};

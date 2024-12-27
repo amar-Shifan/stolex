@@ -18,30 +18,38 @@ const globalVarsMiddleware = (req, res, next) => {
 };
 
 const isAuthen = async (req, res, next) => {
-    try {
-      const userId = req.session.userId;
-  
-      // Check if userId exists in the session
-      if (!userId) {
-        return res.redirect('/user-login');
-      }
-  
-      // Query the database for the active user
-      const user = await User.findOne({ _id: userId, block:false });
-  
-      // If user exists and is active, proceed to the next middleware
-      if (user) {
-        return next();
-      }
-  
-      // Otherwise, redirect to login
+  try {
+    const userId = req.session.userId;
+
+    // Check if userId exists in the session
+    if (!userId) {
       return res.redirect('/user-login');
-    } catch (error) {
-      console.error('Authentication error:', error);
-      return res.status(500).send('Internal Server Error');
     }
-  };
-  
+
+    // Query the database for the active user
+    const user = await User.findOne({ _id: userId, block: false });
+
+    // If user exists, is not blocked, and is active, proceed to the next middleware
+    if (user) {
+      return next();
+    }
+
+    // If user is blocked, clear the session and provide a message
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Error clearing session:', err);
+      }
+    });
+
+    // Redirect to login page with blocked message
+    return res.render('user/error',{message:'Your account is blocked. Please contact support.'})
+
+  } catch (error) {
+    console.error('Authentication error:', error);
+    return res.status(500).send('Internal Server Error');
+  }
+};
+
 function preventAccessIfAuthenticated(req, res, next) {
     if (req.session.userId) {
         return res.redirect('/'); 

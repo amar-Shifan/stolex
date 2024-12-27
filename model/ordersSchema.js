@@ -13,8 +13,9 @@ const orderSchema = new mongoose.Schema(
         total: { type: Number, required: true },
         discountApplied: { type: Number, default: 0 }, // Proportional discount applied to the item
         refundAmount: { type: Number, default: 0 }, // Refund amount if item is returned
-        status: { type: String, enum: ['Pending', 'Shipped', 'Delivered', 'Returned', 'Cancelled' ,'return-request'], default: 'Pending' },
+        status: { type: String, enum: ['Pending', 'Shipped', 'Delivered', 'Returned', 'Cancelled' ,'return-request' ,'cancel-request'], default: 'Pending' },
         returnReason: { type: String, default: '' }, // Reason for item return
+        cancelReason:{type:String , default: ''}
       },
     ],
     totalAmount: { type: Number, required: true },
@@ -23,7 +24,7 @@ const orderSchema = new mongoose.Schema(
     paymentStatus: { type: String, enum: ['pending', 'success', 'failed'], default: 'pending' },
     orderStatus: {
       type: String,
-      enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned', 'return-request'],
+      enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned', 'return-request' ,'cancel-request'],
       default: 'pending',
     },
     razorpayDetails: {
@@ -31,6 +32,7 @@ const orderSchema = new mongoose.Schema(
       paymentId: { type: String }, // Razorpay payment ID (after successful payment)
       signature: { type: String }, // Razorpay signature (for verification)
     },
+    cancelReason: {type:String,default:''},
     returnReason: { type: String, default: '' }, // Reason for order-level return
     createdAt: { type: Date, default: Date.now },
   },

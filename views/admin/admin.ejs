@@ -1,13 +1,67 @@
 <%-include('../partials/admin_header.ejs',{title:"admin page"})%>
 
+<style>
+    .content-main {
+    margin: 0 auto;
+    max-width: 1200px;
+    padding: 20px;
+}
+
+.content-header {
+    margin-bottom: 20px;
+}
+
+.content-title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.card-body {
+    padding: 20px;
+}
+
+.card-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+#bestSellingList {
+    list-style: none;
+    padding-left: 0;
+}
+
+#bestSellingList .list-group-item {
+    font-size: 1rem;
+    margin-bottom: 8px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+select.form-control {
+    width: 200px;
+    margin-left: 10px;
+}
+
+canvas {
+    max-width: 100% !important;
+}
+
+
+</style>
 <section class="content-main">
     <div class="content-header">
         <div>
             <h2 class="content-title card-title">Dashboard</h2>
             <p>Whole data about your business here</p>
-        </div>
-        <div>
-            <a href="#" class="btn btn-primary"><i class="text-muted material-icons md-post_add"></i>Create report</a>
         </div>
     </div>
     <div class="row">
@@ -17,8 +71,7 @@
                     <span class="icon icon-sm rounded-circle bg-primary-light"><i class="text-primary material-icons md-monetization_on"></i></span>
                     <div class="text">
                         <h6 class="mb-1 card-title">Revenue</h6>
-                        <span>$13,456.5</span>
-                        <span class="text-sm"> Shipping fees are not included </span>
+                        <span><%= totalRevenue.toLocaleString() %></span>
                     </div>
                 </article>
             </div>
@@ -29,8 +82,7 @@
                     <span class="icon icon-sm rounded-circle bg-success-light"><i class="text-success material-icons md-local_shipping"></i></span>
                     <div class="text">
                         <h6 class="mb-1 card-title">Orders</h6>
-                        <span>53.668</span>
-                        <span class="text-sm"> Excluding orders in transit </span>
+                        <span><%= totalOrders %></span>
                     </div>
                 </article>
             </div>
@@ -41,8 +93,7 @@
                     <span class="icon icon-sm rounded-circle bg-warning-light"><i class="text-warning material-icons md-qr_code"></i></span>
                     <div class="text">
                         <h6 class="mb-1 card-title">Products</h6>
-                        <span>9.856</span>
-                        <span class="text-sm"> In 19 Categories </span>
+                        <span><%= totalProducts %></span>
                     </div>
                 </article>
             </div>
@@ -53,14 +104,15 @@
                     <span class="icon icon-sm rounded-circle bg-info-light"><i class="text-info material-icons md-shopping_basket"></i></span>
                     <div class="text">
                         <h6 class="mb-1 card-title">Monthly Earning</h6>
-                        <span>$6,982</span>
-                        <span class="text-sm"> Based in your local time. </span>
+                        <span><%= monthlyEarnings.toLocaleString() %></span>
                     </div>
                 </article>
             </div>
         </div>
     </div>
 
+    <!-- chart js  -->
+    
     <!-- chart js  -->
     
 <section class="content-main">
@@ -76,6 +128,11 @@
             <option value="monthly">Monthly</option>
             <option value="weekly">Weekly</option>
         </select>
+    </div>
+
+    <!-- Display Filter Duration -->
+    <div class="mb-4">
+        <p>Time Frame: <strong id="timeFrame"></strong></p>
     </div>
 
     <!-- Product Sales Chart -->
@@ -113,126 +170,24 @@
 
 </section>
 
-
-
-
-    <div class="card mb-4">
-        <header class="card-header">
-            <h4 class="card-title">Latest orders</h4>
-            <div class="row align-items-center">
-                <div class="col-md-3 col-12 me-auto mb-md-0 mb-3">
-                    <div class="custom_select">
-                        <select class="form-select select-nice">
-                            <option selected="">All Categories</option>
-                            <option>Women's Clothing</option>
-                            <option>Men's Clothing</option>
-                            <option>Cellphones</option>
-                            <option>Computer &amp; Office</option>
-                            <option>Consumer Electronics</option>
-                            <option>Jewelry &amp; Accessories</option>
-                            <option>Home &amp; Garden</option>
-                            <option>Luggage &amp; Bags</option>
-                            <option>Shoes</option>
-                            <option>Mother &amp; Kids</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-2 col-6">
-                    <input type="date" value="02.05.2021" class="form-control">
-                </div>
-                <div class="col-md-2 col-6">
-                    <div class="custom_select">
-                        <select class="form-select select-nice">
-                            <option selected="">Status</option>
-                            <option>All</option>
-                            <option>Paid</option>
-                            <option>Chargeback</option>
-                            <option>Refund</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </header>
-        <div class="card-body">
-            <div class="table-responsive">
-                <div class="table-responsive">
-                    <table class="table align-middle table-nowrap mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th scope="col" class="text-center">
-                                    <div class="form-check align-middle">
-                                        <input class="form-check-input" type="checkbox" id="transactionCheck01">
-                                        <label class="form-check-label" for="transactionCheck01"></label>
-                                    </div>
-                                </th>
-                                <th class="align-middle" scope="col">Order ID</th>
-                                <th class="align-middle" scope="col">Billing Name</th>
-                                <th class="align-middle" scope="col">Date</th>
-                                <th class="align-middle" scope="col">Total</th>
-                                <th class="align-middle" scope="col">Payment Status</th>
-                                <th class="align-middle" scope="col">Payment Method</th>
-                                <th class="align-middle" scope="col">View Details</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td class="text-center">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="transactionCheck02">
-                                        <label class="form-check-label" for="transactionCheck02"></label>
-                                    </div>
-                                </td>
-                                <td><a href="#" class="fw-bold">#SK2540</a></td>
-                                <td>Neal Matthews</td>
-                                <td>07 Oct, 2021</td>
-                                <td>$400</td>
-                                <td>
-                                    <span class="badge badge-pill badge-soft-success">Paid</span>
-                                </td>
-                                <td><i class="material-icons md-payment font-xxl text-muted mr-5"></i> Mastercard</td>
-                                <td>
-                                    <a href="#" class="btn btn-xs"> View details</a>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <!-- table-responsive end// -->
-        </div>
-    </div>
-    <div class="pagination-area mt-30 mb-50">
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-start">
-                <li class="page-item active"><a class="page-link" href="#">01</a></li>
-                <li class="page-item"><a class="page-link" href="#">02</a></li>
-                <li class="page-item"><a class="page-link" href="#">03</a></li>
-                <li class="page-item"><a class="page-link dot" href="#">...</a></li>
-                <li class="page-item"><a class="page-link" href="#">16</a></li>
-                <li class="page-item">
-                    <a class="page-link" href="#"><i class="material-icons md-chevron_right"></i></a>
-                </li>
-            </ul>
-        </nav>
-    </div>
 </section>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-     const ctx = document.getElementById('salesChart').getContext('2d');
+    const ctx = document.getElementById('salesChart').getContext('2d');
     let salesChart;
     const ctxCategories = document.getElementById('categoriesChart').getContext('2d');
-const ctxBrands = document.getElementById('brandsChart').getContext('2d');
-let categoriesChart;
-let brandsChart;
+    const ctxBrands = document.getElementById('brandsChart').getContext('2d');
+    let categoriesChart;
+    let brandsChart;
 
-async function updateChart() {
-    const filter = document.getElementById('timeFilter').value;
-    const response = await fetch(`/admin/chart-data?filter=${filter}`);
-    const data = await response.json();
+    async function updateChart() {
+        const filter = document.getElementById('timeFilter').value;
+        const response = await fetch(`/admin/chart-data?filter=${filter}`);
+        const data = await response.json();
 
-    // Update product sales chart
-    if (salesChart) salesChart.destroy();
+        // Update product sales chart
+        if (salesChart) salesChart.destroy();
         salesChart = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -245,7 +200,24 @@ async function updateChart() {
                     borderWidth: 1
                 }]
             },
-            options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Quantity Sold'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Products'
+                        }
+                    }
+                }
+            }
         });
 
         // Update categories chart
@@ -262,7 +234,24 @@ async function updateChart() {
                     borderWidth: 1
                 }]
             },
-            options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Quantity Sold'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Categories'
+                        }
+                    }
+                }
+            }
         });
 
         // Update brands chart
@@ -279,7 +268,24 @@ async function updateChart() {
                     borderWidth: 1
                 }]
             },
-            options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Quantity Sold'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Brands'
+                        }
+                    }
+                }
+            }
         });
 
         // Update best-selling products list
@@ -291,11 +297,22 @@ async function updateChart() {
             li.textContent = `${product.name} - ${product.quantitySold} sold`;
             bestSellingList.appendChild(li);
         });
+
+        // Update time frame description
+        const timeFrameEl = document.getElementById('timeFrame');
+        if (filter === 'yearly') {
+            timeFrameEl.textContent = 'January 2024 - December 2024';
+        } else if (filter === 'monthly') {
+            timeFrameEl.textContent = 'December 2024';
+        } else if (filter === 'weekly') {
+            timeFrameEl.textContent = 'Week 1 - Week 4, December 2024';
+        }
     }
 
     // Initial Load
     updateChart();
 </script>
+
 
 <%- include('../partials/admin_footer.ejs')%>
 

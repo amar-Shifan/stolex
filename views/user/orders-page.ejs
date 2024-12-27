@@ -86,14 +86,31 @@
                 <% } else { %>
                     <% orders.forEach(order => { %>
                         <div class="order-card">
-                            <div class="order-header">
+                            <div class="order-header p-3 border rounded">
                                 <div>
                                     <strong>Order ID:</strong> <%= order._id %>
                                 </div>
-                                <div class="status <%= order.orderStatus === 'delivered' ? 'bg-success' : order.orderStatus === 'processing' ? 'bg-warning text-dark' : 'bg-danger' %>">
-                                    <%= order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1) %>
+                                <% if (order.paymentStatus === 'failed') { %>
+                                    <div class="d-flex justify-content-between align-items-center mt-3">
+                                        <div class="d-flex align-items-center">
+                                            <p class="mb-0 me-2 text-danger"><strong>Payment Status:</strong></p>
+                                            <div class="status px-3 py-1 rounded bg-danger text-light">
+                                                <%= order.paymentStatus.charAt(0).toUpperCase() + order.paymentStatus.slice(1) %>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% } %>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <div class="d-flex align-items-center">
+                                        <p class="mb-0 me-2"><strong>Order Status:</strong></p>
+                                        <div class="status px-3 py-1 rounded 
+                                            <%= order.orderStatus === 'delivered' ? 'bg-success text-light' : order.orderStatus === 'processing' ? 'bg-warning text-dark' : 'bg-danger text-light' %>">
+                                            <%= order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1) %>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+                            
                             <div class="order-info">
                                 <div><i class="bi bi-geo-alt"></i> <%= order.shippingAddress.city %>, <%= order.shippingAddress.state %></div>
                                 <div><i class="bi bi-arrow-right"></i></div>
