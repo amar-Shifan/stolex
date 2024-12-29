@@ -69,6 +69,7 @@ router.patch('/orders/cancel' ,middleware.isAuthen, orderController.cancelOrder)
 router.patch('/orders/return' , middleware.isAuthen, orderController.returnOrder);
 
 router.post('/apply-coupon', couponController.applyCoupon);
+router.get('/available-coupons' , couponController.availableCoupon);
 router.post('/remove-coupon', couponController.removeCoupon);
 
 router.get('/wallet' , middleware.isAuthen ,orderController.getWallet);

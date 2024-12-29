@@ -26,6 +26,7 @@ app.use(session({
     maxAge: 86400000, // 1 day
   },
 }));
+
 app.use(nocache());
 
 // Middleware

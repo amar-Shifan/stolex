@@ -452,21 +452,28 @@ const invoiceDownload = async (req, res) => {
     }
 }
 
-// Rendre Orders Page
-const getOrders = async (req,res)=>{
+// Render Orders Page
+const getOrders = async (req, res) => {
     try {
-        const orders = await Order.find({})
-            .populate('items.productId' , 'name images')
-            .populate('shippingAddress')
-            .sort({createdAt : -1})
+        const userId = req.session.userId; 
 
-        res.render('user/orders-page' , {orders})
+        if (!userId) {
+            return res.redirect('/login'); 
+        }
+
+        const orders = await Order.find({ userId }) 
+            .populate('items.productId', 'name images') 
+            .populate('shippingAddress') 
+            .sort({ createdAt: -1 }); 
+
+        res.render('user/orders-page', { orders }); 
 
     } catch (error) {
         console.log(error);
-        res.render('user/error',{message:"Page Cant render"});
+        res.render('user/error', { message: "Page Can't render" }); 
     }
-}
+};
+
 
 // Render Order Details page Controller
 const details = async(req,res)=>{
@@ -577,6 +584,9 @@ const returnOrder = async (req, res) => {
 
       const { orderId, itemId, reason } = req.body;
       const userId = req.session.userId;
+        console.log('userid' , userId);
+        console.log('orderId ',orderId);
+
   
       if (!userId) {
         return res.status(400).json({ success: false, message: 'User not logged in' });

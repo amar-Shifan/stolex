@@ -69,6 +69,28 @@ const applyCoupon = async (req, res) => {
     // Just return a success message for now since removing the coupon is client-side
     res.status(200).json({ success: true });
   };
+
+const availableCoupon = async(req,res)=>{
+  try {
+    console.log('working');
+    const userId = req.session.userId; // Assume user is authenticated
+    const user = await User.findById(userId);
+
+    // Fetch active coupons excluding used ones
+    const usedCouponIds = user.usedCoupons.map(c => c.couponId.toString());
+    const coupons = await Coupon.find({
+        isActive: true,
+        expiryDate: { $gte: new Date() },
+        _id: { $nin: usedCouponIds },
+    });
+
+    res.status(200).json({ success: true, coupons });
+  } catch (err) {
+      console.error(err);
+      res.status(500).json({ success: false, message: 'Failed to fetch coupons' });
+  }
+
+}
   
 
-module.exports ={removeCoupon , applyCoupon}
+module.exports ={removeCoupon , applyCoupon ,availableCoupon};
