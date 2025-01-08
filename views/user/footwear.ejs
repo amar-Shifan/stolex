@@ -1,200 +1,69 @@
 <%-include('../partials/header.ejs',{title:"admin page",style:'/css/shoppingPage.css' })%>
 
 <style>
-	.colorlib-product {
-		background-color: #ffffff;
-	}
-  
-	.product-card {
-		transition: transform 0.3s ease, box-shadow 0.3s ease;
-		border: 1px solid #e0e0e0 !important;
-	}
-  
-	.product-card:hover {
-		transform: translateY(-5px);
-		box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
-	}
-  
-	.btn-dark {
-		background-color: #000;
-		border-color: #000;
-		transition: background-color 0.3s ease;
-	}
-  
-	.btn-dark:hover {
-		background-color: #333;
-	}
-  
-	.price {
-		color: #000 !important;
-		font-weight: bold;
-	}
-  
-	/* Sidebar Styling */
-	.list-unstyled li {
-		margin-bottom: 0.5rem;
-	}
-  
-	.list-unstyled input[type="checkbox"] {
-		margin-right: 10px;
-	}
-  
-	/* Responsive Adjustments */
-	@media (max-width: 768px) {
-		.colorlib-product .row {
-			flex-direction: column;
-		}
-	}
-  
-	/* Search and Sort Styling */
-	#searchForm .form-control {
-		border: 1px solid #000;
-	}
-  
-	#sortSelect {
-		border: 1px solid #000;
-		color: #000;
-	}
-  
-	.breadcrumbs {
-		background-color: #f8f9fa;
-		padding: 15px 0;
-	}
-  
-	.breadcrumbs a {
-		color: #000;
-		text-decoration: none;
-	}
-  
-	.breadcrumbs a:hover {
-		text-decoration: underline;
-	}
-  
-	/* Sidebar Filter Styling */
-	.filter-sidebar {
-		background-color: #f8f9fa;
-		border-radius: 10px;
-		padding: 20px;
-		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-	}
-  
-	.filter-sidebar h4 {
-		color: #333;
-		border-bottom: 2px solid #000;
-		padding-bottom: 10px;
-		margin-bottom: 15px;
-		text-transform: uppercase;
-		font-weight: 700;
-	}
-  
-	.filter-sidebar ul {
-		padding-left: 0;
-	}
-  
-	.filter-sidebar li {
-		position: relative;
-		margin-bottom: 10px;
-	}
-  
-	.filter-sidebar input[type="checkbox"] {
-		position: absolute;
-		opacity: 0;
-		cursor: pointer;
-		height: 0;
-		width: 0;
-	}
-  
-	.filter-sidebar label {
-		display: block;
-		position: relative;
-		padding-left: 35px;
-		cursor: pointer;
-		font-size: 16px;
-		user-select: none;
-		transition: all 0.3s ease;
-	}
-  
-	.filter-sidebar label::before {
-		content: '';
-		position: absolute;
-		left: 0;
-		top: 0;
-		width: 24px;
-		height: 24px;
-		border: 1px solid #000;
-		background-color: #fff;
-		transition: all 0.3s ease;
-	}
-  
-	.filter-sidebar label:hover::before {
-		background-color: #f0f0f0;
-	}
-  
-	.filter-sidebar input[type="checkbox"]:checked + label {
-		font-weight: bold;
-	}
-  
-	.filter-sidebar input[type="checkbox"]:checked + label::before {
-		background-color: #000;
-		border-color: #000;
-	}
-  
-	.filter-sidebar input[type="checkbox"]:checked + label::after {
-		content: '';
-		position: absolute;
-		left: 8px;
-		top: 4px;
-		width: 5px;
-		height: 10px;
-		border: solid white;
-		border-width: 0 2px 2px 0;
-		transform: rotate(45deg);
-	}
-  
-	.filter-sidebar .btn-primary {
-		width: 100%;
-		background-color: #000;
-		border-color: #000;
-		transition: background-color 0.3s ease;
-	}
-  
-	.filter-sidebar .btn-primary:hover {
-		background-color: #333;
-	}
-  
-	@media (max-width: 768px) {
-		.filter-sidebar {
-			border-radius: 0;
-		}
-	}
+/* General Styling */
+/* General Styling */
+.colorlib-product {
+    background-color: #ffffff;
+}
 
-	.product-card {
+.product-card {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #e0e0e0 !important;
     border-radius: 15px;
-  }
+}
 
-  .product-card:hover {
+.product-card:hover {
     transform: translateY(-10px);
     box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-  }
+}
 
-  .product-card img {
+.product-card img {
     transition: transform 0.4s ease;
     border-radius: 15px 15px 0 0;
-  }
+}
 
-  .product-card img:hover {
+.product-card img:hover {
     transform: scale(1.1);
-  }
+}
 
-  .product-badge {
+.price {
+    font-size: 1.25rem;
+    color: #000 !important;
+    font-weight: bold;
+}
+
+.price-discount {
+    font-size: 0.95rem;
+}
+
+.btn-dark, .btn-view-details {
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.btn-dark {
+    background-color: #000;
+    border-color: #000;
+}
+
+.btn-dark:hover {
+    background-color: #333;
+}
+
+.btn-view-details:hover {
+    background-color: #000;
+    color: #fff;
+    transform: scale(1.05);
+}
+
+.product-badge {
     font-size: 0.9rem;
     font-weight: bold;
     border-radius: 0.5rem;
     opacity: 0.9;
-  }
+}
 
-  .wishlist-icon {
+.wishlist-icon {
     font-size: 1.5rem;
     color: #ff6b6b;
     position: absolute;
@@ -203,40 +72,129 @@
     cursor: pointer;
     z-index: 10;
     transition: transform 0.3s ease, color 0.3s ease;
-  }
+}
 
-  .wishlist-icon:hover {
+.wishlist-icon:hover {
     color: #ff3b3b;
     transform: scale(1.2);
-  }
+}
 
-  .price {
-    font-size: 1.25rem;
-  }
-
-  .price-discount {
-    font-size: 0.95rem;
-  }
-
-  .btn-view-details {
-    transition: background-color 0.3s ease, transform 0.3s ease;
-  }
-
-  .btn-view-details:hover {
-    background-color: #000;
-    color: #fff;
-    transform: scale(1.05);
-  }
-
-  .product-card .card-title {
+.card-title {
     font-size: 1.2rem;
     color: #333;
-  }
+}
 
-  .product-card .card-text {
+.card-text {
     font-size: 0.9rem;
     color: #666;
-  }
+}
+
+/* Sidebar Styling */
+.filter-sidebar {
+    background: #ffffff;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.05);
+}
+
+.filter-section {
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.filter-header {
+    cursor: pointer;
+    padding: 10px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+}
+
+.filter-header:hover {
+    background-color: #f8f8f8;
+}
+
+.filter-header h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #000;
+}
+
+.filter-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.filter-content.show {
+    max-height: 500px;
+}
+
+.filter-list {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+}
+
+.filter-item {
+    margin: 8px 0;
+}
+
+.custom-checkbox {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 5px 0;
+}
+
+.custom-checkbox input[type="checkbox"] {
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+.custom-checkbox:hover {
+    background-color: #f8f8f8;
+}
+
+.apply-filter-btn {
+    width: 100%;
+    padding: 12px;
+    background: #000;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.apply-filter-btn:hover {
+    background: #333;
+    transform: translateY(-1px);
+}
+
+.chevron {
+    transition: transform 0.3s ease;
+    width: 20px;
+    height: 20px;
+}
+
+.chevron.rotate {
+    transform: rotate(180deg);
+}
+
+@media (max-width: 768px) {
+    .filter-sidebar {
+        padding: 15px;
+    }
+    
+    .filter-header h4 {
+        font-size: 1rem;
+    }
+}
 
   </style>
 		<div class="breadcrumbs">
@@ -253,75 +211,92 @@
 			<div class="container-fluid gx-0 py-5 ">
 				<div class="row gx-0">
 					<!-- Sidebar -->
-					<div class="col-lg-3 col-xl-3 border-end  gx-0	 pe-4 filter-sidebar">
-						<form id="filteringForm" method="GET" action="/shop">
-							<!-- Brands Section -->
-							<div class="mb-4">
-								<h4 class="fw-bold">Brand</h4>
-								<ul class="list-unstyled">
-									<% if (brands && brands.length > 0) { %>
-										<% brands.forEach(brand => { %>
-											<li class="mb-2">
-												<input type="checkbox" id="brand_<%= brand.name || 'unknown' %>" name="brand" 
-													value="<%= brand.name || '' %>" 
-													>
-												<label for="brand_<%= brand.name || 'unknown' %>">
-													<%= brand.name || 'Unknown Brand' %>
-												</label>
-											</li>
-										<% }) %>
-									<% } else { %>
-										<p>No brands available</p>
-									<% } %>
-								</ul>
+					<div class="col-lg-3 col-xl-3 border-end gx-0 pe-4">
+						<div class="sticky-sidebar-wrapper">
+							<div class="filter-sidebar">
+								<form id="filteringForm" method="GET" action="/shop">
+									<!-- Brands Section -->
+									<div class="filter-section">
+										<button type="button" class="filter-header" onclick="toggleSection(this)">
+											<h4>Brand</h4>
+											<svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+												<polyline points="6 9 12 15 18 9"></polyline>
+											</svg>
+										</button>
+										<div class="filter-content">
+											<ul class="filter-list">
+												<% if (brands && brands.length > 0) { %>
+													<% brands.forEach(brand => { %>
+														<li class="filter-item">
+															<label class="custom-checkbox">
+																<input type="checkbox" name="brand" value="<%= brand.name || '' %>">
+																<%= brand.name || 'Unknown Brand' %>
+															</label>
+														</li>
+													<% }) %>
+												<% } else { %>
+													<p>No brands available</p>
+												<% } %>
+											</ul>
+										</div>
+									</div>
+					
+									<!-- Sizes Section -->
+									<div class="filter-section">
+										<button type="button" class="filter-header" onclick="toggleSection(this)">
+											<h4>Size</h4>
+											<svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+												<polyline points="6 9 12 15 18 9"></polyline>
+											</svg>
+										</button>
+										<div class="filter-content">
+											<ul class="filter-list">
+												<% if (sizes && sizes.length > 0) { %>
+													<% sizes.forEach(size => { %>
+														<li class="filter-item">
+															<label class="custom-checkbox">
+																<input type="checkbox" name="size" value="<%= size || '' %>">
+																<%= size || 'Unknown Size' %>
+															</label>
+														</li>
+													<% }) %>
+												<% } else { %>
+													<p>No sizes available</p>
+												<% } %>
+											</ul>
+										</div>
+									</div>
+					
+									<!-- Styles Section -->
+									<div class="filter-section">
+										<button type="button" class="filter-header" onclick="toggleSection(this)">
+											<h4>Style</h4>
+											<svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+												<polyline points="6 9 12 15 18 9"></polyline>
+											</svg>
+										</button>
+										<div class="filter-content">
+											<ul class="filter-list">
+												<% if (styles && styles.length > 0) { %>
+													<% styles.forEach(category => { %>
+														<li class="filter-item">
+															<label class="custom-checkbox">
+																<input type="checkbox" name="category" value="<%= category.name || '' %>">
+																<%= category.name || 'Unknown Category' %>
+															</label>
+														</li>
+													<% }) %>
+												<% } else { %>
+													<p>No categories available</p>
+												<% } %>
+											</ul>
+										</div>
+									</div>
+					
+									<button type="submit" class="apply-filter-btn">Apply Filter</button>
+								</form>
 							</div>
-						
-							<!-- Sizes Section -->
-							<div class="mb-4 gx-0">
-								<h4 class="fw-bold">Size</h4>
-								<ul class="list-unstyled">
-									<% if (sizes && sizes.length > 0) { %>
-										<% sizes.forEach(size => { %>
-											<li class="mb-2 gx-0">
-												<input type="checkbox" id="size_<%= size || 'unknown' %>" name="size" 
-													value="<%= size || '' %>" 
-													>
-												<label for="size_<%= size || 'unknown' %>">
-													<%= size || 'Unknown Size' %>
-												</label>
-											</li>
-										<% }) %>
-									<% } else { %>
-										<p>No sizes available</p>
-									<% } %>
-								</ul>
-							</div>
-							
-						
-							<!-- Styles Section -->
-							<div class="mb-4 gx-0">
-								<h4 class="fw-bold">Style</h4>
-								<ul class="list-unstyled">
-									<% if (styles && styles.length > 0) { %>
-										<% styles.forEach(category => { %>
-											<li class="mb-2 gx-0">
-												<input type="checkbox" id="category_<%= category.name || 'unknown' %>" name="category" 
-													value="<%= category.name || '' %>" 
-													>
-												<label for="category_<%= category.name || 'unknown' %>">
-													<%= category.name || 'Unknown Category' %>
-												</label>
-											</li>
-										<% }) %>
-									<% } else { %>
-										<p>No categories available</p>
-									<% } %>
-								</ul>
-								
-							</div>
-
-							<button type="submit" class="btn btn-primary">Apply Filter</button>
-						</form>
+						</div>
 					</div>
 			
 					<!-- Products Section -->
@@ -377,8 +352,6 @@
 								<div class="card h-100 border-0 product-card">
 								  <!-- Product Image Container -->
 								  <div class="position-relative overflow-hidden">
-									<!-- Wishlist Icon -->
-									<span class="wishlist-icon" title="Add to Wishlist">❤️</span>
 						  
 									<img src="<%= product.images[0] || '/api/placeholder/400/400' %>" 
 										 alt="<%= product.name %>" 
@@ -404,7 +377,7 @@
 									<!-- Price Section -->
 									<div class="mt-auto">
 									  <% if (product.discountedPrice) { %>
-										<div class="d-flex align-items-center justify-content-start gap-2 mb-3">
+										<div class="d-flex align-items-center justify-content-start gx-0 gap-2 mb-3">
 										  <span class="price fw-bold text-success">₹<%= product.discountedPrice.toFixed(2) %></span>
 										  <span class="text-muted text-decoration-line-through price-discount">₹<%= product.price.toFixed(2) %></span>
 										</div>
@@ -506,14 +479,7 @@
 			</div>
 		</div>
 
-		<script>
-			function updateQueryParam(key, value) {
-				const url = new URL(window.location.href);
-				url.searchParams.set(key, value);
-				return url.href;
-			}
-		</script>
 		
-		  
-
 <%- include('../partials/footer.ejs')%>
+
+<script src="/js/shop"></script>

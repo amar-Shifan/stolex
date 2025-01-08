@@ -131,19 +131,18 @@
                         <div class="one-eight text-center">
                             <div class="display-tc quantity-control d-flex">
                                 <button class="btn btn-sm btn-outline-secondary decrement-btn" data-id="<%= item._id %>">-</button>
-                                <input type="number" name="quantity" 
-                                       class="form-control input-number text-center quantity-input" 
-                                       value="<%= item.quantity %>" 
-                                       min="1" 
-                                       max="<%= item.productId.stock.find(stock => stock.size === item.size)?.quantity || 0 %>" 
-                                       readonly>
+                                <input type="number" name="quantity" class="form-control input-number text-center quantity-input" 
+                                value="<%= item.quantity %>" min="1" 
+                                max="<%= item.productId.stock.find(stock => stock.size === item.size)?.quantity || 0 %>">
+                         
+
                                 <button class="btn btn-sm btn-outline-secondary increment-btn" data-id="<%= item._id %>">+</button>
                             </div>
                         </div>
                         <div class="one-eight text-center">
                             <div class="display-tc">
                                 <!-- Calculate total based on discountedPrice if it exists -->
-                                <span class="price">
+                                <span class="total price">
                                     ₹<%= (item.productId.discountedPrice || item.price) * item.quantity %>
                                 </span>
                             </div>
@@ -167,17 +166,19 @@
                                             <div class="sub">
                                                 <!-- Calculate subtotal based on discountedPrice if it exists -->
                                                 <p><span>Subtotal:</span> 
-                                                    <span>₹<%= cart.items.reduce((total, item) => {
-                                                        return total + ((item.productId.discountedPrice || item.price) * item.quantity);
-                                                    }, 0) %>
+                                                    <span id="subtotal">
+                                                        ₹<%= cart.items.reduce((total, item) => {
+                                                            return total + ((item.productId.discountedPrice || item.price) * item.quantity);
+                                                        }, 0) %>
                                                     </span>
                                                 </p>
                                             </div>
                                             <div class="grand-total">
                                                 <p><span><strong>Total:</strong></span> 
-                                                    <span>₹<%= cart.items.reduce((total, item) => {
-                                                        return total + ((item.productId.discountedPrice || item.price) * item.quantity);
-                                                    }, 0) %>
+                                                    <span id="grand-total">
+                                                        ₹<%= cart.items.reduce((total, item) => {
+                                                            return total + ((item.productId.discountedPrice || item.price) * item.quantity);
+                                                        }, 0) %>
                                                     </span>
                                                 </p>
                                             </div>
@@ -193,6 +194,7 @@
                             </div>
                         </div>
                     </div>
+                    
                     <% } else { %>
                     <div class="row">
                         <div class="col-md-12 text-center">
@@ -206,118 +208,6 @@
 
 <script src="/js/confirmation.js"></script>
 <script src="/js/showNotification.js"></script>
-<script>
+<script src="/js/cart.js"></script>
 
-document.addEventListener('DOMContentLoaded', () => {
-    const removeButtons = document.querySelectorAll('.removeItem');
-
-    removeButtons.forEach((button) => {
-        button.addEventListener('click', async (e) => {
-            e.preventDefault();
-
-            const itemId = button.dataset.id;
-
-            
-            confirmationUtil.confirm({
-                message: 'Are you sure to remove this item?',
-                confirmText: 'Yes',
-                cancelText: 'No',
-                callback: async (confirmed) => {
-                    if (!confirmed) return; 
-
-                    try {
-                        const response = await fetch(`/cart/remove/${itemId}`, {
-                            method: 'DELETE',
-                            credentials: 'include',
-                        });
-
-                        const data = await response.json();
-
-                        if (data.success) {
-                            showNotification('success', data.message);
-                            window.location.reload(); 
-                        } else {
-                            showNotification('error', data.message);
-                        }
-                    } catch (error) {
-                        console.error(error);
-                        showNotification('error', 'Something went wrong');
-                    }
-                },
-            });
-        });
-    });
-
-    // increment and decrement quantity
-    const quantityControls = document.querySelectorAll('.quantity-control');
-
-    quantityControls.forEach((control) => {
-        const decrementBtn = control.querySelector('.decrement-btn');
-        const incrementBtn = control.querySelector('.increment-btn');
-        const quantityInput = control.querySelector('.quantity-input');
-        const itemId = decrementBtn.dataset.id;
-
-        decrementBtn.addEventListener('click', async () => {
-            const currentQuantity = parseInt(quantityInput.value);
-            if (currentQuantity > 1) {
-                try {
-                    const response = await fetch(`/cart/update-quantity/${itemId}`, {
-                        method: 'PATCH',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ 
-                            quantity: currentQuantity - 1 
-                        }),
-                    });
-
-                    const data = await response.json();
-                    if (data.success) {
-                        quantityInput.value = currentQuantity - 1;
-                        window.location.reload();   
-                    } else {
-                        showNotification('error', data.message);
-                    }
-                } catch (error) {
-                    console.error(error);
-                    showNotification('error', 'Something went wrong');
-                }
-            }
-        });
-
-        incrementBtn.addEventListener('click', async () => {
-            const currentQuantity = parseInt(quantityInput.value);
-            if (currentQuantity < 100) {
-                try {
-                    const response = await fetch(`/cart/update-quantity/${itemId}`, {
-                        method: 'PATCH',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ 
-                            quantity: currentQuantity + 1 
-                        }),
-                    });
-
-                    const data = await response.json();
-                    if (data.success) {
-                        quantityInput.value = currentQuantity + 1;
-                        window.location.reload(); 
-                    } else {
-                        showNotification('error', data.message);
-                    }
-                } catch (error) {
-                    console.error(error);
-                    showNotification('error', 'Something went wrong');
-                }
-            }
-        });
-    });
-});
-
-
-
-
-	
-</script>
 <%- include('../partials/footer.ejs') %>

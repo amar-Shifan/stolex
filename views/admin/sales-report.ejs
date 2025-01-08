@@ -37,7 +37,8 @@
             <div class="col-md-3 align-self-end">
               <button type="submit" class="btn btn-primary w-100">Generate Report</button>
             </div>
-          </form>
+
+        </form>
           
 
           
@@ -70,7 +71,7 @@
               <i class="bi bi-cash-stack fs-2 text-primary"></i>
               <span class="badge bg-primary">Total Amount</span>
             </div>
-            <h3 id="totalSales" class="fw-bold text-primary">$<%= orders.reduce((sum, order) => sum + order.totalAmount, 0).toFixed(2) %></h3>
+            <h3 id="totalSales" class="fw-bold text-primary">₹<%= totalAmount %></h3>
             <small class="text-muted">Gross Revenue</small>
           </div>
         </div>
@@ -80,7 +81,7 @@
               <i class="bi bi-receipt fs-2 text-success"></i>
               <span class="badge bg-success">Total Orders</span>
             </div>
-            <h3 id="totalOrders" class="fw-bold text-success"><%= orders.length %></h3>
+            <h3 id="totalOrders" class="fw-bold text-success"><%= orderLength.length %></h3>
             <small class="text-muted">Number of Orders</small>
           </div>
         </div>
@@ -90,7 +91,7 @@
               <i class="bi bi-tags fs-2 text-warning"></i>
               <span class="badge bg-warning text-dark">Total Discounts</span>
             </div>
-            <h3 id="pendingRefunds" class="fw-bold text-warning">$<%= orders.reduce((sum, order) => sum + order.items.reduce((itemSum, item) => itemSum + item.discountApplied, 0), 0).toFixed(2) %></h3>
+            <h3 id="pendingRefunds" class="fw-bold text-warning">₹<%= totalDiscount %></h3>
             <small class="text-muted">Discount amount</small>
           </div>
         </div>
@@ -107,7 +108,6 @@
         <table class="table table-bordered table-hover">
           <thead class="table-light">
             <tr>
-              <th>#</th>
               <th>Order ID</th>
               <th>User ID</th>
               <th>Order Status</th>
@@ -121,14 +121,13 @@
             <% if (orders.length > 0) { %>
               <% orders.forEach((order, index) => { %>
                 <tr>
-                  <td><%= index + 1 %></td>
-                  <td><%= order._id %></td>
+                  <td><%= order.orderId %></td>
                   <td><%= order.userId._id %></td>
                   <td><%= order.orderStatus %></td>
                   <td><%= order.paymentMethod %></td>
                   <td><%= order.paymentStatus %></td>
-                  <td>$<%= order.totalAmount.toFixed(2) %></td>
-                  <td>$<%= order.totalAmount.toFixed(2) %></td>
+                  <td>₹<%= order.totalAmount.toFixed(2) %></td>
+                  <td>₹<%= order.totalAmount.toFixed(2) %></td>
                 </tr>
               <% }) %>
             <% } else { %>
@@ -159,26 +158,7 @@
   
 </section>
 
-<script>
-    // Show/hide custom date inputs based on selection
-    document.getElementById('timeRange').addEventListener('change', function () {
-      const customDateFields = document.querySelectorAll('.custom-date');
-      if (this.value === 'custom') {
-        customDateFields.forEach(field => field.style.display = 'block');
-      } else {
-        customDateFields.forEach(field => field.style.display = 'none');
-      }
-    });
-  
-  
-    document.getElementById('downloadPdf').addEventListener('click', function () {
-      alert('PDF download functionality is under construction.');
-    });
-  
-    document.getElementById('downloadExcel').addEventListener('click', function () {
-      alert('Excel download functionality is under construction.');
-    });
-  </script>
+<script src="/admin/js/salesReport.js"></script>
 
 
 <%- include('../partials/admin_footer.ejs') %>

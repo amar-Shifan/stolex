@@ -13,7 +13,7 @@ const getProfile = async (req,res)=>{
         
         const userId = req.session.userId;
         const user = await User.findById(userId).populate('address')
-        const dob = user.dob.toISOString().split('T')[0]; 
+        const dob = user.dob ? user.dob.toISOString().split('T')[0] : null;
         res.render('user/user_profile',{user: { 
                 username: user.username,
                 dob: dob, 
@@ -22,7 +22,6 @@ const getProfile = async (req,res)=>{
         })
         
     } catch (error) {
-        console.log(error)
         res.render('error',{message:"something went wrong "})
     }
 }
@@ -30,8 +29,6 @@ const getProfile = async (req,res)=>{
 // ADD PROFILE
 const addProfile  = async (req,res)=>{
     try {
-
-        console.log('userProfile Controller');
         const id = req.session.userId
         const profilePath = req.file ? `/uploads/profiles/${req.file.filename}` : null;
 
@@ -51,7 +48,6 @@ const addProfile  = async (req,res)=>{
 //UPDATE USER
 const updateUser = async (req, res) => {
     try {
-        console.log("working the controller ")
         const { username, dob, phoneNumber } = req.body;
         const id = req.session.userId;
 
@@ -131,7 +127,6 @@ const addAddress = async (req,res)=>{
         res.status(200).json({success:true , message : 'Address added successfully'})
 
     } catch (error) {
-        console.log(error)
         res.status(500).json({success:false , message : 'Something went wrong!'})
     }
 }
@@ -244,7 +239,6 @@ const changePassword = async(req,res)=>{
         return res.status(200).json({ success: true, message: 'Password changed successfully' });
 
     } catch (error) {
-        console.log(error);
         return res.status(500).json({success:false , message:'Something went wrong!'})
     }
 }
@@ -256,7 +250,6 @@ const emailEnter = async(req,res)=>{
         res.render('user/email-enter');
         
     } catch (error) {
-        console.log(error);
         res.render('user/error',{message : 'Server Error Cant find the page'})
     }
 }
@@ -296,7 +289,6 @@ const verifyEmail = async (req, res) => {
         }
     
     } catch (error) {
-        console.log(error);
         return res.status(500).json({ success: false, message: 'Something went wrong!' });
     }
     
@@ -310,7 +302,6 @@ const getResetPassword = async(req,res)=>{
 
         res.render('user/resetPassword' ,{user})
     } catch (error) {
-        console.log(error)
         res.status(500).json({success:false , message:'Something went wrong!'})
     }
 }
@@ -365,8 +356,6 @@ const getWishlist = async (req, res) => {
 
 // Add to Wishlist
 const addToWishlist = async (req, res) => {
-    console.log('Request Body:', req.body); // Debugging
-
     const { productId } = req.body;
     const userId = req.session.userId;
 
@@ -386,7 +375,6 @@ const addToWishlist = async (req, res) => {
 
         res.status(200).json({ success: true, message: 'Item added to wishlist' });
     } catch (error) {
-        console.log('Error adding item to wishlist:', error);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -396,15 +384,10 @@ const addToWishlist = async (req, res) => {
 const remove = async (req, res) => {
     const productId = req.params.productId;
     const userId = req.session.userId;
-    console.log("working");
-    console.log(productId);
-    
     
     if (!userId) return res.status(400).json({ success: false, message: "User not logged in" });
 
     try {
-        console.log('working still');
-        
         const wishlist = await Wishlist.findOneAndUpdate(
             { userId },
             { $pull: { items: { _id: productId } } },
@@ -421,10 +404,9 @@ const remove = async (req, res) => {
         res.status(200).json({ success: true, message: 'Item removed from wishlist' });
         
     } catch (error) {
-        console.log('Error removing item from wishlist:', error);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
 
 module.exports = {getProfile , addProfile ,updateUser , addAddress ,changePassword ,getResetPassword ,verifyEmail 
-                 ,resetPassword ,editAddress ,deleteAddress ,getWishlist ,addToWishlist ,remove ,emailEnter};
+                 ,resetPassword ,editAddress ,deleteAddress ,getWishlist ,addToWishlist ,remove ,emailEnter };

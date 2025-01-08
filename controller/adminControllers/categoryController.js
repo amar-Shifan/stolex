@@ -8,7 +8,9 @@ const categoryController = {
             try {
                 const { name, description, parentCategory, status, type } = req.body;
                 
-                const existingCategory = await Category.findOne({name});
+                const existingCategory = await Category.findOne({
+                    name: { $regex: new RegExp(`^${name}$`, 'i') }
+                });                
                 if (existingCategory) {
                     return res.status(400).json({
                         success: false,
@@ -24,7 +26,6 @@ const categoryController = {
                 };
                 
                 if (type === 'subcategory') {
-                    console.log("entered sub");
                     
                     if (!parentCategory) {
                         return res.status(400).json({
@@ -32,10 +33,8 @@ const categoryController = {
                             message: 'Parent category is required for subcategories'
                         });
                     }
-                    console.log('working');
                     
                     const parentCategoryDoc = await Category.findOne({_id:parentCategory})
-                    console.log('verify parent',parentCategoryDoc);
                     
                     if (!parentCategoryDoc) {
                         return res.status(400).json({
@@ -124,7 +123,9 @@ const categoryController = {
                 }
         
                 if (name && name !== category.name) {
-                    const existingCategory = await Category.findOne({ name });
+                    const existingCategory = await Category.findOne({
+                        name: { $regex: new RegExp(`^${name}$`, 'i') }
+                    });
                     if (existingCategory) {
                         return res.status(400).json({
                             success: false,

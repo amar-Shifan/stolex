@@ -28,7 +28,6 @@ const toggleStatus = async (req, res) => {
     try {
 
         const { userId } = req.params;
-        console.log("req.params:",req.params);
         
         if (!userId) {
             return res.status(400).json({ message: 'User ID is required.' });
@@ -71,7 +70,6 @@ const addUser = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        console.log('blooooooock',block)
         const user = new User({
             username,
             email,

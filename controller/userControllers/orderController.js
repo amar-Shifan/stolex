@@ -84,6 +84,38 @@ const razorpayInstance = new Razorpay({
     key_secret: env.RAZORPAY_SECRET_ID,
 });
 
+// generate OrderId
+const generateOrderId = async () => {
+    let orderId;
+    let isUnique = false;
+
+    // Define a function to generate a random alphanumeric string
+    const generateRandomString = () => {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        for (let i = 0; i < 6; i++) {
+            const randomIndex = Math.floor(Math.random() * characters.length);
+            result += characters[randomIndex];
+        }
+        return result;
+    };
+
+    // Try generating a unique orderId
+    while (!isUnique) {
+        // Generate a 6-character alphanumeric orderId
+        orderId = generateRandomString();
+
+        // Check if this orderId already exists in the database
+        const existingOrder = await Order.findOne({ orderId });
+        if (!existingOrder) {
+            isUnique = true; 
+        }
+    }
+
+    return orderId;
+};
+
+
 // CheckOut Process Controller
 const checkoutProcess = async (req, res) => {
     try {
@@ -206,11 +238,22 @@ const checkoutProcess = async (req, res) => {
             }
         }
 
+         // Generate a unique orderId
+        const orderId = await generateOrderId();
+
         const order = new Order({
+            orderId,
             userId,
             items: updatedItems,
             totalAmount: totalAmount - couponDiscount,  
-            shippingAddress,
+            shippingAddress: {
+                fullName: address.fullName,
+                address: address.address,
+                city: address.city,
+                state: address.state,
+                pincode: address.pincode,
+                phoneNumber: address.phoneNumber
+            },
             paymentMethod,
             paymentStatus: paymentMethod === 'cod' ? 'pending' : 'success',
             orderStatus: 'pending',
@@ -349,7 +392,6 @@ const verifyPayment = async (req, res) => {
 
 // Payment Failure Controller
 const paymentFailure = async (req, res) => {
-    console.log('eorking')
     try {
         const { razorpay_order_id } = req.body;
 
@@ -381,9 +423,7 @@ const paymentFailure = async (req, res) => {
 // Repay Controller
 const repayOrder = async (req, res) => {
     try {
-        console.log('working..........');
         const { orderId } = req.body;
-        console.log(orderId)
         if (!orderId) {
             return res.status(400).json({ success: false, message: 'Order ID is required' });
         }
@@ -393,7 +433,6 @@ const repayOrder = async (req, res) => {
         if (!order) {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
-        console.log(order)
 
         if (order.paymentStatus === 'success') {
             return res.status(400).json({ success: false, message: 'Payment already completed for this order' });
@@ -404,7 +443,6 @@ const repayOrder = async (req, res) => {
             currency: 'INR',
             receipt: order._id.toString(),
         });
-        console.log('working')
 
         // Update order with new Razorpay details
         order.razorpayDetails.orderId = razorpayOrder.id;
@@ -428,8 +466,6 @@ const getSuccess = async(req,res)=>{
     try {
         const orderId = req.query.orderId;
         res.render('user/order-complete', { orderId });
-
-        
     } catch (error) {
         res.render('user/error',{message:'Something went wrong'})
     }
@@ -456,7 +492,7 @@ const invoiceDownload = async (req, res) => {
 const getOrders = async (req, res) => {
     try {
         const userId = req.session.userId; 
-
+        
         if (!userId) {
             return res.redirect('/login'); 
         }
@@ -466,14 +502,12 @@ const getOrders = async (req, res) => {
             .populate('shippingAddress') 
             .sort({ createdAt: -1 }); 
 
-        res.render('user/orders-page', { orders }); 
+        res.render('user/orders', { orders }); 
 
     } catch (error) {
-        console.log(error);
         res.render('user/error', { message: "Page Can't render" }); 
     }
 };
-
 
 // Render Order Details page Controller
 const details = async(req,res)=>{
@@ -496,7 +530,6 @@ const details = async(req,res)=>{
         res.render('user/order-view-details', { order, flowStatus });
 
     } catch (error) {
-        console.log(error);
         res.render('user/error',{message:'Something went wrong!'})
     }
 }    
@@ -506,8 +539,7 @@ const cancelOrder = async (req, res) => {
     try {
         const { orderId, itemId, reason } = req.body;
         const userId = req.session.userId;
-        console.log('userid' , userId);
-        console.log('orderId ',orderId);
+        console.log('wroking')
 
         if (!userId) {
             return res.status(400).json({ success: false, message: 'User not logged in' });
@@ -517,7 +549,8 @@ const cancelOrder = async (req, res) => {
         if (!order) {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
-
+        console.log(order,'wokig');
+        
         if (order.userId.toString() !== userId) {
             return res.status(403).json({ success: false, message: 'Unauthorized access to this order' });
         }
@@ -576,17 +609,12 @@ const cancelOrder = async (req, res) => {
     }
 };
 
-
-
 //Return Order Controller 
 const returnOrder = async (req, res) => {
     try {
 
       const { orderId, itemId, reason } = req.body;
       const userId = req.session.userId;
-        console.log('userid' , userId);
-        console.log('orderId ',orderId);
-
   
       if (!userId) {
         return res.status(400).json({ success: false, message: 'User not logged in' });
@@ -648,7 +676,7 @@ const returnOrder = async (req, res) => {
       console.error(error);
       res.status(500).json({ success: false, message: 'Something went wrong' });
     }
-  };
+};
   
 // Render Wallet Page Controller
 const getWallet = async (req, res) => {

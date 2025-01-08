@@ -19,22 +19,20 @@ router.get('/user-login',middleware.preventAccessIfAuthenticated, controller.get
 router.get('/register', middleware.preventAccessIfAuthenticated, controller.getSignup);
 router.get('/verify',middleware.preventAccessIfAuthenticated ,controller.getOtp)
 router.get('/auth/google',passport.authenticate('google',{scope:['profile','email']}))
-router.get('/google/callback',passport.authenticate('google',{failureRedirect:'/register'}),(req,res)=>{
-    req.session.userId = req.user._id
-    res.redirect('/')
-})
+router.get('/google/callback',passport.authenticate('google',{failureRedirect:'/register'}),controller.googleCallback)
+router.get('/isAuth' , middleware.isAuthenticated);
 
 router.post('/otp-verification', controller.otpVerification);
 router.post('/user-login', controller.userLogin);
 router.post('/register', controller.insertUser);
 router.post('/resend-otp', controller.resendOtp);
 
-//User routes
-router.get('/user_profile', middleware.isAuthen , userController.getProfile);
+// Shop Routers
 router.get('/productDetails/:id', middleware.isAuthen , productController.getProductDetail);
-
 router.get('/shop', productController.getShop)
 
+//User routes
+router.get('/user_profile', middleware.isAuthen , userController.getProfile);
 router.patch('/updateDetails' , userController.updateUser);
 router.post('/addAddress' , userController.addAddress);
 router.patch('/address/edit',userController.editAddress)
@@ -44,41 +42,39 @@ router.post('/verifyEmail' , userController.verifyEmail)
 router.get('/resetPassword' , userController.getResetPassword);
 router.post('/resetPassword' , userController.resetPassword)
 router.get('/emailEnter' , userController.emailEnter)
+router.post('/addProfile', upload.single('profile'), userController.addProfile);
 
+// Wishlist Routers
 router.get('/wishlist' , userController.getWishlist)
 router.post('/wishlist/add' ,userController.addToWishlist );
 router.delete('/wishlist/remove/:productId' ,userController.remove );
 
-
+// Cart Routers
 router.get('/cart' ,middleware.isAuthen, cartController.getCart )
 router.post('/cart/add',middleware.isAuthen, cartController.addToCart);
 router.delete('/cart/remove/:id' ,middleware.isAuthen, cartController.remove);
 router.patch('/cart/update-quantity/:id' ,middleware.isAuthen, cartController.updateQuantity)
 
-
+// CheckOut Routers
 router.get('/checkout',middleware.isAuthen, orderController.getCheckout )
 router.post('/checkout/process' ,middleware.isAuthen, orderController.checkoutProcess);
 router.post('/payment/verify' ,middleware.isAuthen, orderController.verifyPayment);
-
-router.get('/cart/success' , middleware.isAuthen , orderController.getSuccess);
-router.get('/order/:id/invoice',orderController.invoiceDownload);
-router.get('/orders' , middleware.isAuthen ,orderController.getOrders)
-router.get('/order/:orderId' , middleware.isAuthen , orderController.details);
-router.get('/order' , (req,res)=>res.render('user/order-view-details'))
-router.patch('/orders/cancel' ,middleware.isAuthen, orderController.cancelOrder);
-router.patch('/orders/return' , middleware.isAuthen, orderController.returnOrder);
-
 router.post('/apply-coupon', couponController.applyCoupon);
 router.get('/available-coupons' , couponController.availableCoupon);
 router.post('/remove-coupon', couponController.removeCoupon);
 
-router.get('/wallet' , middleware.isAuthen ,orderController.getWallet);
-
-router.get('/isAuth' , middleware.isAuthenticated);
-router.post('/addProfile', upload.single('profile'), userController.addProfile);
-
+// Order Routers
+router.get('/order/:id/invoice',orderController.invoiceDownload);
+router.get('/orders' , middleware.isAuthen ,orderController.getOrders)
+router.get('/order/success' , middleware.isAuthen , orderController.getSuccess);
+router.get('/order/:orderId' , middleware.isAuthen , orderController.details);
+router.patch('/orders/cancel' ,middleware.isAuthen, orderController.cancelOrder);
+router.patch('/orders/return' , middleware.isAuthen, orderController.returnOrder);
 router.post('/payment/failure', orderController.paymentFailure);
 router.post('/repay/order', orderController.repayOrder);
+
+// Wallet Routers
+router.get('/wallet' , middleware.isAuthen ,orderController.getWallet);
 
 //handling multer error
 router.use((err, req, res ,next)=>{
@@ -89,8 +85,5 @@ router.use((err, req, res ,next)=>{
     }
     next();
 })
-
-
-
 
 module.exports = router;

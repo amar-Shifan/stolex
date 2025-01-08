@@ -10,7 +10,6 @@ const getCart = async(req,res)=>{
         const cart = await Cart.findOne({userId}).populate('items.productId');
         res.render('user/cart' ,{cart});
     } catch (error) {
-        console.log(error);
         res.render('user/error',{message:"Something went wrong cant load"})
     }   
 }
@@ -118,7 +117,7 @@ const remove = async (req, res) => {
   const updateQuantity = async (req, res) => {
     try {
         const { id } = req.params; 
-        const { quantity } = req.body;
+        const { quantity } = req.body; 
         const userId = req.session.userId;
 
         if (!userId) {
@@ -159,19 +158,26 @@ const remove = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Requested quantity exceeds available stock' });
         }
 
+        // Update item quantity and total
         item.quantity = quantity;
+        item.total = item.quantity * (product.discountedPrice || item.price);
 
-        const totalPrice = item.quantity * (product.discountedPrice || item.price);
-        item.total = totalPrice;
-
+        // Save cart
         await cart.save();
 
-        res.status(200).json({ success: true, message: 'Item quantity updated successfully' });
+        res.status(200).json({
+            success: true,
+            message: 'Item quantity updated successfully',
+            updatedItem: { id: item._id, quantity: item.quantity, total: item.total },
+            subtotal: cart.subtotal,
+        });
     } catch (error) {
         console.error('Update Quantity Error:', error);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
+
+
 
   
 module.exports = {getCart , addToCart , remove ,updateQuantity}

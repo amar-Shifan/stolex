@@ -15,7 +15,6 @@ const logout = async (req,res)=>{
             res.redirect('/')
         })
     } catch (error) {
-        console.log(error,'error in logout')
     }
 }
 
@@ -50,7 +49,7 @@ const userLogin = async (req, res) => {
         req.session.userId = user._id;
 
         const redirectUrl = req.query.redirect || '/';
-        console.log(req.session)
+
         // Save the session
         req.session.save((err) => {
             if (err) {
@@ -59,7 +58,6 @@ const userLogin = async (req, res) => {
             }
             res.status(200).json({ success: true, message: 'Logged in successfully' ,redirectUrl});
         });
-        console.log(req.session)
 
     } catch (error) {
         console.error('Login Error:', error);
@@ -76,7 +74,6 @@ const getSignup = async(req,res)=>{
     try {
         res.render('user/signup');
     } catch (error) {
-        console.log('error',error);
         res.render('user/error' , {message:'Something went wrong'})
     }
 }
@@ -132,7 +129,6 @@ const getHomePage = async (req, res) => {
             totalPages, 
         });
     } catch (error) {
-        console.log("Error in getting home: ", error.message);
         res.status(500).render('error', { message: 'Internal server error' });
     }
 };
@@ -182,13 +178,11 @@ const insertUser = async(req,res)=>{
         await otpEntry.save();
 
         req.session.tempUserData = { username, email, password, dob, phoneNumber };
-        console.log("req.session.temp",req.session.tempUserData);
 
         return res.status(200).json({success:true,message:"OTP Sent successfully"});
 
     }
         catch(err){
-        console.log(err.message);
         return res.status(500).json({ success:false , message : 'Server Error'});
         }
 }
@@ -214,16 +208,13 @@ const otpVerification = async (req, res) => {
         const { otp1, otp2, otp3, otp4 } = req.body;
 
         const otp = `${otp1}${otp2}${otp3}${otp4}`;
-        console.log('Combined OTP:', otp);
 
         const validOtp = await Otp.findOne({ otp, email });
         if (!validOtp) {
-            console.log('OTP is not valid!');
             return res.status(401).json({ success: false, message: 'Please enter a valid OTP' });
         }
 
         if (validOtp.expiresAt < Date.now()) {
-            console.log('OTP has expired!');
             return res.status(401).json({ success: false, message: 'OTP has expired. Please request a new one.' });
         }
 
@@ -281,9 +272,6 @@ const resendOtp = async (req, res) => {
             { upsert: true, new: true }
         );
 
-        console.log(`OTP sent to ${email}: ${otp}`);
-        console.log('New OTP:', updatedOtp);
-
         const otpMail = await sendOtpToMail(
             email,
             "Your OTP Code", 
@@ -313,6 +301,15 @@ const resendOtp = async (req, res) => {
     }
 };
 
+const googleCallback = (req,res)=>{
+    try {
+        req.session.userId = req.user._id
+        res.redirect('/') 
+    } catch (error) {
+        res.render('user/error')
+    }
+}
+
 module.exports = {
     logout,
     insertUser,
@@ -322,5 +319,6 @@ module.exports = {
     getHomePage,
     getOtp,
     getSignup,
-    getLogin
+    getLogin,
+    googleCallback
 }

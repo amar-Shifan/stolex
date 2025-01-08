@@ -21,6 +21,66 @@
         </div>
     </div>
 
+    <!-- Cancel Request Section -->
+    <% if (order.orderStatus === 'cancel-request' && order.cancelReason) { %>
+        <!-- Order-level cancel request -->
+        <div class="bg-white rounded-3 shadow-sm p-4 mb-4">
+            <h4 class="mb-4">Cancel Request</h4>
+            <div class="card bg-light border-0">
+                <div class="card-body">
+                    <p><strong>Reason for Cancellation:</strong></p>
+                    <p class="text-muted"><%= order.cancelReason %></p>
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button 
+                            class="btn btn-success approve-item-cancel" 
+                            data-order-id="<%= order._id %>">
+                            Approve
+                        </button>
+                        <button 
+                            class="btn btn-danger reject-item-cancel" 
+                            data-order-id="<%= order._id %>">
+                            Reject
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <% } %>
+
+    <!-- Cancel Request Section -->
+    <% if(order.orderStatus !== 'cancel-request') {%>
+        <% order.items.forEach((item, index) => { %>
+            <% if (item.status === 'cancel-request' && item.cancelReason) { %>
+                <div class="bg-white rounded-3 shadow-sm p-4 mb-4">
+                    <h4 class="mb-4">Cancel Request for Item <%= index + 1 %></h4>
+                    <div class="card bg-light border-0">
+                        <div class="card-body">
+                            <p><strong>Product ID:</strong> <%= item.productId._id %></p>
+                            <p><strong>Product Name:</strong> <%= item.productId.name %></p><br>
+                            <p><strong>Reason for Cancellation:</strong></p>
+                            <p class="text-muted"><%= item.cancelReason %></p>
+                            <div class="d-flex justify-content-end gap-2 mt-4">
+                                <button 
+                                    class="btn btn-success approve-item-cancel" 
+                                    data-order-id="<%= order._id %>" 
+                                    data-item-id="<%= item._id %>">
+                                    Approve
+                                </button>
+                                <button 
+                                    class="btn btn-danger reject-item-cancel" 
+                                    data-order-id="<%= order._id %>" 
+                                    data-item-id="<%= item._id %>">
+                                    Reject
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <% } %>
+        <% }); %>
+    <% } %>
+
+    
     <!-- Return Request Section -->
     <% if (order.orderStatus === 'return-request' && order.returnReason) { %>
         <!-- Order-level return request -->
@@ -45,65 +105,39 @@
         </div>
     <% } %>
 
-    <!-- Cancel Request Section -->
-    <% if (order.orderStatus === 'cancel-request' && order.cancelReason) { %>
-        <!-- Order-level cancel request -->
-        <div class="bg-white rounded-3 shadow-sm p-4 mb-4">
-            <h4 class="mb-4">Cancel Request</h4>
-            <div class="card bg-light border-0">
-                <div class="card-body">
-                    <p><strong>Reason for Cancellation:</strong></p>
-                    <p class="text-muted"><%= order.cancelReason %></p>
-                    <div class="d-flex justify-content-end gap-2 mt-4">
-                        <button class="btn btn-success approve-order-cancel" 
-                            data-order-id="<%= order._id %>">
-                            Approve
-                        </button>
-                        <button class="btn btn-danger reject-order-cancel" 
-                            data-order-id="<%= order._id %>">
-                            Reject
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    <% } %>
-
-    
     <!-- Item-level return requests -->
-    <% order.items.forEach((item, index) => { %>
-        <% if (item.status === 'return-request' && item.returnReason) { %>
-            <div class="bg-white rounded-3 shadow-sm p-4 mb-4">
-                <h4 class="mb-4">Return Request for Item <%= index + 1 %></h4>
-                <div class="card bg-light border-0">
-                    <div class="card-body">
-                        <p><strong>Product ID:</strong> <%= item.productId._id %></p>
-                        <p><strong>Product Name:</strong> <%= item.productId.name %></p><br>
-                        <p><strong>Reason for Return:</strong></p>
-                        <p class="text-muted"><%= item.returnReason %></p>
-                        <div class="d-flex justify-content-end gap-2 mt-4">
-                            <button 
-                                class="btn btn-success approve-item-return" 
-                                data-order-id="<%= order._id %>" 
-                                data-item-id="<%= item._id %>">
-                                Approve
-                            </button>
-                            <button 
-                                class="btn btn-danger reject-item-return" 
-                                data-order-id="<%= order._id %>" 
-                                data-item-id="<%= item._id %>">
-                                Reject
-                            </button>
-
+    <% if(order.orderStatus !== 'return-request') {%>
+        <% order.items.forEach((item, index) => { %>
+            <% if (item.status === 'return-request' && item.returnReason) { %>
+                <div class="bg-white rounded-3 shadow-sm p-4 mb-4">
+                    <h4 class="mb-4">Return Request for Item <%= index + 1 %></h4>
+                    <div class="card bg-light border-0">
+                        <div class="card-body">
+                            <p><strong>Product ID:</strong> <%= item.productId._id %></p>
+                            <p><strong>Product Name:</strong> <%= item.productId.name %></p><br>
+                            <p><strong>Reason for Return:</strong></p>
+                            <p class="text-muted"><%= item.returnReason %></p>
+                            <div class="d-flex justify-content-end gap-2 mt-4">
+                                <button 
+                                    class="btn btn-success approve-item-return" 
+                                    data-order-id="<%= order._id %>" 
+                                    data-item-id="<%= item._id %>">
+                                    Approve
+                                </button>
+                                <button 
+                                    class="btn btn-danger reject-item-return" 
+                                    data-order-id="<%= order._id %>" 
+                                    data-item-id="<%= item._id %>">
+                                    Reject
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        <% } %>
-    <% }); %>
+            <% } %>
+        <% }); %>
+    <% } %>
     
-    
-
     <!-- Order Items -->
     <div class="bg-white rounded-3 shadow-sm p-4 mb-4">
         <h4 class="mb-4">Order Items</h4>
@@ -207,169 +241,39 @@
 </div>
 
 <script>
-    // Approve cancel request
-    const handleApproveCancel = (orderId, itemId = null) => {
-        const url = itemId 
-            ? `/admin/orders/${orderId}/items/${itemId}/approve-cancel` 
-            : `/admin/orders/${orderId}/approve-cancel`;
-
-        fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                alert('Cancel request approved successfully.');
-                location.reload();
-            } else {
-                alert('Failed to approve the cancel request.');
-            }
-        })
-        .catch(err => alert('An error occurred. Please try again.'));
-    };
-
-    // Reject cancel request
-    const handleRejectCancel = (orderId, itemId = null) => {
-        const url = itemId 
-            ? `/admin/orders/${orderId}/items/${itemId}/reject-cancel` 
-            : `/admin/orders/${orderId}/reject-cancel`;
-
-        fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                alert('Cancel request rejected successfully.');
-                location.reload();
-            } else {
-                alert('Failed to reject the cancel request.');
-            }
-        })
-        .catch(err => alert('An error occurred. Please try again.'));
-    };
-
-    // Approve cancel button click
-    document.querySelectorAll('.approve-order-cancel').forEach(button => {
-        button.addEventListener('click', () => {
-            const orderId = button.dataset.orderId;
-            const itemId = button.dataset.itemId; // Optional for item-specific
-            handleApproveCancel(orderId, itemId);
-        });
-    });
-
-    // Reject cancel button click
-    document.querySelectorAll('.reject-order-cancel').forEach(button => {
-        button.addEventListener('click', () => {
-            const orderId = button.dataset.orderId;
-            const itemId = button.dataset.itemId; // Optional for item-specific
-            handleRejectCancel(orderId, itemId);
-        });
-    });
-</script>
-
-
-<script>
-    // Approve return
-    const handleApprove = (orderId, itemId = null) => {
-        const url = itemId 
-            ? `/admin/orders/${orderId}/items/${itemId}/approve-return` 
-            : `/admin/orders/${orderId}/approve-return`;
-
-        fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                alert('Return approved successfully.');
-                location.reload();
-            } else {
-                alert('Failed to approve the return.');
-            }
-        })
-        .catch(err => alert('An error occurred. Please try again.'));
-    };
-
-    // Reject return
-    const handleReject = (orderId, itemId = null) => {
-        const url = itemId 
-            ? `/admin/orders/${orderId}/items/${itemId}/reject-return` 
-            : `/admin/orders/${orderId}/reject-return`;
-
-        fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                alert('Return rejected successfully.');
-                location.reload();
-            } else {
-                alert('Failed to reject the return.');
-            }
-        })
-        .catch(err => alert('An error occurred. Please try again.'));
-    };
-
-    // Approve button click
-    document.querySelectorAll('.approve-item-return').forEach(button => {
-        button.addEventListener('click', () => {
-            const orderId = button.dataset.orderId;
-            const itemId = button.dataset.itemId; // Optional for item-specific
-            handleApprove(orderId, itemId);
-        });
-    });
-
-    // Reject button click
-    document.querySelectorAll('.reject-item-return').forEach(button => {
-        button.addEventListener('click', () => {
-            const orderId = button.dataset.orderId;
-            const itemId = button.dataset.itemId; // Optional for item-specific
-            handleReject(orderId, itemId);
-        });
-    });
-</script>
-
-
-
-<script>
     document.getElementById('statusForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
+    e.preventDefault();
 
-        const form = e.target;
-        const formData = new FormData(form);
+    const form = e.target;
+    const formData = new FormData(form);
 
-        try {
-            const formObject = Object.fromEntries(formData.entries());
+    try {
+        const formObject = Object.fromEntries(formData.entries());
 
-            const res = await fetch(`/admin/orders/update-status/<%= order._id %>`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formObject),
-            });
+        const res = await fetch(`/admin/orders/update-status/<%= order._id %>`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formObject),
+        });
 
-            if (!res.ok) throw new Error('Network response was not ok');
+        if (!res.ok) throw new Error('Network response was not ok');
 
-            const data = await res.json();
+        const data = await res.json();
 
-            if (data.success) {
-                showNotification('success', data.message);
+        if (data.success) {
+            showNotification('success', data.message);
 
-                setTimeout(() => {
-                    window.location.reload(); 
-                }, 1500);
-            } else {
-                showNotification('error', data.message || 'Something went wrong!');
-            }
-        } catch (error) {
-            showNotification('error', 'An error occurred while updating the status');
+            setTimeout(() => {
+                window.location.reload(); 
+            }, 1500);
+        } else {
+            showNotification('error', data.message || 'Something went wrong!');
         }
-    });
-
+    } catch (error) {
+        showNotification('error', 'An error occurred while updating the status');
+    }
+});
 </script>
+<script src="/admin/js/orderDetail.js"></script>
+
 <%- include('../partials/admin_footer.ejs') %>

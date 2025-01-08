@@ -25,7 +25,6 @@ module.exports = async (to, sub, msg)=>{
         })
         return true
     }catch(error){
-        console.log("Failed to send email :", error);
         return false;
     }
 }

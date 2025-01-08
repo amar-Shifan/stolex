@@ -14,7 +14,6 @@ const applyCoupon = async (req, res) => {
       const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), isActive: true });
   
       if (!coupon) {
-        console.log('Coupon not found or inactive');
         return res.status(400).json({ success: false, message: 'Invalid coupon code!' });
       }
 
@@ -72,7 +71,6 @@ const applyCoupon = async (req, res) => {
 
 const availableCoupon = async(req,res)=>{
   try {
-    console.log('working');
     const userId = req.session.userId; // Assume user is authenticated
     const user = await User.findById(userId);
 

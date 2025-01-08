@@ -26,7 +26,6 @@ const getOrders = async (req, res) => {
             limit: Number(limit),
         });
     } catch (error) {
-        console.log(error);
         res.status(500).json({ success: false, message: 'Something went wrong!' });
     }
 };
@@ -47,7 +46,6 @@ const getOrderDetails = async(req,res)=>{
         res.render('admin/order-view' ,{order});
 
     } catch (error) {
-        console.log(error);
         res.status(500).json({success:true , message : 'Something went wrong!'})
     }
 }
@@ -133,7 +131,7 @@ const approveReturn = async (req, res) => {
                 }
             });
 
-            description = `Refund for Order #${orderId}`;
+            description = `Refund for Order #${order.orderId}`;
             order.orderStatus = 'returned';
         }
 
@@ -205,52 +203,105 @@ const rejectReturn = async (req, res) => {
     }
 };
 
+// Cancel Controllers
+// Approve Cancel Controller
 const approveCancel = async (req, res) => {
     try {
         const { orderId, itemId } = req.params;
 
+        // Find the order by ID
         const order = await Order.findById(orderId);
         if (!order) {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
+        let refundAmount = 0;
+        let description = '';
+
         if (itemId) {
             // Approve cancel request for a specific item
-            const item = order.items.find(item => item._id.toString() === itemId);
-            if (!item) {
+            const itemIndex = order.items.findIndex(item => item._id.toString() === itemId);
+            if (itemIndex === -1) {
                 return res.status(404).json({ success: false, message: 'Item not found' });
             }
 
+            const item = order.items[itemIndex];
             if (item.status !== 'cancel-request') {
                 return res.status(400).json({ success: false, message: 'No cancel request for this item' });
             }
 
-            item.status = 'Cancelled'; // Update item status
+            refundAmount = item.refundAmount; // Get the refund amount stored in the item
+            description = `Refund for item in Order #${orderId}`;
+
+            order.items[itemIndex].status = 'Cancelled'; // Update item status
+            order.items[itemIndex].refundAmount = refundAmount; // Store the refund amount
+
+            const allCancelled = order.items.every(item => item.status === 'Cancelled');
+            if (allCancelled) {
+                order.orderStatus = 'cancelled';
+            }
+
         } else {
             // Approve cancel request for the entire order
             if (order.orderStatus !== 'cancel-request') {
                 return res.status(400).json({ success: false, message: 'No cancel request for this order' });
             }
 
-            order.orderStatus = 'cancelled';
             order.items.forEach(item => {
                 if (item.status === 'cancel-request') {
+                    refundAmount += item.refundAmount; // Add refund amount for each canceled item
                     item.status = 'Cancelled';
+                    item.refundAmount = item.refundAmount; // Store the refund amount
                 }
             });
+
+            description = `Refund for Order #${order.orderId}`;
+            order.orderStatus = 'cancelled';
         }
 
+        // Save the updated order
         await order.save();
-        return res.status(200).json({ success: true, message: 'Cancel request approved successfully', order });
+
+        // Only process the refund if the payment was successful
+        if (order.paymentStatus === 'success' && refundAmount > 0) {
+            let wallet = await Wallet.findOne({ userId: order.userId });
+            if (!wallet) {
+                wallet = new Wallet({
+                    userId: order.userId,
+                    amount: 0,
+                    transactionHistory: [],
+                });
+            }
+
+            wallet.amount += refundAmount; // Add refund to wallet
+            wallet.transactionHistory.push({
+                type: 'credit',
+                amount: refundAmount,
+                description,
+                date: new Date(),
+            });
+
+            // Save the updated wallet
+            await wallet.save();
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: `Cancel request approved successfully. Refund of ${refundAmount} processed.`,
+            refundAmount,
+            order,
+        });
+
     } catch (error) {
-        console.error(error);
+        console.error('Error approving cancel request:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 
+// Reject Cancel Cotroller
 const rejectCancel = async (req, res) => {
     try {
-        const { orderId, itemId } = req.params;
+        const { orderId , itemId } = req.params;
 
         const order = await Order.findById(orderId);
         if (!order) {
@@ -268,17 +319,17 @@ const rejectCancel = async (req, res) => {
                 return res.status(400).json({ success: false, message: 'No cancel request for this item' });
             }
 
-            item.status = 'Processing'; // Reset status or leave it unchanged
+            item.status = 'Pending'; // Reset status or leave it unchanged
         } else {
             // Reject cancel request for the entire order
             if (order.orderStatus !== 'cancel-request') {
                 return res.status(400).json({ success: false, message: 'No cancel request for this order' });
             }
 
-            order.orderStatus = 'Processing'; // Reset status or leave it unchanged
+            order.orderStatus = 'pending'; // Reset status or leave it unchanged
             order.items.forEach(item => {
                 if (item.status === 'cancel-request') {
-                    item.status = 'Processing';
+                    item.status = 'Pending';
                 }
             });
         }
@@ -296,7 +347,7 @@ const getSalesReport = async (req, res) => {
     try {
       const { timeRange, startDate, endDate, page = 1, limit = 10 } = req.query;
   
-      let filter = {};
+      let filter = {paymentStatus: 'success'};
       const now = new Date();
   
       // Filter logic
@@ -320,7 +371,33 @@ const getSalesReport = async (req, res) => {
   
       const pageInt = parseInt(page, 10);
       const limitInt = parseInt(limit, 10);
-  
+      
+      const orderLength = await Order.find(filter);
+
+       // Fetch total amount and total refund amount using aggregation
+    const totalAmounts = await Order.aggregate([
+        { $match: filter },
+        {
+            $project: {
+                items: 1, // Include only the items array
+            }
+        },
+        {
+            $unwind: '$items'  // Flatten the items array
+        },
+        {
+            $group: {
+                _id: null,
+                totalAmount: { $sum: "$items.total" },
+                totalRefundAmount: { $sum: "$items.refundAmount" },
+                totalDiscount: { $sum: "$items.discountApplied" }  // Sum of all discountApplied values
+            }
+        }
+    ]);
+
+    const totalAmount = totalAmounts.length > 0 ? totalAmounts[0].totalAmount : 0;
+    const totalDiscount = totalAmounts.length > 0 ? totalAmounts[0].totalDiscount : 0;
+
       // Fetch paginated results
       const orders = await Order.find(filter)
         .populate('userId')
@@ -340,6 +417,9 @@ const getSalesReport = async (req, res) => {
         currentPage: pageInt,
         totalPages,
         limit: limitInt,
+        orderLength,
+        totalAmount,  
+        totalDiscount
       });
     } catch (error) {
       console.error('Error fetching sales report:', error);
@@ -353,7 +433,7 @@ const generateSalesReportPDF = async (req, res) => {
     try {
         const { timeRange, startDate, endDate } = req.query;
 
-        let query = {};
+        let query = { paymentStatus: 'success' };
         if (timeRange === 'custom' && startDate && endDate) {
             query = {
                 createdAt: {
@@ -394,7 +474,8 @@ const generateSalesReportPDF = async (req, res) => {
         doc.font('Helvetica').fontSize(12).text(`Total Discount Given: $${totalDiscount.toFixed(2)}`, { align: 'left' });
         doc.moveDown(2);
 
-        const tableTop = 220; 
+        // Table Header and Content
+        const tableTop = doc.y; // Updated to follow after summary
         const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
         const columnCount = 8;
         const columnWidth = pageWidth / columnCount;
@@ -417,12 +498,11 @@ const generateSalesReportPDF = async (req, res) => {
             let maxHeight = defaultRowHeight;
             rowData.forEach((text) => {
                 const textHeight = doc.heightOfString(text, { width: columnWidth - 10 });
-                if (textHeight > maxHeight) maxHeight = textHeight + 10; 
+                if (textHeight > maxHeight) maxHeight = textHeight + 10;
             });
             return maxHeight;
         };
 
-        // Draw Cell 
         const drawCell = (x, y, width, height, text, options = {}) => {
             doc.rect(x, y, width, height).stroke();
             doc.font(options.bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(10);
@@ -444,14 +524,13 @@ const generateSalesReportPDF = async (req, res) => {
         orders.forEach((order, index) => {
             x = doc.page.margins.left;
 
-            // Calculate total discount for each order
             const totalDiscountApplied = order.items.reduce((sum, item) => {
                 return sum + (item.discountApplied || 0);
             }, 0);
 
             const rowData = [
                 index + 1,
-                order._id,
+                order.orderId,
                 order.userId?.username || 'N/A',
                 order.orderStatus || 'N/A',
                 order.paymentMethod || 'N/A',
@@ -469,12 +548,10 @@ const generateSalesReportPDF = async (req, res) => {
 
             y += rowHeight;
 
-            // Page Break
             if (y + rowHeight > doc.page.height - doc.page.margins.bottom) {
                 doc.addPage();
                 y = tableTop;
 
-                // Redraw headers
                 x = doc.page.margins.left;
                 headers.forEach((header) => {
                     drawCell(x, y, columnWidth, defaultRowHeight, header, { bold: true });
@@ -484,13 +561,6 @@ const generateSalesReportPDF = async (req, res) => {
             }
         });
 
-        // Footer Section with Total Information
-        doc.moveDown(2);
-        doc.font('Helvetica-Bold').fontSize(14).text('Report Summary:', { underline: true });
-        doc.font('Helvetica').fontSize(12).text(`Total Orders: ${totalOrders}`, { align: 'left' });
-        doc.font('Helvetica').fontSize(12).text(`Total Revenue: $${totalRevenue.toFixed(2)}`, { align: 'left' });
-        doc.font('Helvetica').fontSize(12).text(`Total Discount Given: $${totalDiscount.toFixed(2)}`, { align: 'left' });
-
         doc.end();
     } catch (error) {
         console.error(error);
@@ -499,12 +569,13 @@ const generateSalesReportPDF = async (req, res) => {
 };
 
 
+
 // Generate SalesReport Excel Controller 
 const generateSalesReportExcel = async (req, res) => {
     try {
         const { timeRange, startDate, endDate } = req.query;
 
-        let query = {};
+        let query = { paymentStatus: 'success' };
         if (timeRange === 'custom' && startDate && endDate) {
             query = {
                 createdAt: {
@@ -522,32 +593,43 @@ const generateSalesReportExcel = async (req, res) => {
         const worksheet = workbook.addWorksheet('Sales Report');
 
         // Calculate Summary Data
-        let totalOrders = orders.length;
-        let totalRevenue = 0;
-        let totalDiscount = 0;
+        const totalOrders = orders.length;
+        const totalRevenue = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+        const totalDiscount = orders.reduce((sum, order) => {
+            return sum + order.items.reduce((itemSum, item) => itemSum + (item.discountApplied || 0), 0);
+        }, 0);
 
-        orders.forEach((order) => {
-            totalRevenue += order.totalAmount || 0;
-            const totalDiscountApplied = order.items.reduce((sum, item) => {
-                return sum + (item.discountApplied || 0);
-            }, 0);
-            totalDiscount += totalDiscountApplied;
-        });
+        // Add Title
+        worksheet.mergeCells('A1', 'H1');
+        worksheet.getCell('A1').value = 'Sales Report';
+        worksheet.getCell('A1').font = { bold: true, size: 16 };
+        worksheet.getCell('A1').alignment = { horizontal: 'center' };
 
-        // Add Summary First (Above the Table Header)
-        worksheet.addRow([]);
-        worksheet.addRow(['Total Orders', totalOrders, 'Total Revenue', `$${totalRevenue.toFixed(2)}`, 'Total Discount Given', `$${totalDiscount.toFixed(2)}`]);
-        worksheet.getRow(2).font = { bold: true };
-        worksheet.getRow(2).alignment = { horizontal: 'center' };
+        // Add Summary Section
+        worksheet.addRow([]); // Blank row for spacing
+        const summaryRow = worksheet.addRow([
+            'Summary:', 
+            '', '', 
+            'Total Orders:', totalOrders, 
+            '', 
+            'Total Revenue:', `₹${totalRevenue.toFixed(2)}`
+        ]);
+        summaryRow.font = { bold: true };
+        summaryRow.alignment = { vertical: 'middle' };
+        
+        const discountRow = worksheet.addRow([
+            '', '', '', 
+            'Total Discount Given:', `₹${totalDiscount.toFixed(2)}`
+        ]);
+        discountRow.font = { bold: true };
 
-        // Add a blank row after the summary
-        worksheet.addRow([]);
+        worksheet.addRow([]); // Blank row for spacing
 
-        // Add Headers for the Detailed Report
+        // Add Headers
         worksheet.columns = [
             { header: '#', key: 'index', width: 5 },
-            { header: 'Order ID', key: 'orderId', width: 30 },
-            { header: 'User', key: 'user', width: 15 },
+            { header: 'Order ID', key: 'orderId', width: 25 },
+            { header: 'User', key: 'user', width: 20 },
             { header: 'Order Status', key: 'orderStatus', width: 15 },
             { header: 'Payment Method', key: 'paymentMethod', width: 15 },
             { header: 'Payment Status', key: 'paymentStatus', width: 15 },
@@ -555,39 +637,55 @@ const generateSalesReportExcel = async (req, res) => {
             { header: 'Discount', key: 'discount', width: 15 },
         ];
 
-        // Add Rows for Detailed Orders
+        const headerRow = worksheet.getRow(worksheet.lastRow.number);
+        headerRow.font = { bold: true };
+        headerRow.alignment = { horizontal: 'center', vertical: 'middle' };
+
+        // Add Rows for Orders
         orders.forEach((order, index) => {
-            const totalDiscountApplied = order.items.reduce((sum, item) => {
-                return sum + (item.discountApplied || 0);
-            }, 0);
+            const totalDiscountApplied = order.items.reduce((sum, item) => sum + (item.discountApplied || 0), 0);
 
             worksheet.addRow({
                 index: index + 1,
-                orderId: order._id.toString(),
+                orderId: order.orderId,
                 user: order.userId?.username || 'N/A',
                 orderStatus: order.orderStatus || 'N/A',
                 paymentMethod: order.paymentMethod || 'N/A',
                 paymentStatus: order.paymentStatus || 'N/A',
-                totalAmount: `$${order.totalAmount?.toFixed(2) || '0.00'}`,
-                discount: `$${totalDiscountApplied.toFixed(2) || '0.00'}`,
+                totalAmount: `₹${order.totalAmount?.toFixed(2) || '0.00'}`,
+                discount: `₹${totalDiscountApplied.toFixed(2) || '0.00'}`,
             });
         });
 
-        // Style Headers
-        worksheet.getRow(1).font = { bold: true };
+        // Align all columns
+        worksheet.eachRow((row, rowNumber) => {
+            row.alignment = { vertical: 'middle', horizontal: 'left' };
+            if (rowNumber > 1 && rowNumber <= worksheet.lastRow.number) {
+                row.font = { bold: rowNumber === 3 || rowNumber === 4 }; // Bold for summary rows
+            }
+        });
 
-        // Set response headers for Excel download
+        // Ensure column widths are proper and visible
+        worksheet.columns.forEach((column) => {
+            const maxLength = column.values.reduce((acc, cur) => {
+                return Math.max(acc, cur ? cur.toString().length : 10);
+            }, column.width);
+            column.width = maxLength + 2; // Add padding for visibility
+        });
+
+        // Set response headers
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', 'attachment; filename=sales_report.xlsx');
 
-        // Write Excel to response
+        // Write Excel file to response
         await workbook.xlsx.write(res);
         res.end();
     } catch (error) {
-        console.error(error);
+        console.error('Error generating sales report:', error);
         res.status(500).send('Failed to generate Excel report');
     }
 };
+
 
 module.exports ={ getOrders ,getOrderDetails ,changeStatus ,approveReturn ,rejectReturn ,getSalesReport 
                 ,generateSalesReportPDF ,generateSalesReportExcel , approveCancel,

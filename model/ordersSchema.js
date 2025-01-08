@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const orderSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    orderId : {type: String , required: true },
     items: [
       {
         productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
@@ -19,7 +20,14 @@ const orderSchema = new mongoose.Schema(
       },
     ],
     totalAmount: { type: Number, required: true },
-    shippingAddress: { type: mongoose.Schema.Types.ObjectId, ref: 'Address', required: true },
+    shippingAddress: {
+      fullName: { type: String, required: true },
+      address: { type: String, required: true },
+      city: { type: String, required: true },
+      state: { type: String, required: true },
+      pincode: { type: Number, required: true },
+      phoneNumber: { type: String, required: true }
+    },
     paymentMethod: { type: String, enum: ['razorpay', 'cod' , 'wallet'], required: true },
     paymentStatus: { type: String, enum: ['pending', 'success', 'failed'], default: 'pending' },
     orderStatus: {

@@ -20,7 +20,6 @@ const brandFetch = async(req,res)=>{
       }
     
   } catch (error) {
-    console.log(error);
     res.status(500).json({success:false , message : 'something wetn wrong'})
   }
 }
@@ -63,7 +62,6 @@ const addProduct = async (req, res) => {
 // Get Brands Controller
 const getBrands = async (req, res) => {
   try {
-    console.log('working')
     const { parentCategory } = req.body;
 
     if (!parentCategory) {
@@ -255,7 +253,6 @@ const getUpdate = async (req, res) => {
     res.render('admin/update-product', { product, categories, brands });
 
   } catch (error) {
-    console.log("Error in getting product update page:", error.message);
     res.status(500).send("Internal Server Error");
   }
 };

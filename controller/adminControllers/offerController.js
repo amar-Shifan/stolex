@@ -23,10 +23,7 @@ const getOffers = async (req, res) => {
 // Create Offer Controller
 const createOffer = async (req, res) => {
     try {
-        console.log(req.body);
         const { type, title, discount, startDate, expiryDate, categoryId, productId } = req.body;
-
-        console.log(title, discount, startDate, expiryDate, type, categoryId, productId);
 
         if (!title || discount === undefined || !startDate || !expiryDate || !type) {
             return res.status(400).json({ success: false, message: 'All required fields must be provided.' });
@@ -49,7 +46,6 @@ const createOffer = async (req, res) => {
             expiryDate: expiry,
             applyTo: type,
         };
-        console.log('working ')
 
         if (type === 'products') {
             const ids = Array.isArray(productId) ? productId : [productId];
@@ -57,10 +53,8 @@ const createOffer = async (req, res) => {
                 return res.status(400).json({ success: false, message: 'Product IDs must be provided for product offers.' });
             }
             offerData.productIds = ids;
-            console.log('working 2')
         }
         else if (type === 'categories') {
-             console.log('working 2')
             const ids = Array.isArray(categoryId) ? categoryId : [categoryId];
             if (!ids || ids.length === 0) {
                 return res.status(400).json({ success: false, message: 'Category IDs must be provided for category offers.' });
@@ -69,7 +63,7 @@ const createOffer = async (req, res) => {
         } else {
             return res.status(400).json({ success: false, message: 'Invalid offer type.' });
         }
-        console.log('saving ')
+
         const offer = new Offer(offerData);
         await offer.save();
 
@@ -136,7 +130,6 @@ const getCategory = async(req,res)=>{
         const categories = await Category.find({status : 'Active' , level: 1 });
         res.json(categories);
       } catch (error) {
-        console.error('Error fetching categories:', error);
         res.status(500).json({ success:false , message: 'Unable to load categories' });
     }
 }
@@ -147,7 +140,6 @@ const getProducts = async(req,res)=>{
         const products = await Product.find({status : 'Active'});
         res.json(products);
       } catch (error) {
-        console.error('Error fetching products:', error);
         res.status(500).json({ message: 'Unable to load products' });
       }
 }
@@ -156,7 +148,6 @@ const getProducts = async(req,res)=>{
 const deleteCategoryOffer = async (req, res) => {
     try {
         const { id } = req.params;
-        console.log('working ');
 
         const offerToDelete = await Offer.findById(id);
         if (!offerToDelete) {

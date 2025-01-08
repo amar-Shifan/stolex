@@ -23,7 +23,7 @@ const generateInvoice = (order, res) => {
 
     // Order Details Section
     doc.fontSize(12).font('Helvetica-Bold').text('Order Details:', { underline: true });
-    doc.font('Helvetica').text(`Order ID: ${order._id}`);
+    doc.font('Helvetica').text(`Order ID: ${order.orderId}`);
     doc.text(`Order Date: ${order.createdAt.toDateString()}`);
     doc.text(`Payment Method: ${order.paymentMethod}`);
     doc.text(`Total Amount: ₹${order.totalAmount.toFixed(2)}`);

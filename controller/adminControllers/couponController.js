@@ -8,7 +8,6 @@ const getCoupon = async(req,res)=>{
 
         res.render('admin/coupon' , {coupons});
     } catch (error) {
-        console.log(error);
         res.render('user/error' , {message : 'Something went wrong!'})
     }
 }
@@ -27,7 +26,6 @@ const createCoupon = async (req, res) => {
       expiryDate 
     } = req.body;
 
-    console.log(code, discountType, discountValue, minPurchaseAmount, maxDiscountAmount, usageLimit, startDate, expiryDate);
 
     if (!code || !discountType || !discountValue || !expiryDate) {
       return res.status(400).json({ success: false, message: 'Missing required fields' });
@@ -49,7 +47,6 @@ const createCoupon = async (req, res) => {
     res.status(201).json({ success: true, message: 'Coupon created successfully', coupon: savedCoupon });
 
   } catch (error) {
-    console.log(error);
     res.status(500).json({ success: false, message: 'Server Error!' });
   }
 };

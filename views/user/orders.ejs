@@ -72,12 +72,7 @@
                   <div class="col-md-6">
                       <h2 class="mb-0">Orders</h2>
                   </div>
-                  <div class="col-md-6 text-end ">
-                      <div class="input-group">
-                          <input type="text" class="form-control" placeholder="Search orders..." aria-label="Search orders">
-                          <button class="btn btn-dark" type="button">Search</button>
-                      </div>
-                  </div>
+                  
               </div>
 
               <div class="order-list">
@@ -88,7 +83,7 @@
                         <div class="order-card">
                             <div class="order-header p-3 border rounded">
                                 <div>
-                                    <strong>Order ID:</strong> <%= order._id %>
+                                    <strong>Order ID:</strong> <%= order.orderId %>
                                 </div>
                                 <% if (order.paymentStatus === 'failed') { %>
                                     <div class="d-flex justify-content-between align-items-center mt-3">
@@ -140,11 +135,33 @@
                                     <% if (order.orderStatus !== 'cancelled' && order.orderStatus !== 'delivered') { %>
                                         <form class="cancelFormClass" style="margin-left: 10px;">
                                             <input type="hidden" name="orderId" value="<%= order._id %>">
-                                            <button type="submit" class="btn btn-outline-danger btn-sm">Cancel</button>
+                                            <button type="submit" class="btn btn-outline-danger btn-sm cancelButton">Cancel</button>
                                         </form>
                                     <% } %>
                                 </div>
                             </div>
+                            <!-- Modal for Cancel Reason -->
+                            <div class="modal fade" id="cancelReasonModal" tabindex="-1" aria-labelledby="cancelReasonModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="cancelReasonModalLabel">Cancel Order</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form id="cancelReasonForm">
+                                                <input type="hidden" id="cancelOrderId" name="orderId" value="">
+                                                <div class="mb-3">
+                                                    <label for="cancelReason" class="form-label">Reason for Cancellation</label>
+                                                    <textarea class="form-control" id="cancelReason" name="reason" rows="3" required></textarea>
+                                                </div>
+                                                <button type="submit" class="btn btn-danger">Submit</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             
                             <!-- Modal for Return Reason -->
                             <div class="modal fade" id="returnReasonModal" tabindex="-1" aria-labelledby="returnReasonModalLabel" aria-hidden="true">
@@ -167,7 +184,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+        
                             
                         </div>
                     <% }) %>
@@ -187,97 +204,5 @@
 </div>
 
 
-<script>
-    
-document.querySelectorAll('.cancelFormClass').forEach((form) => {
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const formData = new FormData(e.target);
-
-        confirmationUtil.confirm({
-                title: 'Cancel Order',
-                message: 'Are you sure to Cancel this Order?',
-                confirmText: 'Yes',
-                cancelText: 'No',
-                confirmButtonClass: 'btn-danger', // Optional: Customize confirm button style
-                callback: async (confirmed) => {
-                    if (!confirmed) return; // Exit if the user clicks "Cancel" or "X"
-
-                    try {
-                        // Prepare form data for PATCH request
-                        const formObject = Object.fromEntries(formData.entries());
-                        const res = await fetch('/orders/cancel', {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(formObject),
-                        });
-                        const data = await res.json();
-
-                        // Handle response
-                        if (data.success) {
-                            showNotification('success', data.message);
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 1500);
-                        } else {
-                            showNotification('error', data.message);
-                        }
-                    } catch (error) {
-                        console.error(error);
-                        showNotification('error', 'Something went wrong!');
-                    }
-                },
-            });
-
-    });
-});
-
-
-
-document.querySelectorAll('.returnButton').forEach((button) => {
-    button.addEventListener('click', (e) => {
-        const form = e.target.closest('.returnFormClass');
-        const orderId = form.querySelector('input[name="orderId"]').value;
-
-        // Set the order ID in the modal's hidden input field
-        document.getElementById('modalOrderId').value = orderId;
-
-        // Show the modal
-        const returnModal = new bootstrap.Modal(document.getElementById('returnReasonModal'));
-        returnModal.show();
-    });
-});
-
-document.getElementById('returnReasonForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const formData = new FormData(e.target);
-    const formObject = Object.fromEntries(formData.entries());
-
-    try {
-        const res = await fetch('/orders/return', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formObject),
-        });
-        const data = await res.json();
-
-        // Handle response
-        if (data.success) {
-            showNotification('success', data.message);
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
-        } else {
-            showNotification('error', data.message);
-        }
-    } catch (error) {
-        console.error(error);
-        showNotification('error', 'Something went wrong!');
-    }
-});
-
-
-</script>
+<script src="/js/orders.js"></script>
 <%- include('../partials/footer.ejs') %>
