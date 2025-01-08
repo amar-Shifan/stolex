@@ -86,4 +86,9 @@ router.use((err, req, res ,next)=>{
     next();
 })
 
+// 404 Route - Page Not Found
+router.use((req, res) => {
+    res.status(404).render('user/error', { message: 'Page Not Found' });
+});
+
 module.exports = router;
