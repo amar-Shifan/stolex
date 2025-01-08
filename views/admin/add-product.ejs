@@ -57,7 +57,7 @@
     <div class="row mb-4">
       <div class="col-md-6 mb-3">
         <label for="price" class="form-label">Price</label>
-        <input type="number" class="form-control" id="price" name="price" placeholder="Enter price" required>
+        <input type="number" class="form-control" id="price" name="price" placeholder="Enter price" oninput="this.value = this.value < 0 ? 0 : this.value" required>
       </div>
   
       <div class="col-md-6 mb-3">

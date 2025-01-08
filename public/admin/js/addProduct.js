@@ -128,6 +128,7 @@ let imageCount = 3;
   stockEntries.forEach(entry => {
     const size = entry.size?.trim();
     const quantity = parseInt(entry.quantity);
+    console.log(quantity , entry.stock)
     if (!size || isNaN(quantity) || quantity <= 0) {
       stockValid = false;
     }
@@ -191,7 +192,7 @@ let imageCount = 3;
         </div>
         <div class="col-md-6 mb-3">
           <label for="quantity" class="form-label">Quantity</label>
-          <input type="number" class="form-control" name="stock[${index}][quantity]" placeholder="Stock for size ${size}" min="0" required>
+          <input type="number" class="form-control" name="stock[${index}][quantity]" placeholder="Stock for size ${size}" min="0" oninput="this.value = this.value < 0 ? 0 : this.value" required>
         </div>
       `;
       sizeStockContainer.innerHTML += fieldHTML;
