@@ -1,4 +1,22 @@
 
+// Image handling functions
+let imageCount = <%= product.images ? product.images.length : 0 %>;
+
+function addImage() {
+  imageCount++;
+  const row = document.createElement('div');
+  row.className = 'col-md-4 mb-3';
+  row.innerHTML = `
+    <div class="card h-100">
+      <img src="/api/placeholder/300/200" class="card-img-top preview-img" alt="Image ${imageCount}">
+      <div class="card-body d-flex flex-column justify-content-end">
+        <input type="file" class="form-control file-input" name="images" accept="image/*">
+      </div>
+    </div>`;
+  document.getElementById('image-container').appendChild(row);
+  initializeFileInput(row.querySelector('.file-input'));
+}
+
 // Stock management functions
 function addStockEntry() {
   const container = document.getElementById('stockContainer');

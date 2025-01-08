@@ -70,6 +70,7 @@ router.get('/offers/products' , offerController.getProducts)
 router.delete('/offers/category/:id/delete', offerController.deleteCategoryOffer);
 router.delete('/offers/product/:id/delete', offerController.deleteProductOffer);
 
+
 // CouponManagement Routers
 router.get('/coupons' , couponController.getCoupon);
 router.post('/coupons/create' , couponController.createCoupon)
@@ -78,11 +79,6 @@ router.delete('/coupons/:id' , couponController.deleteCoupon)
 // SalesManagement Routers
 router.get('/salesReport' , ordersController.getSalesReport)
 router.get('/salesReport/pdf', ordersController.generateSalesReportPDF);
-router.get('/salesReport/excel', ordersController.generateSalesReportExcel);  
-
-// 404 Route - Page Not Found
-router.use((req, res) => {
-    res.status(404).render('user/error', { message: 'Page Not Found' });
-});
+router.get('/salesReport/excel', ordersController.generateSalesReportExcel);        
 
 module.exports = router

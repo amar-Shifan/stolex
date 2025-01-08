@@ -54,7 +54,13 @@ const adminRoutes = require('./router/admin.js')
 app.use('/',userRoutes)
 app.use('/admin',adminRoutes)
 
-
+// 404 Handler for Users
+app.use((req, res, next) => {
+  if (req.originalUrl.startsWith('/admin')) {
+      return res.status(404).render('user/error', { title: 'Admin - Page Not Found' });
+  }
+  res.status(404).render('user/error', { title: 'Page Not Found' });
+});
 
 const PORT = env.PORT || 3001;
 app.listen(PORT, () => {
